@@ -22,7 +22,7 @@
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
     var GremlinPipeline = java.import("com.tinkerpop.gremlin.java.GremlinPipeline");
-    var ArrayList = java.import('java.util.ArrayList');
+    //var ArrayList = java.import('java.util.ArrayList');
 
     var Float = java.import('java.lang.Float');
 
@@ -88,28 +88,7 @@
         return gremlin;
     }
 
-    exports.E = function(){
-        var gremlin = new GremlinJSPipeline(),
-            k,
-            o = {};
-        if (!key) {
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync());    
-        } else {
-            if (_isObject(key)) {
-                o = key;
-                for(k in o){
-                    if(key.hasOwnProperty(k)){
-                        key = k;
-                        value = o[k];
-                    }
-                }
-            }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync(key, value));    
-        }
-        return gremlin;
-    }
-
-    //NEed to fix this to accept multiple args if possible
+    //Need to fix this to accept multiple args if possible
     exports.e = function(){
         var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);            
@@ -144,13 +123,13 @@
      * @return the extended Pipeline
      */
     GremlinJSPipeline.prototype.aggregate = function() {
-        this.gremlinPipeline.aggregateSync(new ArrayList());
+        this.gremlinPipeline.aggregateSync();
         return this;
     }
 
 
     GremlinJSPipeline.prototype.interval = function(key, startValue, endValue) {
-        this.gremlinPipeline.intervalSync(key, new Float(startValue), new Float(endValue));
+        this.gremlinPipeline.intervalSync(key, startValue, endValue);
         return this;
     }
 
@@ -187,9 +166,10 @@
         return this;
     }
 
-//     public GremlinPipeline<S, Vertex> idVertex(final Graph graph) {
-//         return this.add(new IdVertexPipe(graph));
-//     }
+    // GremlinJSPipeline.prototype.idVertex = function() {
+    //     this.gremlinPipeline.idVertexSync(this.graph);
+    //     return this;
+    // }
 
     GremlinJSPipeline.prototype.inE = function() {
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
