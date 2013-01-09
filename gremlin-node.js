@@ -1,4 +1,3 @@
-
 (function (definition) {
 
     // RequireJS
@@ -22,7 +21,7 @@
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
     var GremlinPipeline = java.import("com.tinkerpop.gremlin.java.GremlinPipeline");
-    //var ArrayList = java.import('java.util.ArrayList');
+    var ArrayList = java.import('java.util.ArrayList');
 
     var Float = java.import('java.lang.Float');
 
@@ -30,7 +29,8 @@
         push = Array.prototype.push,
         slice = Array.prototype.slice;
         
-
+    //Maybe passin in graph type specified in a options obj
+    //then call the relevant graph impl constructor
     function GremlinJSPipeline() {
         this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
         this.gremlinPipeline = {};
@@ -129,7 +129,7 @@
 
 
     GremlinJSPipeline.prototype.interval = function(key, startValue, endValue) {
-        this.gremlinPipeline.intervalSync(key, startValue, endValue);
+        this.gremlinPipeline.intervalSync(key, java.callStaticMethodSync("java.lang.Float", "parseFloat", startValue), java.callStaticMethodSync("java.lang.Float", "parseFloat", endValue));
         return this;
     }
 
@@ -365,7 +365,7 @@
     // }
 
     GremlinJSPipeline.prototype.scatter = function() {
-        this.gremlinPipeline.add(java.newInstanceSync("com.tinkerpop.pipes.transform.ScatterPipe"));
+        this.gremlinPipeline.scatterSync();
         return this;
     }
 
@@ -430,11 +430,15 @@
     // public <T> GremlinPipeline<S, T> transform(final PipeFunction<E, T> function) {
     //     return this.add(new TransformFunctionPipe(function));
     // }
-
+    GremlinJSPipeline.prototype.transform = function(func) {
+        var funcProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: func });
+        this.gremlinPipeline.transformSync(funcProxy);
+        return this;
+    }
 
 
     GremlinJSPipeline.prototype.emit = function (){
-
+        // maybe this.gremlinPipeline.getStartsSync();
         // var it = this.gremlinPipeline.iteratorSync();
         // while(it.hasNextSync()){
         //     var i = it.nextSync();
