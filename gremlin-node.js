@@ -16,19 +16,29 @@
 })(function (exports) {
 
     var java = require("java");
-    java.classpath.push("./src");
+    java.classpath.push("./src"); //make Configurable
 
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
     var GremlinPipeline = java.import("com.tinkerpop.gremlin.java.GremlinPipeline");
     var ArrayList = java.import('java.util.ArrayList');
 
+    //Map map = new HashMap();
+
     var Float = java.import('java.lang.Float');
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
         slice = Array.prototype.slice;
-        
+
+    var Tokens = {
+        gt: 'gt',
+        lt: 'lt',
+        eq: 'eq',
+        gte: 'gte',
+        lte: 'lte',
+        neq: 'neq'
+    }        
     //Maybe passin in graph type specified in a options obj
     //then call the relevant graph impl constructor
     function GremlinJSPipeline() {
@@ -36,48 +46,7 @@
         this.gremlinPipeline = {};
     }
     
-    //can also pass in JSON
-    exports.V = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
-            k,
-            o = {};
-        if (!key) {
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync());    
-        } else {
-            if (_isObject(key)) {
-                o = key;
-                for(k in o){
-                    if(key.hasOwnProperty(k)){
-                        key = k;
-                        value = o[k];
-                    }
-                }
-            }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync(key, value));    
-        }
-        return gremlin;
-    }
 
-    exports.E = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
-            k,
-            o = {};
-        if (!key) {
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync());    
-        } else {
-            if (_isObject(key)) {
-                o = key;
-                for(k in o){
-                    if(key.hasOwnProperty(k)){
-                        key = k;
-                        value = o[k];
-                    }
-                }
-            }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync(key, value));    
-        }
-        return gremlin;
-    }
 
     //NEed to fix this to accept multiple args if possible
     exports.v = function(){
@@ -113,37 +82,24 @@
         return toString.call(o) === '[object Array]';
     }
 
-/******************************************************************************************************************************************************
-    NEED TO IMPLEMENT ALL AGGREGATE METHODS
-********************************************************************************************************************************************************/
-    /**
-     * Add an AggregatePipe to the end of the Pipeline.
-     * The objects prior to aggregate are greedily collected into an ArrayList.
-     *
-     * @return the extended Pipeline
-     */
-    GremlinJSPipeline.prototype.aggregate = function() {
-        this.gremlinPipeline.aggregateSync();
-        return this;
-    }
-
-
-    GremlinJSPipeline.prototype.interval = function(key, startValue, endValue) {
-        this.gremlinPipeline.intervalSync(key, java.callStaticMethodSync("java.lang.Float", "parseFloat", startValue), java.callStaticMethodSync("java.lang.Float", "parseFloat", endValue));
-        return this;
-    }
-
-
-  
 
     ///////////////////////
     /// TRANSFORM PIPES ///
     ///////////////////////
 
-    GremlinJSPipeline.prototype.bothE = function() {
-        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-        this.gremlinPipeline.bothESync(java.newArray("java.lang.String", args));
-        return this;
+    /**
+     * Add an IdentityPipe to the end of the Pipeline.
+     * Useful in various situations where a step is needed without processing.
+     * For example, useful when two as-steps are needed in a row.
+     *
+     * @return the extended Pipeline
+     */
+    exports._ = function() {
+        var gremlin = new GremlinJSPipeline();
+        gremlin.gremlinPipeline = new GremlinPipeline();
+        gremlin.gremlinPipeline._Sync();
+        return gremlin;
+
     }
 
     GremlinJSPipeline.prototype.both = function() {
@@ -152,101 +108,44 @@
         return this;
     }
     
+    GremlinJSPipeline.prototype.bothE = function() {
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.bothESync(java.newArray("java.lang.String", args));
+        return this;
+    }
+
     GremlinJSPipeline.prototype.bothV = function() {
         this.gremlinPipeline.bothVSync();
         return this;
     }
 
-//     public GremlinPipeline<S, Edge> idEdge(final Graph graph) {
-//         return this.add(new IdEdgePipe(graph));
-//     }
-
-    GremlinJSPipeline.prototype.id = function() {
-        this.gremlinPipeline.idSync();
+    GremlinJSPipeline.prototype.cap = function() {
+        this.gremlinPipeline.capSync();
         return this;
+
     }
 
-    // GremlinJSPipeline.prototype.idVertex = function() {
-    //     this.gremlinPipeline.idVertexSync(this.graph);
-    //     return this;
-    // }
-
-    GremlinJSPipeline.prototype.inE = function() {
-        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-        this.gremlinPipeline.inESync(java.newArray("java.lang.String", args));
-        return this;
+    exports.E = function(key, value){
+        var gremlin = new GremlinJSPipeline(),
+            k,
+            o = {};
+        if (!key) {
+            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync());    
+        } else {
+            if (_isObject(key)) {
+                o = key;
+                for(k in o){
+                    if(key.hasOwnProperty(k)){
+                        key = k;
+                        value = o[k];
+                    }
+                }
+            }
+            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync(key, value));    
+        }
+        return gremlin;
     }
 
-    GremlinJSPipeline.prototype.in = function() {
-        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-        this.gremlinPipeline.inSync(java.newArray("java.lang.String", args));
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.inV = function() {
-        this.gremlinPipeline.inVSync();
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.label = function() {
-        this.gremlinPipeline.labelSync();
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.outV = function (){
-        this.gremlinPipeline.outVSync();
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.out = function (){
-        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-        this.gremlinPipeline.outSync(java.newArray("java.lang.String", args));
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.map = function() {
-        this.gremlinPipeline.mapSync();
-        return this;
-    }
-
-    GremlinJSPipeline.prototype.property = function (key) {
-        this.gremlinPipeline.propertySync(key);
-        return this;
-    }
-
-    // /**
-    //  * Add a FunctionPipe to the end of the pipeline.
-    //  * The provide provided PipeFunction emits whatever is defined by the function.
-    //  * This serves as an arbitrary step computation.
-    //  *
-    //  * @param function the function of the FunctionPipe
-    //  * @return the extended Pipeline
-    //  */
-    // public GremlinPipeline<S, ?> step(final PipeFunction function) {
-    //     return this.add(new FunctionPipe(function));
-    // }
-
-    // /**
-    //  * Add an arbitrary Pipe to the end of the pipeline.
-    //  *
-    //  * @param pipe The provided pipe.
-    //  * @param <T>  the object type emitted by the provided pipe.
-    //  * @return the extended Pipeline
-    //  */
-    // public <T> GremlinPipeline<S, T> step(final Pipe<E, T> pipe) {
-    //     return this.add(pipe);
-    // }
-
-
-
-
-
-    /**
-     * Add a GatherPipe to the end of the Pipeline.
-     * All the objects previous to this step are aggregated in a greedy fashion and emitted as a List.
-     *
-     * @return the extended Pipeline
-     */
     GremlinJSPipeline.prototype.gather = function (func) {
         var funcProxy;
         if (_isFunction(func)) {
@@ -258,17 +157,46 @@
         return this;
     }
 
-    /**
-     * Add an IdentityPipe to the end of the Pipeline.
-     * Useful in various situations where a step is needed without processing.
-     * For example, useful when two as-steps are needed in a row.
-     *
-     * @return the extended Pipeline
-     */
-    GremlinJSPipeline.prototype._ = function() {
-            this.gremlinPipeline._Sync();
-            return this;
+    GremlinJSPipeline.prototype.id = function() {
+        this.gremlinPipeline.idSync();
+        return this;
     }
+
+    GremlinJSPipeline.prototype.in = function() {
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.inSync(java.newArray("java.lang.String", args));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.inE = function() {
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.inESync(java.newArray("java.lang.String", args));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.inV = function() {
+        this.gremlinPipeline.inVSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.property = function (key) {
+        this.gremlinPipeline.propertySync(key);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.label = function() {
+        this.gremlinPipeline.labelSync();
+        return this;
+    }
+
+    //map -> need to update to snapshot 2.3.0
+    GremlinJSPipeline.prototype.map = function() {
+        this.gremlinPipeline.mapSync();
+        return this;
+    }
+
+    //memoize
+
 
     // /**
     //  * Add a MemoizePipe to the end of the Pipeline.
@@ -320,12 +248,18 @@
     //     return this.add(new MemoizePipe(new Pipeline(FluentUtility.removePreviousPipes(this, numberedStep)), map));
     // }
 
-    // /**
-    //  * Add an OrderPipe to the end of the Pipeline.
-    //  * This step will sort the objects in the stream in a default Comparable order.
-    //  *
-    //  * @return the extended Pipeline
-    //  */
+    //Need to create Map proxy object
+    GremlinJSPipeline.prototype.memoize = function() {
+        var arg = slice.call(arguments);
+        if (arg.length > 1) {
+            this.gremlinPipeline.memoizeSync(arg[0], arg[1]);
+        } else {
+            this.gremlinPipeline.memoizeSync(arg[0]);
+        }
+        return this;
+    }
+
+     //Need to check func call
     GremlinJSPipeline.prototype.order = function(func) {
         var funcProxy;
         if (_isFunction(func)) {
@@ -337,21 +271,24 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.groupCount = function() {
-        this.gremlinPipeline.groupCountSync();
+    GremlinJSPipeline.prototype.out = function (){
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.outSync(java.newArray("java.lang.String", args));
         return this;
     }
-    // /**
-    //  * Add an OrderPipe to the end of the Pipeline.
-    //  * This step will sort the objects in the stream according to a comparator defined in the provided function.
-    //  *
-    //  * @param compareFunction a comparator function of two objects of type E
-    //  * @return the extended Pipeline
-    //  */
-    // public GremlinPipeline<S, E> order(final PipeFunction<Pair<E, E>, Integer> compareFunction) {
-    //     return this.add(new OrderPipe(compareFunction));
-    // }
 
+    GremlinJSPipeline.prototype.outE = function() {
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.outESync(java.newArray("java.lang.String", args));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.outV = function (){
+        this.gremlinPipeline.outVSync();
+        return this;
+    }
+
+    //path
     // *
     //  * Add a PathPipe or PathPipe to the end of the Pipeline.
     //  * This will emit the path that has been seen thus far.
@@ -359,7 +296,7 @@
     //  *
     //  * @param pathFunctions the path function of the PathPipe
     //  * @return the extended Pipeline
-     
+
     // public GremlinPipeline<S, List> path(final PipeFunction... pathFunctions) {
     //     return this.add(new PathPipe<Object>(pathFunctions));
     // }
@@ -403,49 +340,256 @@
     //  *
     //  * @return the extended Pipeline
     //  */
-    // public GremlinPipeline<S, Row> select() {
-    //     return this.add(new SelectPipe(null, FluentUtility.getAsPipes(this)));
-    // }
-
-    // /**
-    //  * Add a SideEffectCapPipe to the end of the Pipeline.
-    //  * When the previous step in the pipeline is implements SideEffectPipe, then it has a method called getSideEffect().
-    //  * The cap step will greedily iterate the pipeline and then, when its empty, emit the side effect of the previous pipe.
-    //  *
-    //  * @return the extended Pipeline
-    //  */
-    GremlinJSPipeline.prototype.cap = function() {
-        this.gremlinPipeline.capSync();
+     GremlinJSPipeline.prototype.select = function () {
+        this.gremlinPipeline.selectSync();
         return this;
-
     }
 
-    // /**
-    //  * Add a TransformFunctionPipe to the end of the Pipeline.
-    //  * Given an input, the provided function is computed on the input and the output of that function is emitted.
-    //  *
-    //  * @param function the transformation function of the pipe
-    //  * @return the extended Pipeline
-    //  */
-    // public <T> GremlinPipeline<S, T> transform(final PipeFunction<E, T> function) {
-    //     return this.add(new TransformFunctionPipe(function));
-    // }
     GremlinJSPipeline.prototype.transform = function(func) {
         var funcProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: func });
         this.gremlinPipeline.transformSync(funcProxy);
         return this;
+    }    
+
+    //can also pass in JSON
+    exports.V = function(key, value){
+        var gremlin = new GremlinJSPipeline(),
+            k,
+            o = {};
+        if (!key) {
+            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync());    
+        } else {
+            if (_isObject(key)) {
+                o = key;
+                for(k in o){
+                    if(key.hasOwnProperty(k)){
+                        key = k;
+                        value = o[k];
+                    }
+                }
+            }
+            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync(key, value));    
+        }
+        return gremlin;
+    }
+
+    ////////////////////
+    /// FILTER PIPES ///
+    ////////////////////
+
+    GremlinJSPipeline.prototype.itemAt = function(idx) {
+        this.gremlinPipeline.range(idx, idx);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.range = function(low, high) {
+        this.gremlinPipeline.range(low, high);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
+        var args = slice.call(arguments),
+            pipes = [];
+        for (var i = 0; i < args.length; i++) {
+            //Need to emit() to reference Pipe
+            pipes[i] = args[i].emit();
+        };
+        this.gremlinPipeline.andSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.back = function(step) {
+        this.gremlinPipeline.backSync(step);
+        return this;//.add(new BackFilterPipe(new Pipeline(FluentUtility.removePreviousPipes(this, numberedStep))));
+    }
+
+     //Need to check func call
+    GremlinJSPipeline.prototype.dedup = function(func) {
+        var funcProxy;
+        if (_isFunction(func)) {
+            funcProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: func });
+            this.gremlinPipeline.dedupSync(funcProxy);
+        } else {
+            this.gremlinPipeline.dedupSync();
+        }
+        return this;
+    }
+
+   /**
+     * Add an ExceptFilterPipe to the end of the Pipeline.
+     * Will only emit the object if it is not in the provided collection.
+     *
+     * @param collection the collection except from the stream
+     * @return the extended Pipeline
+     */
+    GremlinJSPipeline.prototype.except = function(/*final Collection<E> collection*/) {
+        //May need to implement the Collection interface ????
+        var list = new ArrayList();
+        list.addSync(g.v(1).emit());
+        //list.addSync(g.v(2).emit());
+        //list.addSync(g.v(3).emit());
+        //var c = java.callStaticMethodSync("java.util.Collections", "unmodifiableCollection", list);
+
+        var list2 = [g.v(1).emit()];
+        this.gremlinPipeline.exceptSync(list2);
+        return this;//.add(new ExceptFilterPipe<E>(collection));
+    }
+
+    GremlinJSPipeline.prototype.filter = function(func) {
+        var funcProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: func });
+            this.gremlinPipeline.filterSync(funcProxy);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.has = function() {
+        var args = slice.call(arguments),
+            token;
+
+        if(args.length == 2){
+            this.gremlinPipeline.hasSync(args[0], args[1]);    
+        } else {
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            this.gremlinPipeline.hasSync(args[0], token, args[2]);
+        }
+        
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.hasNot = function() {
+        var args = slice.call(arguments),
+            token;
+
+        if(args.length == 2){
+            this.gremlinPipeline.hasNotSync(args[0], args[1]);    
+        } else {
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
+        }
+        
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.interval = function(key, startValue, endValue) {
+        this.gremlinPipeline.intervalSync(key, startValue, endValue);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
+        var args = slice.call(arguments),
+            pipes = [];
+        for (var i = 0; i < args.length; i++) {
+            //Need to emit() to reference Pipe
+            pipes[i] = args[i].emit();
+        };
+        this.gremlinPipeline.orSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.random = function(prob) {
+        this.gremlinPipeline.randomSync(prob);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.retain = function(/*final Collection<E> collection*/) {
+        //May need to implement the Collection interface ????
+        var list = new ArrayList();
+        list.addSync(g.v(1).emit());
+        //list.addSync(g.v(2).emit());
+        //list.addSync(g.v(3).emit());
+        //var c = java.callStaticMethodSync("java.util.Collections", "unmodifiableCollection", list);
+        this.gremlinPipeline.retainSync(list);
+        return this;//.add(new ExceptFilterPipe<E>(collection));
+    }
+
+    GremlinJSPipeline.prototype.simplePath = function() {
+        this.gremlinPipeline.simplePathSync();
+        return this;
+    }
+
+    /////////////////////////
+    /// SIDE EFFECT PIPES ///
+    /////////////////////////
+
+/**********************************************
+    NEED TO IMPLEMENT ALL AGGREGATE METHODS
+*********************************************/
+    /**
+     * Add an AggregatePipe to the end of the Pipeline.
+     * The objects prior to aggregate are greedily collected into an ArrayList.
+     *
+     * @return the extended Pipeline
+     */
+    GremlinJSPipeline.prototype.aggregate = function() {
+        this.gremlinPipeline.aggregateSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.as = function(name) {
+        this.gremlinPipeline.as(name);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.groupCount = function() {
+        this.gremlinPipeline.groupCountSync();
+        return this;
     }
 
 
+
+
+    //////////////////////
+    /// UTILITY PIPES ///
+    //////////////////////
+
+
     GremlinJSPipeline.prototype.emit = function (){
-        // maybe this.gremlinPipeline.getStartsSync();
+        //this.gremlinPipeline.getStartsSync();
         // var it = this.gremlinPipeline.iteratorSync();
-        // while(it.hasNextSync()){
-        //     var i = it.nextSync();
-        //     console.log(i.toString());
+        // it.toString()
+
+        return this.gremlinPipeline;
+
+        // var Things = [];
+        // var it = this.gremlinPipeline.toListSync().toArraySync();
+        // var l = it.length;
+        // var keys;
+        // var o = {};
+        // for (var i = it.length - 1; i >= 0; i--) {
+        //     keys = it[i].getPropertyKeysSync().toArraySync();
+        //     o._id = it[i].getIdSync();
+        //     for(var j=0,l=keys.length;j<l;j++){
+        //         console.log(j +" - " + keys[j]);
+        //         o[keys[j]] = it[i].getPropertySync(keys[j]);
+        //     }
+        //     push.call(Things, o);
+        //     o = {};
+        // };
+        // console.log(JSON.stringify(Things));
+
+        //var v = Things[0];
+        //console.log(v.getPropertySync('name').toString());
+
+// for ( flavoursIter = it.iteratorSync(); flavoursIter.hasNextSync(); ) {
+//     var t = flavoursIter.nextSync();
+//       console.log( t.toString() );
+//     }
+
+        //console.log(it.toStringSync());
+// for ( flavoursIter = this.gremlinPipeline.iteratorSync(); flavoursIter.hasNextSync(); ) {
+//     var t = flavoursIter.nextSync();
+//       console.log( t[0].toString() );
+//     }
+
+        // while(it){
+        //     var i = it.next();
+        //     console.log(it.toStringSync());
+        // }
+
+        // for(var k in it){
+        //     console.log(k);
         // }
         
-        return this.gremlinPipeline.toListSync().toString();
+        //return this.gremlinPipeline.toString();
     }
 
 });
