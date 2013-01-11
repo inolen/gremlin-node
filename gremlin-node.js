@@ -20,12 +20,10 @@
 
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
-    var GremlinPipeline = java.import("com.tinkerpop.gremlin.java.GremlinPipeline");
+    var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
     var ArrayList = java.import('java.util.ArrayList');
 
     //Map map = new HashMap();
-
-    var Float = java.import('java.lang.Float');
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
@@ -45,24 +43,28 @@
         this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
         this.gremlinPipeline = {};
     }
-    
-
 
     //NEed to fix this to accept multiple args if possible
     exports.v = function(){
         var gremlin = new GremlinJSPipeline(),
-            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);            
-        
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVertexSync(args[0]));    
+            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            list = new ArrayList();
+        for (var i = 0; i < args.length; i++) {
+            list.addSync(gremlin.graph.getVertexSync(args[i]));
+        };
+        gremlin.gremlinPipeline = new GremlinPipeline(list);
         return gremlin;
     }
 
     //Need to fix this to accept multiple args if possible
     exports.e = function(){
         var gremlin = new GremlinJSPipeline(),
-            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);            
-        
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgeSync(args[0]));    
+            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            list = new ArrayList();
+        for (var i = 0; i < args.length; i++) {
+            list.addSync(gremlin.graph.getEdgeSync(args[i]));
+        };
+        gremlin.gremlinPipeline = new GremlinPipeline(list);
         return gremlin;
     }
 
@@ -191,7 +193,9 @@
 
     //map -> need to update to snapshot 2.3.0
     GremlinJSPipeline.prototype.map = function() {
-        this.gremlinPipeline.mapSync();
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+        this.gremlinPipeline.mapSync(java.newArray("java.lang.String", args));
+        //this.gremlinPipeline.mapSync();
         return this;
     }
 
@@ -391,8 +395,7 @@
         var args = slice.call(arguments),
             pipes = [];
         for (var i = 0; i < args.length; i++) {
-            //Need to emit() to reference Pipe
-            pipes[i] = args[i].emit();
+            push.call(pipes, args[i].emit());
         };
         this.gremlinPipeline.andSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
         return this;
@@ -400,7 +403,7 @@
 
     GremlinJSPipeline.prototype.back = function(step) {
         this.gremlinPipeline.backSync(step);
-        return this;//.add(new BackFilterPipe(new Pipeline(FluentUtility.removePreviousPipes(this, numberedStep))));
+        return this;
     }
 
      //Need to check func call
@@ -415,24 +418,14 @@
         return this;
     }
 
-   /**
-     * Add an ExceptFilterPipe to the end of the Pipeline.
-     * Will only emit the object if it is not in the provided collection.
-     *
-     * @param collection the collection except from the stream
-     * @return the extended Pipeline
-     */
-    GremlinJSPipeline.prototype.except = function(/*final Collection<E> collection*/) {
-        //May need to implement the Collection interface ????
-        var list = new ArrayList();
-        list.addSync(g.v(1).emit());
-        //list.addSync(g.v(2).emit());
-        //list.addSync(g.v(3).emit());
-        //var c = java.callStaticMethodSync("java.util.Collections", "unmodifiableCollection", list);
-
-        var list2 = [g.v(1).emit()];
-        this.gremlinPipeline.exceptSync(list2);
-        return this;//.add(new ExceptFilterPipe<E>(collection));
+    GremlinJSPipeline.prototype.except = function() {
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            list = new ArrayList();
+        for (var i = 0; i < args.length; i++) {
+            list.addSync(args[i].single());
+        };
+        this.gremlinPipeline.exceptSync(list);
+        return this;
     }
 
     GremlinJSPipeline.prototype.filter = function(func) {
@@ -465,7 +458,6 @@
             token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
             this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
         }
-        
         return this;
     }
 
@@ -478,8 +470,7 @@
         var args = slice.call(arguments),
             pipes = [];
         for (var i = 0; i < args.length; i++) {
-            //Need to emit() to reference Pipe
-            pipes[i] = args[i].emit();
+            push.call(pipes, args[i].emit());
         };
         this.gremlinPipeline.orSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
         return this;
@@ -491,14 +482,13 @@
     }
 
     GremlinJSPipeline.prototype.retain = function(/*final Collection<E> collection*/) {
-        //May need to implement the Collection interface ????
-        var list = new ArrayList();
-        list.addSync(g.v(1).emit());
-        //list.addSync(g.v(2).emit());
-        //list.addSync(g.v(3).emit());
-        //var c = java.callStaticMethodSync("java.util.Collections", "unmodifiableCollection", list);
+        var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            list = new ArrayList();
+        for (var i = 0; i < args.length; i++) {
+            list.addSync(args[i].single());
+        };
         this.gremlinPipeline.retainSync(list);
-        return this;//.add(new ExceptFilterPipe<E>(collection));
+        return this;
     }
 
     GremlinJSPipeline.prototype.simplePath = function() {
@@ -535,61 +525,16 @@
     }
 
 
-
-
     //////////////////////
     /// UTILITY PIPES ///
     //////////////////////
 
-
     GremlinJSPipeline.prototype.emit = function (){
-        //this.gremlinPipeline.getStartsSync();
-        // var it = this.gremlinPipeline.iteratorSync();
-        // it.toString()
-
         return this.gremlinPipeline;
+    }
 
-        // var Things = [];
-        // var it = this.gremlinPipeline.toListSync().toArraySync();
-        // var l = it.length;
-        // var keys;
-        // var o = {};
-        // for (var i = it.length - 1; i >= 0; i--) {
-        //     keys = it[i].getPropertyKeysSync().toArraySync();
-        //     o._id = it[i].getIdSync();
-        //     for(var j=0,l=keys.length;j<l;j++){
-        //         console.log(j +" - " + keys[j]);
-        //         o[keys[j]] = it[i].getPropertySync(keys[j]);
-        //     }
-        //     push.call(Things, o);
-        //     o = {};
-        // };
-        // console.log(JSON.stringify(Things));
-
-        //var v = Things[0];
-        //console.log(v.getPropertySync('name').toString());
-
-// for ( flavoursIter = it.iteratorSync(); flavoursIter.hasNextSync(); ) {
-//     var t = flavoursIter.nextSync();
-//       console.log( t.toString() );
-//     }
-
-        //console.log(it.toStringSync());
-// for ( flavoursIter = this.gremlinPipeline.iteratorSync(); flavoursIter.hasNextSync(); ) {
-//     var t = flavoursIter.nextSync();
-//       console.log( t[0].toString() );
-//     }
-
-        // while(it){
-        //     var i = it.next();
-        //     console.log(it.toStringSync());
-        // }
-
-        // for(var k in it){
-        //     console.log(k);
-        // }
-        
-        //return this.gremlinPipeline.toString();
+    GremlinJSPipeline.prototype.single = function(){
+        return this.gremlinPipeline.toListSync().getSync(0);
     }
 
 });
