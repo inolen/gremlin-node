@@ -412,7 +412,7 @@
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             list = new ArrayList();
         for (var i = 0; i < args.length; i++) {
-            list.addSync(args[i].single());
+            list.addSync(args[i].next());
         };
         this.gremlinPipeline.exceptSync(list);
         return this;
@@ -475,7 +475,7 @@
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             list = new ArrayList();
         for (var i = 0; i < args.length; i++) {
-            list.addSync(args[i].single());
+            list.addSync(args[i].next());
         };
         this.gremlinPipeline.retainSync(list);
         return this;
@@ -515,16 +515,68 @@
     }
 
 
+    /**
+     * Add a StartPipe to the end of the pipeline.
+     * Though, in practice, a StartPipe is usually the beginning.
+     * Moreover, the constructor of the Pipeline will internally use StartPipe.
+     *
+     * @param object the object that serves as the start of the pipeline (iterator/iterable are unfolded)
+     * @return the extended Pipeline
+    
+    public GremlinPipeline<S, S> start(final S object) {
+        this.add(new StartPipe<S>(object));
+        FluentUtility.setStarts(this, object);
+        return (GremlinPipeline<S, S>) this;
+    } */
+
+
     //////////////////////
     /// UTILITY PIPES ///
     //////////////////////
+
+    GremlinJSPipeline.prototype.count = function() {
+        return this.gremlinPipeline.countSync();
+    }
+
+    GremlinJSPipeline.prototype.iterate = function() {
+        this.gremlinPipeline.iterateSync();
+    }
 
     GremlinJSPipeline.prototype.emit = function (){
         return this.gremlinPipeline;
     }
 
-    GremlinJSPipeline.prototype.single = function(){
-        return this.gremlinPipeline.toListSync().getSync(0);
+    GremlinJSPipeline.prototype.next = function(){
+        return this.gremlinPipeline.nextSync();
+    }
+
+    GremlinJSPipeline.prototype.toList = function(){
+        return this.gremlinPipeline.toListSync();
+    }
+
+    GremlinJSPipeline.prototype.toArray = function(){
+        return this.gremlinPipeline.toListSync().toArraySync();
+    }
+
+       /**
+     * Fill the provided collection with the objects in the pipeline.
+     *
+     * @param collection the collection to fill
+     * @return the collection filled
+     
+    public Collection<E> fill(final Collection<E> collection) {
+        PipeHelper.fillCollection(this, collection);
+        return collection;
+    }*/
+
+    GremlinJSPipeline.prototype.enablePath = function() {
+        this.gremlinPipeline.enablePathSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.optimize = function(optimize) {
+        this.gremlinPipeline.optimizeSync(optimize);
+        return this;
     }
 
 });
