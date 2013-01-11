@@ -37,14 +37,14 @@
         lte: 'lte',
         neq: 'neq'
     }        
-    //Maybe passin in graph type specified in a options obj
+
+    //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
     function GremlinJSPipeline() {
         this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
         this.gremlinPipeline = {};
     }
 
-    //NEed to fix this to accept multiple args if possible
     exports.v = function(){
         var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
@@ -56,7 +56,6 @@
         return gremlin;
     }
 
-    //Need to fix this to accept multiple args if possible
     exports.e = function(){
         var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
@@ -89,13 +88,6 @@
     /// TRANSFORM PIPES ///
     ///////////////////////
 
-    /**
-     * Add an IdentityPipe to the end of the Pipeline.
-     * Useful in various situations where a step is needed without processing.
-     * For example, useful when two as-steps are needed in a row.
-     *
-     * @return the extended Pipeline
-     */
     exports._ = function() {
         var gremlin = new GremlinJSPipeline();
         gremlin.gremlinPipeline = new GremlinPipeline();
@@ -191,11 +183,9 @@
         return this;
     }
 
-    //map -> need to update to snapshot 2.3.0
     GremlinJSPipeline.prototype.map = function() {
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
         this.gremlinPipeline.mapSync(java.newArray("java.lang.String", args));
-        //this.gremlinPipeline.mapSync();
         return this;
     }
 
