@@ -1,7 +1,7 @@
 {
   "name": "gremlin",
   "description": "A Graph Traversal Language",
-  "version": "0.0.1a",
+  "version": "0.1.1a",
   "keywords": ["graph", "database", "tinkerpop", "gremlin", "blueprints"],
   "homepage": "https://github.com/entrendipity/gremlin-node",
   "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],

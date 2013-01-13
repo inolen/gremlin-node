@@ -22,8 +22,9 @@
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
     var ArrayList = java.import('java.util.ArrayList');
-
-    //Map map = new HashMap();
+    var HashMap = java.import('java.util.HashMap');
+    var Table = java.import("com.tinkerpop.pipes.util.structures.Table");
+    var Tree = java.import("com.tinkerpop.pipes.util.structures.Tree");
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
@@ -38,6 +39,11 @@
         neq: 'neq'
     }        
 
+    exports.ArrayList = ArrayList;
+    exports.HashMap = HashMap;
+    exports.Table = Table;
+    exports.Tree = Tree;
+
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
     function GremlinJSPipeline() {
@@ -48,8 +54,9 @@
     exports.v = function(){
         var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            argsLen = args.length,
             list = new ArrayList();
-        for (var i = 0; i < args.length; i++) {
+        for (var i = 0; i < argsLen; i++) {
             list.addSync(gremlin.graph.getVertexSync(args[i]));
         };
         gremlin.gremlinPipeline = new GremlinPipeline(list);
@@ -59,8 +66,9 @@
     exports.e = function(){
         var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            argsLen = args.length,
             list = new ArrayList();
-        for (var i = 0; i < args.length; i++) {
+        for (var i = 0; i < argsLen; i++) {
             list.addSync(gremlin.graph.getEdgeSync(args[i]));
         };
         gremlin.gremlinPipeline = new GremlinPipeline(list);
@@ -282,60 +290,48 @@
         return this;
     }
 
-    //path
-    // *
-    //  * Add a PathPipe or PathPipe to the end of the Pipeline.
-    //  * This will emit the path that has been seen thus far.
-    //  * If path functions are provided, then they are evaluated in a round robin fashion on the objects of the path.
-    //  *
-    //  * @param pathFunctions the path function of the PathPipe
-    //  * @return the extended Pipeline
-
-    // public GremlinPipeline<S, List> path(final PipeFunction... pathFunctions) {
-    //     return this.add(new PathPipe<Object>(pathFunctions));
-    // }
+    GremlinJSPipeline.prototype.path = function(/*final PipeFunction... pathFunctions*/) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            pipeFunctions = [];
+        for (var i = 0; i < argsLen; i++) {
+            push.call(pipeFunctions, java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[i] }));
+        };
+        this.gremlinPipeline.pathSync(java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+        return this;
+    }
 
     GremlinJSPipeline.prototype.scatter = function() {
         this.gremlinPipeline.scatterSync();
         return this;
     }
 
-    // /**
-    //  * Add a SelectPipe to the end of the Pipeline.
-    //  * The objects of the named steps (via as) previous in the pipeline are emitted as a Row object.
-    //  * A Row object extends ArrayList and simply provides named columns and some helper methods.
-    //  * If column functions are provided, then they are evaluated in a round robin fashion on the objects of the Row.
-    //  *
-    //  * @param stepNames       the name of the steps in the expression to retrieve the objects from
-    //  * @param columnFunctions the functions to apply to the column objects prior to filling the Row
-    //  * @return the extended Pipeline
-    //  */
-    // public GremlinPipeline<S, Row> select(final Collection<String> stepNames, final PipeFunction... columnFunctions) {
-    //     return this.add(new SelectPipe(stepNames, FluentUtility.getAsPipes(this), columnFunctions));
-    // }
+    GremlinJSPipeline.prototype.select = function () {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            pipeFunctions = [];
 
-    // /**
-    //  * Add a SelectPipe to the end of the Pipeline.
-    //  * The objects of the named steps (via as) previous in the pipeline are emitted as a Row object.
-    //  * A Row object extends ArrayList and simply provides named columns and some helper methods.
-    //  * If column functions are provided, then they are evaluated in a round robin fashion on the objects of the Row.
-    //  *
-    //  * @param columnFunctions the functions to apply to the column objects prior to filling the Row
-    //  * @return the extended Pipeline
-    //  */
-    // public GremlinPipeline<S, Row> select(final PipeFunction... columnFunctions) {
-    //     return this.add(new SelectPipe(null, FluentUtility.getAsPipes(this), columnFunctions));
-    // }
+        if (argsLen == 0) {
+            this.gremlinPipeline.selectSync();
+        }
+        if (!_isFunction(args[0])) {
+            for (var i = 1; i < argsLen; i++) {
+                push.call(pipeFunctions, java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[i] }));
+            };
+            this.gremlinPipeline.selectSync(args[0], java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+            //this.gremlinPipeline.selectSync( java.newArray("java.lang.String", args[0]), java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+        } else {
+            for (var i = 0; i < argsLen; i++) {
+                push.call(pipeFunctions, java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[i] }));
+            };
+            this.gremlinPipeline.selectSync(java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+        }
+        return this;
 
-    // /**
-    //  * Add a SelectPipe to the end of the Pipeline.
-    //  * The objects of the named steps (via as) previous in the pipeline are emitted as a Row object.
-    //  * A Row object extends ArrayList and simply provides named columns and some helper methods.
-    //  *
-    //  * @return the extended Pipeline
-    //  */
-     GremlinJSPipeline.prototype.select = function () {
-        this.gremlinPipeline.selectSync();
+    }
+
+    GremlinJSPipeline.prototype.shuffle = function() {
+        this.gremlinPipeline.shuffleSync();
         return this;
     }
 
@@ -383,9 +379,10 @@
 
     GremlinJSPipeline.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
         var args = slice.call(arguments),
+            argsLen = args.length,
             pipes = [];
-        for (var i = 0; i < args.length; i++) {
-            push.call(pipes, args[i].emit());
+        for (var i = 0; i < argsLen; i++) {
+            push.call(pipes, args[i].pipe());
         };
         this.gremlinPipeline.andSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
         return this;
@@ -410,8 +407,9 @@
 
     GremlinJSPipeline.prototype.except = function() {
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            argsLen = args.length,
             list = new ArrayList();
-        for (var i = 0; i < args.length; i++) {
+        for (var i = 0; i < argsLen; i++) {
             list.addSync(args[i].next());
         };
         this.gremlinPipeline.exceptSync(list);
@@ -458,9 +456,10 @@
 
     GremlinJSPipeline.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
         var args = slice.call(arguments),
+            argsLen = args.length,
             pipes = [];
-        for (var i = 0; i < args.length; i++) {
-            push.call(pipes, args[i].emit());
+        for (var i = 0; i < argsLen; i++) {
+            push.call(pipes, args[i].pipe());
         };
         this.gremlinPipeline.orSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
         return this;
@@ -473,8 +472,9 @@
 
     GremlinJSPipeline.prototype.retain = function(/*final Collection<E> collection*/) {
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+            argsLen = args.length,
             list = new ArrayList();
-        for (var i = 0; i < args.length; i++) {
+        for (var i = 0; i < argsLen; i++) {
             list.addSync(args[i].next());
         };
         this.gremlinPipeline.retainSync(list);
@@ -490,17 +490,28 @@
     /// SIDE EFFECT PIPES ///
     /////////////////////////
 
-/**********************************************
-    NEED TO IMPLEMENT ALL AGGREGATE METHODS
-*********************************************/
-    /**
-     * Add an AggregatePipe to the end of the Pipeline.
-     * The objects prior to aggregate are greedily collected into an ArrayList.
-     *
-     * @return the extended Pipeline
-     */
     GremlinJSPipeline.prototype.aggregate = function() {
-        this.gremlinPipeline.aggregateSync();
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            aggregateFunctionProxy;
+
+        if (argsLen == 0){
+            this.gremlinPipeline.aggregateSync(); 
+        }
+        if (argsLen == 1) {
+            if ( _isFunction(args[0])) {
+                aggregateFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+                this.gremlinPipeline.aggregateSync(aggregateFunctionProxy);
+            } else {
+                this.gremlinPipeline.aggregateSync(args[0]);
+            }
+        } 
+        if (argsLen == 2) {
+            if ( _isFunction(args[1])) {
+                aggregateFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                this.gremlinPipeline.aggregateSync(args[0], aggregateFunctionProxy);
+            }
+        }
         return this;
     }
 
@@ -509,10 +520,314 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.groupCount = function() {
-        this.gremlinPipeline.groupCountSync();
+
+
+    /**
+     * Add a GroupByPipe to the end of the Pipeline.
+     * Group the objects inputted objects according to a key generated from the object and a value generated from the object.
+     * The grouping map has values that are Lists.
+     *
+     * @param keyFunction   the function that generates the key from the object
+     * @param valueFunction the function that generates the value from the function
+     * @return the extended Pipeline
+     */
+    GremlinJSPipeline.prototype.groupBy = function (map, /*final PipeFunction*/ keyFunction, /*final PipeFunction*/ valueFunction) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            keyFunctionProxy,
+            valueFunctionProxy,
+            reduceFunctionProxy;
+
+        if (argsLen == 2) {
+            keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+            valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+            this.gremlinPipeline.groupBySync(keyFunctionProxy, valueFunctionProxy);            
+        } 
+        if (argsLen == 3) {
+            if (!_isFunction(args[0])) {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[2] });
+                this.gremlinPipeline.groupBySync(args[0], keyFunctionProxy, valueFunctionProxy);
+            } else {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+                valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                reduceFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[2] });
+                this.gremlinPipeline.groupBySync(keyFunctionProxy, valueFunctionProxy, reduceFunctionProxy);
+            }
+        }
+        if (argsLen == 4) {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[2] });
+                reduceFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[3] });            
+                this.gremlinPipeline.groupBySync(args[0], keyFunctionProxy, valueFunctionProxy, reduceFunctionProxy);
+        }
+        //this.gremlinPipeline.iterateSync();
         return this;
     }
+
+    GremlinJSPipeline.prototype.groupCount = function() {
+        var args = slice.call(arguments),
+                    argsLen = args.length,
+                    keyFunctionProxy,
+                    valueFunctionProxy;
+
+        if (argsLen == 0) {
+            this.gremlinPipeline.groupCountSync();
+        }
+        if (argsLen == 1) {
+            if (!_isFunction(args[0])) {
+                this.gremlinPipeline.groupCountSync(args[0]);
+            } else {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+                this.gremlinPipeline.groupCountSync(keyFunctionProxy);
+            }
+        }
+        if (argsLen == 2) {
+            if (!_isFunction(args[0])) {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                this.gremlinPipeline.groupCountSync(args[0], keyFunctionProxy); 
+            } else {
+                keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+                valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                this.gremlinPipeline.groupCountSync(keyFunctionProxy, valueFunctionProxy);            
+            }
+        } 
+        if (argsLen == 3) {
+            keyFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+            valueFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[2] });
+            this.gremlinPipeline.groupCountSync(args[0], keyFunctionProxy, valueFunctionProxy);
+        }
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.optional = function(step) {
+        this.gremlinPipeline.optionalSync(step);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.sideEffect = function(/*final PipeFunction<E, ?> sideEffectFunction*/) {
+        var sideEffectFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+
+        this.gremlinPipeline.sideEffectSync(sideEffectFunctionProxy);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.store = function(storage, storageFunction) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            storageFunctionProxy;
+
+        if (argsLen == 0){
+            this.gremlinPipeline.storeSync(); 
+        }
+        if (argsLen == 1) {
+            if ( _isFunction(args[0])) {
+                storageFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[0] });
+                this.gremlinPipeline.storeSync(storageFunctionProxy);
+            } else {
+                this.gremlinPipeline.storeSync(args[0]);
+            }
+        } 
+        if (argsLen == 2) {
+            if ( _isFunction(args[1])) {
+                storageFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+                this.gremlinPipeline.storeSync(args[0], storageFunctionProxy);
+            }
+        }
+        return this;
+    }
+
+/**
+     * Add a TablePipe to the end of the Pipeline.
+     * This step is used for grabbing previously seen objects the pipeline as identified by as-steps.
+     *
+     * @param table           the table to fill
+     * @param stepNames       the partition steps to include in the filling
+     * @param columnFunctions the post-processing function for each column
+     * @return the extended Pipeline
+     
+    public GremlinPipeline<S, E> table(final Table table, final Collection<String> stepNames, final PipeFunction... columnFunctions) {
+        return this.add(new TablePipe(table, stepNames, FluentUtility.getAsPipes(this), columnFunctions));
+    }
+
+    /**
+     * Add a TablePipe to the end of the Pipeline.
+     * This step is used for grabbing previously seen objects the pipeline as identified by as-steps.
+     *
+     * @param table           the table to fill
+     * @param columnFunctions the post-processing function for each column
+     * @return the extended Pipeline
+     
+    public GremlinPipeline<S, E> table(final Table table, final PipeFunction... columnFunctions) {
+        return this.add(new TablePipe(table, null, FluentUtility.getAsPipes(this), columnFunctions));
+    }
+
+    /**
+     * Add a TablePipe to the end of the Pipeline.
+     * This step is used for grabbing previously seen objects the pipeline as identified by as-steps.
+     *
+     * @param columnFunctions the post-processing function for each column
+     * @return the extended Pipeline
+     
+    public GremlinPipeline<S, E> table(final PipeFunction... columnFunctions) {
+        return this.add(new TablePipe(new Table(), null, FluentUtility.getAsPipes(this), columnFunctions));
+    }
+
+    /**
+     * Add a TablePipe to the end of the Pipeline.
+     * This step is used for grabbing previously seen objects the pipeline as identified by as-steps.
+     *
+     * @param table the table to fill
+     * @return the extended Pipeline
+     
+    public GremlinPipeline<S, E> table(final Table table) {
+        return this.add(new TablePipe(table, null, FluentUtility.getAsPipes(this)));
+    }
+
+    /**
+     * Add a TablePipe to the end of the Pipeline.
+     * This step is used for grabbing previously seen objects the pipeline as identified by as-steps.
+     *
+     * @return the extended Pipeline
+     */
+    GremlinJSPipeline.prototype.table = function() {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            table = argsLen > 0 ? !_isFunction(args[0]) : false,
+            colle = argsLen > 1 ? !_isFunction(args[1]) : false,
+            funcs = args,
+            pipeFunctions = [];
+
+
+        if (argsLen == 0){
+            this.gremlinPipeline.tableSync(); 
+            return this;
+        }
+        if (argsLen == 1 && table) {
+            this.gremlinPipeline.tableSync(args[0]);       
+            return this;
+        }
+
+        if(colle){
+            funcs = slice.call(args, 2);
+        } else if (table) {
+            funcs = slice.call(args, 1);
+        }
+        
+        for (var i = 0, l = funcs.length; i < l; i++) {
+            push.call(pipeFunctions, java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: funcs[i] }));
+        };
+
+        this.gremlinPipeline.tableSync(java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+
+        return this;
+    }
+
+    /**
+     * Add a TreePipe to the end of the Pipeline
+     * This step maintains an internal tree representation of the paths that have flowed through the step.
+     *
+     * @param tree            an embedded Map data structure to store the tree representation in
+     * @param branchFunctions functions to apply to each path object in a round robin fashion
+     * @return the extended Pipeline
+     
+    public GremlinPipeline<S, E> tree(final Tree tree, final PipeFunction... branchFunctions) {
+        return this.add(new TreePipe<E>(tree, branchFunctions));
+    }
+
+    /**
+     * Add a TreePipe to the end of the Pipeline
+     * This step maintains an internal tree representation of the paths that have flowed through the step.
+     *
+     * @param branchFunctions functions to apply to each path object in a round robin fashion
+     * @return the extended Pipeline
+     */
+    GremlinJSPipeline.prototype.tree = function(/*final PipeFunction... branchFunctions*/) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            tree = !_isFunction(args[0]),
+            funcs = tree ? slice.call(args, 1) : args,
+            pipeFunctions = [];
+
+        if(argsLen == 1 && tree) {
+            this.gremlinPipeline.treeSync(args[0]);
+        }
+
+        if(!!funcs.length) {
+            for (var i = 0, l = funcs.length; i < l; i++) {
+                push.call(pipeFunctions, java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: funcs[i] }));
+            };
+        
+            if (table){
+                this.gremlinPipeline.treeSync(args[0], java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+            } else {
+                this.gremlinPipeline.treeSync(java.newArray("com.tinkerpop.pipes.PipeFunction", pipeFunctions));
+            }
+
+        }        
+        return this;    
+    }
+
+
+
+
+    //////////////
+    /// BRANCH ///
+    //////////////
+
+    GremlinJSPipeline.prototype.copySplit = function(/*final Pipe<E, ?>... pipes*/) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            pipes = [];
+        for (var i = 0; i < argsLen; i++) {
+            push.call(pipes, args[i].pipe());
+        };
+        this.gremlinPipeline.copySplitSync(java.newArray("com.tinkerpop.pipes.Pipe", pipes));
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.exhaustMerge = function() {
+        thie.gremlinPipeline.exhaustMergeSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.fairMerge = function() {
+        thie.gremlinPipeline.fairMergeSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.ifThenElse = function(ifFunction, thenFunction, elseFunction) {
+        ifFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: ifFunction });
+        thenFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: thenFunction });
+        elseFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: elseFunction });
+        this.gremlinPipeline.groupBySync(ifFunctionProxy, thenFunctionProxy, elseFunctionProxy);        
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.loop = function(/*step, whileFunction, emitFunction*/) {
+        var args = slice.call(arguments),
+            argsLen = args.length,
+            whileFunctionProxy,
+            emitFunctionProxy;
+
+        if (argsLen == 2) {
+            whileFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+            this.gremlinPipeline.loopSync(args[0], whileFunctionProxy); 
+        } 
+        if (argsLen == 3) {
+            whileFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[1] });
+            emitFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[2] });
+            this.gremlinPipeline.loopSync(args[0], whileFunctionProxy, emitFunctionProxy); 
+        }
+        return this;        
+    }
+
+  
+
+
+
+
+
 
 
     /**
@@ -530,10 +845,6 @@
     } */
 
 
-    //////////////////////
-    /// UTILITY PIPES ///
-    //////////////////////
-
     GremlinJSPipeline.prototype.count = function() {
         return this.gremlinPipeline.countSync();
     }
@@ -542,11 +853,18 @@
         this.gremlinPipeline.iterateSync();
     }
 
-    GremlinJSPipeline.prototype.emit = function (){
+    GremlinJSPipeline.prototype.iterator = function() {
         return this.gremlinPipeline;
     }
 
-    GremlinJSPipeline.prototype.next = function(){
+    GremlinJSPipeline.prototype.pipe = function() {
+        return this.gremlinPipeline;
+    }
+
+    GremlinJSPipeline.prototype.next = function(number){
+        if(number){
+            return this.gremlinPipeline.nextSync(number);    
+        }
         return this.gremlinPipeline.nextSync();
     }
 
@@ -558,16 +876,10 @@
         return this.gremlinPipeline.toListSync().toArraySync();
     }
 
-       /**
-     * Fill the provided collection with the objects in the pipeline.
-     *
-     * @param collection the collection to fill
-     * @return the collection filled
-     
-    public Collection<E> fill(final Collection<E> collection) {
-        PipeHelper.fillCollection(this, collection);
+    GremlinJSPipeline.prototype.fill = function(collection) {
+        this.gremlinPipeline.fillSync(collection);
         return collection;
-    }*/
+    }
 
     GremlinJSPipeline.prototype.enablePath = function() {
         this.gremlinPipeline.enablePathSync();
@@ -578,5 +890,76 @@
         this.gremlinPipeline.optimizeSync(optimize);
         return this;
     }
+
+    GremlinJSPipeline.prototype.size = function() {
+        return this.gremlinPipeline.sizeSync();
+    }
+
+    GremlinJSPipeline.prototype.reset = function() {
+        this.gremlinPipeline.resetSync();
+    }
+
+
+    // protected void setPipes(final List<Pipe> pipes) {
+    //     final int pipelineLength = pipes.size();
+    //     this.startPipe = (Pipe<S, ?>) pipes.get(0);
+    //     this.endPipe = (Pipe<?, E>) pipes.get(pipelineLength - 1);
+    //     for (int i = 1; i < pipelineLength; i++) {
+    //         pipes.get(i).setStarts((Iterator) pipes.get(i - 1));
+    //     }
+    // }
+
+
+    // public void addPipe(final Pipe pipe) {
+    //     this.pipes.add(pipe);
+    //     this.setPipes(this.pipes);
+    // }
+
+    // public void addPipe(final int location, final Pipe pipe) {
+    //     this.pipes.add(location, pipe);
+    //     this.setPipes(this.pipes);
+    // }
+
+    // public void setStarts(final Iterator<S> starts) {
+    //     this.starts = starts;
+    //     this.startPipe.setStarts(starts);
+    // }
+
+    // public void setStarts(final Iterable<S> starts) {
+    //     this.setStarts(starts.iterator());
+    // }
+
+    GremlinJSPipeline.prototype.remove = function() {
+        this.gremlinPipeline.removeSync();
+    }
+    
+    GremlinJSPipeline.prototype.hasNext = function() {
+        return this.gremlinPipeline.hasNextSync();
+    }
+
+    GremlinJSPipeline.prototype.getCurrentPath = function() {
+        return this.gremlinPipeline.getCurrentPathSync();
+    }
+
+    GremlinJSPipeline.prototype.getPipes = function() {
+        return this.gremlinPipeline.getPipesSync();
+    }
+
+    GremlinJSPipeline.prototype.getStarts = function() {
+        return this.gremlinPipeline.getStartsSync();
+    }
+
+    GremlinJSPipeline.prototype.remove = function(index) {
+        return this.gremlinPipeline.removeSync(index);
+    }
+
+    GremlinJSPipeline.prototype.get = function(index) {
+        return this.gremlinPipeline.getSync(index);
+    }
+
+    GremlinJSPipeline.prototype.equals = function(object) {
+        return this.gremlinPipeline.equalsSync(object);
+    }
+
 
 });
