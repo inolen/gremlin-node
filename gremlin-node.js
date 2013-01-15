@@ -1,17 +1,6 @@
 (function (definition) {
 
-    // RequireJS
-    if (typeof define === "function") {
-        define([], function () {
-            var exports = {};
-            definition(exports);
-            return exports;
-        });
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        definition(exports);
-    }
+    definition(exports);
 
 })(function (exports) {
 
@@ -25,6 +14,10 @@
     var HashMap = java.import('java.util.HashMap');
     var Table = java.import("com.tinkerpop.pipes.util.structures.Table");
     var Tree = java.import("com.tinkerpop.pipes.util.structures.Tree");
+
+    //On init, iterate though pipe to determine Types
+    // var Vertex = java.import("com.tinkerpop.blueprints.impls.tg.TinkerVertex");
+    // exports.Vertex = Vertex;
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
