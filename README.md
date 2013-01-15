@@ -5,7 +5,7 @@ Node implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki).
 
 ## Dependancies
 
-[__java-node__](https://github.com/nearinfinity/node-java)
+[__node-java__](https://github.com/nearinfinity/node-java)
 
 Bridge API to connect with existing Java APIs.
 
