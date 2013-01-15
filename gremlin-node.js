@@ -5,7 +5,7 @@
 })(function (exports) {
 
     var java = require("java");
-    java.classpath.push("./src"); //make Configurable
+    java.classpath.push("lib"); //make Configurable
 
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
@@ -24,12 +24,12 @@
         slice = Array.prototype.slice;
 
     var Tokens = {
-        gt: 'gt',
-        lt: 'lt',
-        eq: 'eq',
-        gte: 'gte',
-        lte: 'lte',
-        neq: 'neq'
+        'T.gt': 'gt',
+        'T.lt': 'lt',
+        'T.eq': 'eq',
+        'T.gte': 'gte',
+        'T.lte': 'lte',
+        'T.neq': 'neq'
     }        
 
     exports.ArrayList = ArrayList;
@@ -360,7 +360,7 @@
     /// FILTER PIPES ///
     ////////////////////
 
-    GremlinJSPipeline.prototype.itemAt = function(idx) {
+    GremlinJSPipeline.prototype.index = function(idx) {
         this.gremlinPipeline.range(idx, idx);
         return this;
     }
@@ -513,17 +513,6 @@
         return this;
     }
 
-
-
-    /**
-     * Add a GroupByPipe to the end of the Pipeline.
-     * Group the objects inputted objects according to a key generated from the object and a value generated from the object.
-     * The grouping map has values that are Lists.
-     *
-     * @param keyFunction   the function that generates the key from the object
-     * @param valueFunction the function that generates the value from the function
-     * @return the extended Pipeline
-     */
     GremlinJSPipeline.prototype.groupBy = function (map, /*final PipeFunction*/ keyFunction, /*final PipeFunction*/ valueFunction) {
         var args = slice.call(arguments),
             argsLen = args.length,
@@ -554,7 +543,6 @@
                 reduceFunctionProxy = java.newProxy('com.tinkerpop.pipes.PipeFunction', { compute: args[3] });            
                 this.gremlinPipeline.groupBySync(args[0], keyFunctionProxy, valueFunctionProxy, reduceFunctionProxy);
         }
-        //this.gremlinPipeline.iterateSync();
         return this;
     }
 
