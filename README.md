@@ -11,15 +11,15 @@ Bridge API to connect with existing Java APIs.
 
 ## Installation
 
-    ```bash
-    $ npm install gremlin-node
-    ```
+```bash
+$ npm install gremlin-node
+```
 
-    then in node
+then in node
 
-    ```
-    var g = require(“gremlin-node”);
-    ```
+```
+var g = require(“gremlin-node”);
+```
 
 ##License
 ###The MIT License (MIT)
