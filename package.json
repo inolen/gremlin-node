@@ -1,5 +1,5 @@
 {
-  "name": "gremlin",
+  "name": "gremlin-node",
   "description": "A Graph Traversal Language",
   "version": "0.1.1a",
   "keywords": ["graph", "database", "tinkerpop", "gremlin", "blueprints"],
