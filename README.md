@@ -150,7 +150,7 @@ node>       g.V().out().groupBy(function(it) { return it.getPropertySync('name')
                                 }
                                 return list;
                             }
-                        ).cap()
+                        ).cap();
 ```
 
 __Example 7: retain__
@@ -158,7 +158,7 @@ __Example 7: retain__
 ```
 gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
 
-node>     g.V().retain([g.v(1), g.v(2), g.v(3)])
+node>     g.V().retain([g.v(1), g.v(2), g.v(3)]);
 ```
 
 __Example 8: groupBy with map__
@@ -172,10 +172,22 @@ node>       var map = new g.HashMap();
 node>       g.V().groupBy(map, function(it){return it;},
                         function(it){ 
                             return g.v(it.getIdSync()).out().pipe();
-                        }).iterate()
+                        }).iterate();
 ```
 
-__Example 9: accessing returned values___
+__Example 9: aggregate___
+```
+gremlin>    x = []
+
+gremlin>    g.v(1).out.aggregate(x).out.retain(x)
+
+node>       var x = new g.ArrayList();
+
+node>       g.v(1).out().aggregate(x).out().retain(x);
+
+```
+
+__Example 10: accessing returned values___
 ```
 node>       g.v(1).out().toList();
 
@@ -196,7 +208,9 @@ node>       g.v(1).out().iterator().toList(function(err, results) {
 ##TODO
 * Add other Blueprints Graphs
 * Create, Update, Delete
+* JSONify
 * Indexing
+* Error trapping
 * Testing
 * REPL
 
