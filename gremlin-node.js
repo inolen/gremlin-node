@@ -5,10 +5,37 @@
 })(function (exports) {
 
     var java = require("java");
-    java.classpath.push("lib");
+    java.classpath.push("./lib/gremlin-groovy-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib/gremlin-java-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib/blueprints-core-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib/pipes-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib");
+
+    /*
+        I think I will have a JSON config to set up what and where the database is.
+    */
+    /*OrientDB*/
+    if(true){
+        java.classpath.push("./lib/orientdb/orient-commons-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-client-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-core-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-distributed-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-enterprise-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-graphdb-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-nativeos-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-object-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-server-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/orientdb-tools-1.4.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/blueprints-orient-graph-2.3.0-SNAPSHOT.jar");
+        var OrientGraph = java.import("com.tinkerpop.blueprints.impls.orient.OrientGraph");
+
+    }
 
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+
+
+
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
     var ArrayList = java.import('java.util.ArrayList');
     var HashMap = java.import('java.util.HashMap');
@@ -35,13 +62,35 @@
 
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
-    function GremlinJSPipeline() {
-        this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
+    function GremlinJSPipeline(db) {
+        if(!db){
+            //console.log('No database set. Using mock TinkerGraph.');
+            this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");    
+        } else {
+            this.graph = db;
+        }
         this.gremlinPipeline = {};
     }
 
+    var _db;
+    exports.tg = function(location) {
+        if (!location) {
+            _db = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
+        } else {
+            _db = new TinkerGraph(location);
+        }
+    } 
+
+    exports.orientDB = function(location) {
+        if (!location) {
+            throw "No database specified"
+        } else {
+            _db = new OrientGraph(location);
+        }
+    }
+
     exports.v = function(){
-        var gremlin = new GremlinJSPipeline(),
+        var gremlin = new GremlinJSPipeline(_db),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             argsLen = args.length,
             list = new ArrayList();
@@ -53,7 +102,7 @@
     }
 
     exports.e = function(){
-        var gremlin = new GremlinJSPipeline(),
+        var gremlin = new GremlinJSPipeline(_db),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             argsLen = args.length,
             list = new ArrayList();
@@ -94,7 +143,7 @@
     ///////////////////////
 
     exports._ = function() {
-        var gremlin = new GremlinJSPipeline();
+        var gremlin = new GremlinJSPipeline(_db);
         gremlin.gremlinPipeline = new GremlinPipeline();
         gremlin.gremlinPipeline._Sync();
         return gremlin;
@@ -125,7 +174,7 @@
     }
 
     exports.E = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
+        var gremlin = new GremlinJSPipeline(_db),
             k,
             o = {};
         if (!key) {
@@ -285,7 +334,7 @@
 
     //can also pass in JSON
     exports.V = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
+        var gremlin = new GremlinJSPipeline(_db),
             k,
             o = {};
         if (!key) {
