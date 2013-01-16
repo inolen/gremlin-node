@@ -175,7 +175,7 @@ node>       g.V().groupBy(map, function(it){return it;},
                         }).iterate();
 ```
 
-__Example 9: aggregate___
+__Example 9: aggregate__
 ```
 gremlin>    x = []
 
@@ -187,7 +187,7 @@ node>       g.v(1).out().aggregate(x).out().retain(x);
 
 ```
 
-__Example 10: accessing returned values___
+__Example 10: accessing returned values__
 ```
 node>       g.v(1).out().toList();
 
