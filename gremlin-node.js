@@ -70,6 +70,7 @@
             this.graph = db;
         }
         this.gremlinPipeline = {};
+        this.Type = 'GremlinJSPipeline';
     }
 
     var _db;
