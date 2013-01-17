@@ -27,6 +27,12 @@
         java.classpath.push("./lib/orientdb/orientdb-server-1.4.0-SNAPSHOT.jar");
         java.classpath.push("./lib/orientdb/orientdb-tools-1.4.0-SNAPSHOT.jar");
         java.classpath.push("./lib/orientdb/blueprints-orient-graph-2.3.0-SNAPSHOT.jar");
+        java.classpath.push("./lib/orientdb/activation-1.1.jar");
+        java.classpath.push("./lib/orientdb/hibernate-jpa-2.0-api-1.0.0.Final.jar");
+        java.classpath.push("./lib/orientdb/javassist-3.16.1-GA.jar");
+        java.classpath.push("./lib/orientdb/jna-3.4.0.jar");
+        java.classpath.push("./lib/orientdb/mail-1.4.jar");
+        java.classpath.push("./lib/orientdb/platform-3.4.0.jar");
         var OrientGraph = java.import("com.tinkerpop.blueprints.impls.orient.OrientGraph");
 
     }
