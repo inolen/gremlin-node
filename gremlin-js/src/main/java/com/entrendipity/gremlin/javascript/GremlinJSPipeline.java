@@ -2,13 +2,13 @@ package com.entrendipity.gremlin.javascript;
 
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.gremlin.Tokens;
-import com.tinkerpop.gremlin.java.GremlinPipeline;
+import com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline;
 
 
 /**
  * @author Frank Panetta (frank.panetta@entrendipity.com.au)
  */
-public class GremlinJSPipeline<S, E> extends GremlinPipeline<S, E> {
+public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
 
     private static final String FLOAT_SUFFIX = "f";
 
@@ -16,43 +16,39 @@ public class GremlinJSPipeline<S, E> extends GremlinPipeline<S, E> {
         super();
     }
 
-    public GremlinJSPipeline(final Object starts, final boolean doQueryOptimization) {
-        super(starts, doQueryOptimization);
-    }
-
     public GremlinJSPipeline(final Object starts) {
-        this(starts, true);
+        super(starts);
     }
 
-    public GremlinPipeline<S, ? extends Element> has(final String key, final String value) {
+    public GremlinGroovyPipeline<S, ? extends Element> has(final String key, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return super.has(key, Float.parseFloat(value));
+            return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, Float.parseFloat(value));
         }
-        return super.has(key, value);
+        return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, value);
     }
 
-    public GremlinPipeline<S, ? extends Element> has(final String key, final Tokens.T comparison, final String value) {
+    public GremlinGroovyPipeline<S, ? extends Element> has(final String key, final Tokens.T comparison, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return super.has(key, comparison, Float.parseFloat(value));
+            return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, comparison, Float.parseFloat(value));
         }
-        return super.has(key, comparison, value);
+        return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, comparison, value);
     }
 
-    public GremlinPipeline<S, ? extends Element> hasNot(final String key, final String value) {
+    public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return super.hasNot(key, Float.parseFloat(value));
+            return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, Float.parseFloat(value));
         }
-        return super.hasNot(key, value);
+        return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, value);
     }
 
-    public GremlinPipeline<S, ? extends Element> hasNot(final String key, final Tokens.T comparison, final String value) {
+    public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final Tokens.T comparison, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return super.hasNot(key, comparison, Float.parseFloat(value));
+            return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, comparison, Float.parseFloat(value));
         }
-        return super.hasNot(key, comparison, value);
+        return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, comparison, value);
     }
 
-    public GremlinPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
+    public GremlinGroovyPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
         Object tmpStartValue = startValue;
         Object tmpEndValue = endValue;
         if (startValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(startValue))){
@@ -61,6 +57,6 @@ public class GremlinJSPipeline<S, E> extends GremlinPipeline<S, E> {
         if (endValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(endValue))){
             tmpEndValue = Float.parseFloat(endValue);
         }
-        return super.interval(key, tmpStartValue, tmpEndValue);
+        return (GremlinGroovyPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
 }
