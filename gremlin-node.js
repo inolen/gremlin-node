@@ -52,7 +52,7 @@
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
     var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
 
-    var GremlinGroovyScriptEngineFactory = java.import("com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngineFactory");
+    var GremlinGroovyScriptEngine = java.import("com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine");
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
     
     
@@ -82,10 +82,14 @@
     exports.Table = Table;
     exports.Tree = Tree;
 
+    //var ScriptEngineFactory = new GremlinGroovyScriptEngineFactory();
+    var ENGINE = new GremlinGroovyScriptEngine();// ScriptEngineFactory.getScriptEngineSync();
+    var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
+
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
     function GremlinJSPipeline(db) {
-        this.engFactory = new GremlinGroovyScriptEngineFactory();
+        
 
         if(!db){
             //console.log('No database set. Using mock TinkerGraph.');
@@ -94,8 +98,8 @@
             this.graph = db;
         }
 
-        this.engine = this.engFactory.getScriptEngineSync();
-        this.ctx = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
+        this.engine = ENGINE;
+        this.ctx = CONTEXT;
         this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
 
         this.gremlinPipeline = {};
