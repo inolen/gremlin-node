@@ -845,10 +845,6 @@
     // public void setStarts(final Iterable<S> starts) {
     //     this.setStarts(starts.iterator());
     // }
-
-    GremlinJSPipeline.prototype.remove = function() {
-        this.gremlinPipeline.removeSync();
-    }
     
     GremlinJSPipeline.prototype.hasNext = function() {
         return this.gremlinPipeline.hasNextSync();
@@ -867,7 +863,7 @@
     }
 
     GremlinJSPipeline.prototype.remove = function(index) {
-        return this.gremlinPipeline.removeSync(index);
+        return index ? this.gremlinPipeline.removeSync(index) : this.gremlinPipeline.removeSync();
     }
 
     GremlinJSPipeline.prototype.get = function(index) {
