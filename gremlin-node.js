@@ -17,10 +17,14 @@
     java.classpath.push("./lib/blueprints-core-2.3.0-SNAPSHOT.jar");
     java.classpath.push("./lib/pipes-2.3.0-SNAPSHOT.jar");
     java.classpath.push("./lib");
-
-
-
-
+    java.classpath.push("./lib/rexster-core-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib/rexster-protocol-2.3.0-SNAPSHOT.jar");
+    java.classpath.push("./lib/jettison-1.3.1.jar");
+ 
+java.classpath.push("./lib/jackson-core-asl-1.8.5.jar");
+java.classpath.push("./lib/jackson-jaxrs-1.9.2.jar");
+java.classpath.push("./lib/jackson-mapper-asl-1.8.5.jar");
+java.classpath.push("./lib/jackson-xc-1.9.2.jar");
 
 
     /*
@@ -45,6 +49,9 @@
         java.classpath.push("./lib/orientdb/jna-3.4.0.jar");
         java.classpath.push("./lib/orientdb/mail-1.4.jar");
         java.classpath.push("./lib/orientdb/platform-3.4.0.jar");
+
+
+
         var OrientGraph = java.import("com.tinkerpop.blueprints.impls.orient.OrientGraph");
 
     }
@@ -54,12 +61,16 @@
 
     var GremlinGroovyScriptEngine = java.import("com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine");
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
-    
-    
+
+    var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
+    //var JSONResultConverter = java.import("com.entrendipity.gremlin.javascript.converter");
+
     var ArrayList = java.import('java.util.ArrayList');
     var HashMap = java.import('java.util.HashMap');
     var Table = java.import("com.tinkerpop.pipes.util.structures.Table");
     var Tree = java.import("com.tinkerpop.pipes.util.structures.Tree");
+
+    var HashSet = java.import('java.util.HashSet');
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
@@ -86,6 +97,14 @@
     var ENGINE = new GremlinGroovyScriptEngine();// ScriptEngineFactory.getScriptEngineSync();
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
     var NULL = java.callStaticMethodSync("org.codehaus.groovy.runtime.NullObject","getNullObject");
+
+    var COMPACT = java.getStaticFieldValue("com.tinkerpop.blueprints.util.io.graphson.GraphSONMode","COMPACT");
+
+    var MAX_VALUE = 2147483647;//java.getStaticFieldValue("java.lang.Long","MAX_VALUE"); Does not work...
+    var MIN_VALUE = 0;
+
+    //JSONResultConverter(com.tinkerpop.blueprints.util.io.graphson.GraphSONMode,long,long,java.util.Set)
+    var _JSON = new JSONResultConverter(COMPACT,MIN_VALUE,MAX_VALUE, null);
 
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
@@ -202,7 +221,7 @@
             this.engine.getBindingsSync(this.ctx).putSync("V", this.gremlinPipeline);
             this.gremlinPipeline = this.engine.evalSync("V.step" + closure);
         } else {
-            this.gremlinPipeline.stepSync(java.newInstanceSyncs("com.tinkerpop.pipes.Pipe", closure.pipe()));
+            this.gremlinPipeline.stepSync(java.newInstanceSync("com.tinkerpop.pipes.Pipe", closure.pipe()));
         }
         return this;
     }
@@ -765,6 +784,11 @@
     //     return this.gremlinPipeline.countSync();
     // }
 
+    GremlinJSPipeline.prototype.toJSON = function() {
+        return JSON.parse(_JSON.convertSync(this.gremlinPipeline).toString());
+    }
+    
+
     GremlinJSPipeline.prototype.iterate = function() {
         this.gremlinPipeline.iterateSync();
     }
@@ -784,9 +808,9 @@
     //     return this.gremlinPipeline.nextSync();
     // }
 
-    // GremlinJSPipeline.prototype.toList = function(){
-    //     return this.gremlinPipeline.toListSync();
-    // }
+    GremlinJSPipeline.prototype.toList = function(){
+        return this.gremlinPipeline.toList;
+    }
 
     // GremlinJSPipeline.prototype.toArray = function(){
     //     return this.gremlinPipeline.toListSync().toArraySync();
