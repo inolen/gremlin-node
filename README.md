@@ -53,7 +53,7 @@ All gremlin-node calls are synchronous, but there is no need to add 'Sync' to me
 * __Closures__ passed in as string.
 
     ```e.g.
-    g.v(1).out().gather('{return it.size()}')
+    g.v(1).out().gather('{it.size()}')
     ```
 * __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
 
