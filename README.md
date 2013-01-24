@@ -50,10 +50,10 @@ list.addSync('item1');
 All gremlin-node calls are synchronous, but there is no need to add 'Sync' to method calls as that is done for you. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* Anonymous functions replace __Closures__.
+* __Closures__ passed in as string.
 
     ```e.g.
-    g.v(1).out().gather(function(it){return it.size();})
+    g.v(1).out().gather('{return it.size()'})
     ```
 * __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
 
