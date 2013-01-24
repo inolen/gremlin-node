@@ -177,6 +177,11 @@ node>       g.v(1).out().toList(function(err, results) {
 
                             });                            
                         });
+
+node>       g.v(1).out().toJSON(function(err, result){
+                                    if(err) {return;}
+                                    console.log(result.toString());
+                                });
 ```
 
 ##TODO
