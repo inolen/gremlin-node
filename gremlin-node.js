@@ -4,56 +4,57 @@
 
 })(function (exports) {
 
-    var java = require("java");
-    java.classpath.push("./lib/antlr-2.7.7.jar");
-    java.classpath.push("./lib/asm-3.2.jar");
-    java.classpath.push("./lib/asm-analysis-3.2.jar");
-    java.classpath.push("./lib/asm-commons-3.2.jar");
-    java.classpath.push("./lib/asm-tree-3.2.jar");
-    java.classpath.push("./lib/asm-util-3.2.jar");
-    java.classpath.push("./lib/gremlin-groovy-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib/groovy-1.8.8.jar");
-    java.classpath.push("./lib/gremlin-java-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib/blueprints-core-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib/pipes-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib");
-    java.classpath.push("./lib/rexster-core-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib/rexster-protocol-2.3.0-SNAPSHOT.jar");
-    java.classpath.push("./lib/jettison-1.3.1.jar");
- 
-java.classpath.push("./lib/jackson-core-asl-1.8.5.jar");
-java.classpath.push("./lib/jackson-jaxrs-1.9.2.jar");
-java.classpath.push("./lib/jackson-mapper-asl-1.8.5.jar");
-java.classpath.push("./lib/jackson-xc-1.9.2.jar");
+    var java = require("java"),
+        fs = require('fs'),
+        path = require('path');
 
 
-    /*
-        I think I will have a JSON config to set up what and where the database is.
-    */
-    /*OrientDB*/
-    if(true){
-        java.classpath.push("./lib/orientdb/orient-commons-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-client-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-core-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-distributed-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-enterprise-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-graphdb-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-nativeos-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-object-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-server-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/orientdb-tools-1.4.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/blueprints-orient-graph-2.3.0-SNAPSHOT.jar");
-        java.classpath.push("./lib/orientdb/activation-1.1.jar");
-        java.classpath.push("./lib/orientdb/hibernate-jpa-2.0-api-1.0.0.Final.jar");
-        java.classpath.push("./lib/orientdb/javassist-3.16.1-GA.jar");
-        java.classpath.push("./lib/orientdb/jna-3.4.0.jar");
-        java.classpath.push("./lib/orientdb/mail-1.4.jar");
-        java.classpath.push("./lib/orientdb/platform-3.4.0.jar");
+    function isJarFile(element, index, array){
+        return element.split('.').slice(-1) == 'jar';
+    }
 
+    function readdirSyncRecursive (baseDir) {
+        baseDir = baseDir.replace(/\/$/, '');
+     
+        var readdirSyncRecursive = function(baseDir) {
+            var files = [],
+                curFiles,
+                nextDirs,
+                isDir = function(fname){
+                    return fs.lstatSync(path.join(baseDir, fname) ).isDirectory();
+                },
+                prependBaseDir = function(fname){
+                    return path.join(baseDir, fname);
+                };
+     
+            curFiles = fs.readdirSync(baseDir);
+            nextDirs = curFiles.filter(isDir);
+            curFiles = curFiles.map(prependBaseDir);
+     
+            files = files.concat( curFiles );
+     
+            while (nextDirs.length) {
+                files = files.concat( readdirSyncRecursive(path.join(baseDir, nextDirs.shift()) ) );
+            }
+     
+            return files;
+        };
+     
+        // convert absolute paths to relative
+        var fileList = readdirSyncRecursive(baseDir).map(function(val){
+            return path.relative(baseDir, val);
+        });
+     
+        return fileList.filter(isJarFile);
+    };
 
+    java.classpath.push(path.join(__dirname , "lib"));
+    
+    //add jar files
+    var jar = readdirSyncRecursive(__dirname);
 
-        var OrientGraph = java.import("com.tinkerpop.blueprints.impls.orient.OrientGraph");
-
+    for(var i=0,l=jar.length; i<l; i++){
+        java.classpath.push(path.join(__dirname, jar[i]));
     }
 
     var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
@@ -63,48 +64,40 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
 
     var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
-    //var JSONResultConverter = java.import("com.entrendipity.gremlin.javascript.converter");
 
     var ArrayList = java.import('java.util.ArrayList');
     var HashMap = java.import('java.util.HashMap');
     var Table = java.import("com.tinkerpop.pipes.util.structures.Table");
     var Tree = java.import("com.tinkerpop.pipes.util.structures.Tree");
 
-    var HashSet = java.import('java.util.HashSet');
-
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
         slice = Array.prototype.slice;
 
-
-    var closureRegex = /^\{\[?\s*\bit(\w|\W)*\s*\]?\}$/;
+    var closureRegex = /^\{.*\}$/;
 
     var Tokens = {
-        'T.gt': 'gt',
-        'T.lt': 'lt',
-        'T.eq': 'eq',
-        'T.gte': 'gte',
-        'T.lte': 'lte',
-        'T.neq': 'neq'
+        'gt': 'gt',
+        'lt': 'lt',
+        'eq': 'eq',
+        'gte': 'gte',
+        'lte': 'lte',
+        'neq': 'neq'
     }        
-
+    exports.Tokens = Tokens;
     exports.ArrayList = ArrayList;
     exports.HashMap = HashMap;
     exports.Table = Table;
     exports.Tree = Tree;
 
-    //var ScriptEngineFactory = new GremlinGroovyScriptEngineFactory();
     var ENGINE = new GremlinGroovyScriptEngine();// ScriptEngineFactory.getScriptEngineSync();
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
     var NULL = java.callStaticMethodSync("org.codehaus.groovy.runtime.NullObject","getNullObject");
 
-    var COMPACT = java.getStaticFieldValue("com.tinkerpop.blueprints.util.io.graphson.GraphSONMode","COMPACT");
-
-    var MAX_VALUE = 2147483647;//java.getStaticFieldValue("java.lang.Long","MAX_VALUE"); Does not work...
+    var MAX_VALUE = 2147483647;
     var MIN_VALUE = 0;
 
-    //JSONResultConverter(com.tinkerpop.blueprints.util.io.graphson.GraphSONMode,long,long,java.util.Set)
-    var _JSON = new JSONResultConverter(COMPACT,MIN_VALUE,MAX_VALUE, null);
+    var _JSON = new JSONResultConverter(null,MIN_VALUE,MAX_VALUE, null);
 
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
@@ -112,7 +105,7 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
         
 
         if(!db){
-            //console.log('No database set. Using mock TinkerGraph.');
+            console.log('No database set. Using mock TinkerGraph.');
             this.graph = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");  
         } else {
             this.graph = db;
@@ -126,23 +119,27 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
         this.Type = 'GremlinJSPipeline';
     }
 
+    /********************** BLUEPRINT GRAPHS ******************************************/
+
     var _db;
-    exports.tg = function(location) {
-        if (!location) {
+    exports.tg = function(connectionString) {
+        if (!connectionString) {
             _db = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
         } else {
-            _db = new TinkerGraph(location);
+            _db = new TinkerGraph(connectionString);
         }
-    } 
-
-    exports.orientDB = function(location) {
-        if (!location) {
+    }
+     
+    //only works with remote:
+    exports.orientDB = function(connectionString) {
+        if (!connectionString) {
             throw "No database specified"
         } else {
-            _db = new OrientGraph(location);
+            _db = java.newInstanceSync("com.tinkerpop.blueprints.impls.orient.OrientGraph", connectionString);
         }
     }
 
+    /***********************************************************************************/
 
     exports.v = function(){
         var gremlin = new GremlinJSPipeline(_db),
@@ -171,6 +168,10 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
     function _isClosure(val) {
         return _isString(val) && val.search(closureRegex) > -1;   
     }
+
+    function _isFunction(o) {
+        return toString.call(o) === '[object Function]';
+    };
 
     function _isString(o) {
         return toString.call(o) === '[object String]';
@@ -201,13 +202,14 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
             return type === typeName;
     }
 
+    //use for to add functions to gremlin console
     exports.addFunction = function(name, func){
         GremlinJSPipeline.prototype[name] = func;
     }
+
     ///////////////////////
     /// TRANSFORM PIPES ///
     ///////////////////////
-
     exports._ = function() {
         var gremlin = new GremlinJSPipeline(_db);
         gremlin.gremlinPipeline = new GremlinPipeline();
@@ -764,31 +766,14 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
         return this;
     }
 
-    /**
-     * Add a StartPipe to the end of the pipeline.
-     * Though, in practice, a StartPipe is usually the beginning.
-     * Moreover, the constructor of the Pipeline will internally use StartPipe.
-     *
-     * @param object the object that serves as the start of the pipeline (iterator/iterable are unfolded)
-     * @return the extended Pipeline
-    
-    public GremlinPipeline<S, S> start(final S object) {
-        this.add(new StartPipe<S>(object));
-        FluentUtility.setStarts(this, object);
-        return (GremlinPipeline<S, S>) this;
+    GremlinJSPipeline.prototype.count = function(callback) {
+        return this.gremlinPipeline.count(callback);
     }
-    */
 
-
-    // GremlinJSPipeline.prototype.count = function() {
-    //     return this.gremlinPipeline.countSync();
-    // }
-
-    GremlinJSPipeline.prototype.toJSON = function() {
-        return JSON.parse(_JSON.convertSync(this.gremlinPipeline).toString());
+    GremlinJSPipeline.prototype.toJSON = function(callback) {
+        return _JSON.convert(this.gremlinPipeline, callback);
     }
     
-
     GremlinJSPipeline.prototype.iterate = function() {
         this.gremlinPipeline.iterateSync();
     }
@@ -801,25 +786,24 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
         return this.gremlinPipeline;
     }
 
-    // GremlinJSPipeline.prototype.next = function(number){
-    //     if(number){
-    //         return this.gremlinPipeline.nextSync(number);    
-    //     }
-    //     return this.gremlinPipeline.nextSync();
-    // }
-
-    GremlinJSPipeline.prototype.toList = function(){
-        return this.gremlinPipeline.toList;
+    GremlinJSPipeline.prototype.next = function(number, callback){
+        if(_isFunction(number)){
+            callback = number;
+            return this.gremlinPipeline.next(callback);    
+        }
+        return this.gremlinPipeline.next(number, callback);
+        
     }
 
-    // GremlinJSPipeline.prototype.toArray = function(){
-    //     return this.gremlinPipeline.toListSync().toArraySync();
-    // }
+    GremlinJSPipeline.prototype.toList = function(callback){
+        return this.gremlinPipeline.toList(callback);
+    }
 
-    // GremlinJSPipeline.prototype.fill = function(collection) {
-    //     this.gremlinPipeline.fillSync(collection);
-    //     return collection;
-    // }
+    //Need to look at fill and make Async ???
+    GremlinJSPipeline.prototype.fill = function(collection) {
+        this.gremlinPipeline.fillSync(collection);
+        return collection;
+    }
 
     GremlinJSPipeline.prototype.enablePath = function() {
         this.gremlinPipeline.enablePathSync();
@@ -831,39 +815,43 @@ java.classpath.push("./lib/jackson-xc-1.9.2.jar");
         return this;
     }
 
-    // GremlinJSPipeline.prototype.size = function() {
-    //     return this.gremlinPipeline.sizeSync();
-    // }
+    GremlinJSPipeline.prototype.size = function(callback) {
+        return this.gremlinPipeline.size(callback);
+    }
 
     GremlinJSPipeline.prototype.reset = function() {
         this.gremlinPipeline.resetSync();
     }
     
-    // GremlinJSPipeline.prototype.hasNext = function() {
-    //     return this.gremlinPipeline.hasNextSync();
-    // }
+    GremlinJSPipeline.prototype.hasNext = function(callback) {
+        return this.gremlinPipeline.hasNext(callback);
+    }
 
-    // GremlinJSPipeline.prototype.getCurrentPath = function() {
-    //     return this.gremlinPipeline.getCurrentPathSync();
-    // }
+    GremlinJSPipeline.prototype.getCurrentPath = function(callback) {
+        return this.gremlinPipeline.getCurrentPath(callback);
+    }
 
-    // GremlinJSPipeline.prototype.getPipes = function() {
-    //     return this.gremlinPipeline.getPipesSync();
-    // }
+    GremlinJSPipeline.prototype.getPipes = function(callback) {
+        return this.gremlinPipeline.getPipes(callback);
+    }
 
-    // GremlinJSPipeline.prototype.getStarts = function() {
-    //     return this.gremlinPipeline.getStartsSync();
-    // }
+    GremlinJSPipeline.prototype.getStarts = function(callback) {
+        return this.gremlinPipeline.getStarts(callback);
+    }
 
-    // GremlinJSPipeline.prototype.remove = function(index) {
-    //     return index ? this.gremlinPipeline.removeSync(index) : this.gremlinPipeline.removeSync();
-    // }
+    GremlinJSPipeline.prototype.remove = function(index, callback) {
+        if(_isFunction(index)){
+            callback = index;
+            return this.gremlinPipeline.remove(callback);
+        }
+        return this.gremlinPipeline.remove(index, callback);
+    }
 
-    // GremlinJSPipeline.prototype.get = function(index) {
-    //     return this.gremlinPipeline.getSync(index);
-    // }
+    GremlinJSPipeline.prototype.get = function(index, callback) {
+        return this.gremlinPipeline.get(index, callback);
+    }
 
-    // GremlinJSPipeline.prototype.equals = function(object) {
-    //     return this.gremlinPipeline.equalsSync(object);
-    // }
+    GremlinJSPipeline.prototype.equals = function(object, callback) {
+        return this.gremlinPipeline.equals(object, callback);
+    }
 });
