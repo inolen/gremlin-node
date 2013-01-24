@@ -15,15 +15,17 @@ Bridge API to connect with existing Java APIs. Please read the [__node-java__](h
 $ npm install gremlin-node
 ```
 
-Move the ``lib`` folder from gremlin-node's root directory to the directory where you will run the node command. (i.e. This is usually where the server.js is.)
+Place the .jar files for the desired Blueprints database into a directory within the module. You can place them in lib or create a new folder and place them there. You can organise them how you please. Gremlin-node will find them. Class files will however, need to be placed in the ``lib`` directory.
 
-Then in node
+Then in node:
 
 ```
-var g = require(“gremlin-node”);
+var g = require(“gremlin-node”),
+
+    T = g.Tokens;
 ```
 
-N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database for proof of concept. We will add the other Blueprints databasees soon.
+N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database and OrientDB (remote: connection only) for proof of concept. We will add the other Blueprints databasees soon.
 
 ## Introduction
 
@@ -54,17 +56,16 @@ All gremlin-node calls are synchronous, but there is no need to add 'Sync' to me
     ```e.g.
     g.v(1).out().gather(function(it){return it.size();})
     ```
-* __Comparators__ and __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
+* __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
 
     ```e.g.
-    g.v(1).outE().has("weight", "T.gte", "0.5f").property("weight")
+    g.v(1).outE().has("weight", T.gte, "0.5f").property("weight")
     ```
 
-As mentioned above, gremlin-node is a javascript wrapper. We are, however, able to get access to the actual gremlin pipeline by calling the ``pipe`` or ``iterator`` methods. These methods return the Java version of the Gremlin pipeline, which you can then make calls against. But remember, now that we are calling Java methods, we need to provide a callback or append 'Sync' to our method names. This will become clearer as we go along. 
+As mentioned above, gremlin-node is a javascript wrapper. We are, however, able to get access to the actual gremlin pipeline by calling the ``pipe`` or ``iterator`` methods. These methods return the Java version of the Gremlin pipeline, which you can make calls against. But remember, now that we are calling Java methods, we need to provide a callback or append 'Sync' to the method names. This will become clearer as we go along. 
 
 ## API
  Still to come...meanwhile the examples below should get you started.
-
 
 ## Examples
 
@@ -108,12 +109,7 @@ __Example 4: has__
 ```
 gremlin>    g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
 
-node>       g.E().has('weight', 'T.gt', '0.5f').outV().transform(function(it){
-                var list = new g.ArrayList();
-                list.addSync(it.getIdSync());    
-                list.addSync(it.getPropertySync('age'));
-                return list;
-            });
+node>       g.E().has('weight', T.gt, '0.5f').outV().transform('{[it.id,it.age]}');
 ```
 
 __Example 5: and & or__
@@ -126,7 +122,7 @@ node>     g.V().and(g._().both("knows"), g._().both("created"));
 
 gremlin>  g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
-node>     g.v(1).outE().or(g._().has('id', 'T.eq', 9), g._().has('weight', 'T.lt', '0.6f')); 
+node>     g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f')); 
 
 ```
 
@@ -135,22 +131,7 @@ __Example 6: groupBy__
 ```
 gremlin>    g.V.out.groupBy{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}.cap
 
-node>       g.V().out().groupBy(function(it) { return it.getPropertySync('name'); },
-                            function(it) { return g.v(it.getIdSync()).in().pipe(); },
-                            function(it){
-                                var v, 
-                                    list = new g.ArrayList();
-                                while(it.hasNextSync()){
-                                    v = it.nextSync();
-                                    if(v.getPropertySync('age') > 30){
-                                        if(!list.containsSync(v.getPropertySync('name'))){
-                                            list.addSync(v.getPropertySync('name'));    
-                                        }
-                                    }
-                                }
-                                return list;
-                            }
-                        ).cap();
+node>       g.V().out().groupBy('{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}').cap();
 ```
 
 __Example 7: retain__
@@ -169,10 +150,7 @@ gremlin>    g.V.groupBy(m){it}{it.out}.iterate();null;
 
 node>       var map = new g.HashMap();
 
-node>       g.V().groupBy(map, function(it){return it;},
-                        function(it){ 
-                            return g.v(it.getIdSync()).out().pipe();
-                        }).iterate();
+node>       g.V().groupBy(map, '{it}{it.out}').iterate();
 ```
 
 __Example 9: aggregate__
@@ -189,13 +167,9 @@ node>       g.v(1).out().aggregate(x).out().retain(x);
 
 __Example 10: accessing returned values__
 ```
-node>       g.v(1).out().toList();
-
-node>       g.v(1).out().toArray();
-
 node>       g.v(1).out().iterator().toListSync();
 
-node>       g.v(1).out().iterator().toList(function(err, results) {
+node>       g.v(1).out().toList(function(err, results) {
                             if(err) { console.error(err); return; }
                             
                             // results from doSomething
@@ -208,11 +182,9 @@ node>       g.v(1).out().iterator().toList(function(err, results) {
 ##TODO
 * Add other Blueprints Graphs
 * Create, Update, Delete
-* JSONify
 * Indexing
 * Error trapping
 * Testing
-* REPL
 
 ##License
 ###The MIT License (MIT)
