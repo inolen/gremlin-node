@@ -191,6 +191,10 @@ node>       g.v(1).out().toJSON(function(err, result){
 * Error trapping
 * Testing
 
+## Author
+
+Frank Panetta [@entrendipity](https://twitter.com/entrendipity))
+
 ##License
 ###The MIT License (MIT)
 
