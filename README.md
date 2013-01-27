@@ -29,7 +29,7 @@ N.B. Gremlin-node is still in development and only implements the TinkerGraph mo
 
 ## Introduction
 
-Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods. Node.JS adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java methods are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
+Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods. Node.JS adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
 
 ```javascript
 var list = new ArrayList();
@@ -40,7 +40,7 @@ list.add("itemA", function(err, result) {
 
 ```
 
-However, node-java does allow for synchronous calls of all methods, but require that method name be suffixed with the word 'Sync'. It can then be treated like a regular Java call. The example below shows the synchronous version of the add method being called. It is called using ``addSync``.
+However, node-java does allow for synchronous calls, but requires that the method name be suffixed with the word 'Sync'. It can then be treated like a regular Java call. The example below shows the synchronous version of the ``add`` method being called synchronously.
 
 ```javascript
 var list = new ArrayList();
@@ -48,13 +48,13 @@ var list = new ArrayList();
 list.addSync('item1');
 ```
 
-All gremlin-node calls are synchronous, but there is no need to add 'Sync' to method calls as that is done for you. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
+All gremlin-node calls are synchronous by default, so there is no need to add 'Sync' to method calls. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
-* Anonymous functions replace __Closures__.
+* __Closures__ passed in as string.
 
     ```e.g.
-    g.v(1).out().gather(function(it){return it.size();})
+    g.v(1).out().gather('{it.size()}')
     ```
 * __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
 
@@ -169,19 +169,9 @@ __Example 10: accessing returned values__
 ```
 node>       g.v(1).out().iterator().toListSync();
 
-node>       g.v(1).out().toList(function(err, results) {
-                            if(err) { console.error(err); return; }
-                            
-                            // results from doSomething
-                            console.log('results -> ' + results.toString());
+node>       g.v(1).out().toList();
 
-                            });                            
-                        });
-
-node>       g.v(1).out().toJSON(function(err, result){
-                                    if(err) {return;}
-                                    console.log(result.toString());
-                                });
+node>       g.v(1).out().toJSON();
 ```
 
 ##TODO

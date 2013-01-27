@@ -131,12 +131,13 @@
     }
      
     //only works with remote:
-    exports.orientDB = function(connectionString) {
+    exports.OrientGraph = function(connectionString) {
         if (!connectionString) {
             throw "No database specified"
         } else {
             _db = java.newInstanceSync("com.tinkerpop.blueprints.impls.orient.OrientGraph", connectionString);
         }
+        return _db;
     }
 
     /***********************************************************************************/
@@ -766,12 +767,12 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.count = function(callback) {
-        return this.gremlinPipeline.count(callback);
+    GremlinJSPipeline.prototype.count = function() {
+        return this.gremlinPipeline.countSync();
     }
 
-    GremlinJSPipeline.prototype.toJSON = function(callback) {
-        return _JSON.convert(this.gremlinPipeline, callback);
+    GremlinJSPipeline.prototype.toJSON = function() {
+        return _JSON.convertSync(this.gremlinPipeline);
     }
     
     GremlinJSPipeline.prototype.iterate = function() {
@@ -786,20 +787,22 @@
         return this.gremlinPipeline;
     }
 
-    GremlinJSPipeline.prototype.next = function(number, callback){
-        if(_isFunction(number)){
-            callback = number;
-            return this.gremlinPipeline.next(callback);    
+    GremlinJSPipeline.prototype.next = function(number){
+        if(number){
+            return this.gremlinPipeline.nextSync(number);    
         }
-        return this.gremlinPipeline.next(number, callback);
+        return this.gremlinPipeline.nextSync();
         
     }
 
-    GremlinJSPipeline.prototype.toList = function(callback){
-        return this.gremlinPipeline.toList(callback);
+    GremlinJSPipeline.prototype.toList = function(){
+        return this.gremlinPipeline.toListSync();
     }
 
-    //Need to look at fill and make Async ???
+    GremlinJSPipeline.prototype.toArray = function(){
+        return this.gremlinPipeline.toListSync().toArraySync();
+    }
+        //Need to look at fill and make Async ???
     GremlinJSPipeline.prototype.fill = function(collection) {
         this.gremlinPipeline.fillSync(collection);
         return collection;
@@ -815,43 +818,42 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.size = function(callback) {
-        return this.gremlinPipeline.size(callback);
+    GremlinJSPipeline.prototype.size = function() {
+        return this.gremlinPipeline.sizeSync();
     }
 
     GremlinJSPipeline.prototype.reset = function() {
         this.gremlinPipeline.resetSync();
     }
     
-    GremlinJSPipeline.prototype.hasNext = function(callback) {
-        return this.gremlinPipeline.hasNext(callback);
+    GremlinJSPipeline.prototype.hasNext = function() {
+        return this.gremlinPipeline.hasNextSync();
     }
 
-    GremlinJSPipeline.prototype.getCurrentPath = function(callback) {
-        return this.gremlinPipeline.getCurrentPath(callback);
+    GremlinJSPipeline.prototype.getCurrentPath = function() {
+        return this.gremlinPipeline.getCurrentPathSync();
     }
 
-    GremlinJSPipeline.prototype.getPipes = function(callback) {
-        return this.gremlinPipeline.getPipes(callback);
+    GremlinJSPipeline.prototype.getPipes = function() {
+        return this.gremlinPipeline.getPipesSync();
     }
 
-    GremlinJSPipeline.prototype.getStarts = function(callback) {
-        return this.gremlinPipeline.getStarts(callback);
+    GremlinJSPipeline.prototype.getStarts = function() {
+        return this.gremlinPipeline.getStartsSync();
     }
 
-    GremlinJSPipeline.prototype.remove = function(index, callback) {
-        if(_isFunction(index)){
-            callback = index;
-            return this.gremlinPipeline.remove(callback);
+    GremlinJSPipeline.prototype.remove = function(index) {
+        if(index){
+            return this.gremlinPipeline.removeSync(index);
         }
-        return this.gremlinPipeline.remove(index, callback);
+        return this.gremlinPipeline.removeSync();
     }
 
-    GremlinJSPipeline.prototype.get = function(index, callback) {
-        return this.gremlinPipeline.get(index, callback);
+    GremlinJSPipeline.prototype.get = function(index) {
+        return this.gremlinPipeline.getSync(index);
     }
 
-    GremlinJSPipeline.prototype.equals = function(object, callback) {
-        return this.gremlinPipeline.equals(object, callback);
+    GremlinJSPipeline.prototype.equals = function(object) {
+        return this.gremlinPipeline.equalsSync(object);
     }
 });
