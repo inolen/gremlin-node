@@ -193,7 +193,7 @@ node>       g.v(1).out().toJSON(function(err, result){
 
 ## Author
 
-Frank Panetta [Follow on Twitter](https://twitter.com/intent/user?screen_name=entrendipity)
+Frank Panetta [Follow on Twitter](https://twitter.com/intent/follow?screen_name=entrendipity)
 
 ##License
 ###The MIT License (MIT)
