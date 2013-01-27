@@ -48,11 +48,11 @@
         return fileList.filter(isJarFile);
     };
 
+    //default dir
     java.classpath.push(path.join(__dirname , "lib"));
     
     //add jar files
     var jar = readdirSyncRecursive(__dirname);
-
     for(var i=0,l=jar.length; i<l; i++){
         java.classpath.push(path.join(__dirname, jar[i]));
     }
