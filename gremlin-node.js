@@ -50,10 +50,20 @@
 
     //default dir
     java.classpath.push(path.join(__dirname , "lib"));
+    java.classpath.push(path.join(__dirname , "lib", "rexster-core-2.3.0-SNAPSHOT.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "rexster-protocol-2.3.0-SNAPSHOT.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "gremlin-groovy-2.3.0-SNAPSHOT.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "antlr-2.7.7.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "asm-3.2.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "asm-analysis-3.2.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "asm-commons-3.2.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "asm-tree-3.2.jar"));
+    java.classpath.push(path.join(__dirname , "lib", "asm-util-3.2.jar"));
     
     //add jar files
     var jar = readdirSyncRecursive(__dirname);
     for(var i=0,l=jar.length; i<l; i++){
+        console.log(path.join(__dirname, jar[i]));
         java.classpath.push(path.join(__dirname, jar[i]));
     }
 
