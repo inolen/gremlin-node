@@ -3,6 +3,8 @@ package com.entrendipity.gremlin.javascript;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.gremlin.Tokens;
 import com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline;
+import com.tinkerpop.gremlin.groovy.GroovyPipeFunction;
+import groovy.lang.Closure;
 
 
 /**
@@ -59,4 +61,8 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         }
         return (GremlinGroovyPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
+
+//    public GremlinGroovyPipeline<S, ?> gather(final Closure closure) {
+//        return (GremlinGroovyPipeline<S, ?>) super.gather(new GroovyPipeFunction(closure));
+//    }
 }
