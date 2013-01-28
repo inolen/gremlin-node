@@ -1,7 +1,9 @@
 gremlin-node
 ============
 
-Node.JS implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki).
+NodeJS implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki). Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods.
+
+N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database and OrientDB (remote: connection only) for proof of concept. We will add the other Blueprints databases soon.
 
 ## Dependancies
 
@@ -15,7 +17,7 @@ Bridge API to connect with existing Java APIs. Please read the [__node-java__](h
 $ npm install gremlin-node
 ```
 
-Place the .jar files for the desired Blueprints database into a directory within the module. You can place them in lib or create a new folder and place them there. You can organise them how you please. Gremlin-node will find them. Class files will however, need to be placed in the ``lib`` directory.
+Within the module directory, place the relevant .jar files for the desired Blueprints. You can put them into the lib directory or create a new folder. You can organise them how you please. Gremlin-node will find them. Class files will however, need to be placed in the ``lib`` directory.
 
 Then in node:
 
@@ -24,11 +26,9 @@ var g = require(“gremlin-node”),
     T = g.Tokens;
 ```
 
-N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database and OrientDB (remote: connection only) for proof of concept. We will add the other Blueprints databasees soon.
-
 ## Introduction
 
-Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods. Node.JS adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
+NodeJS adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
 
 ```javascript
 var list = new ArrayList();
@@ -39,7 +39,7 @@ list.add("itemA", function(err, result) {
 
 ```
 
-However, node-java does allow for synchronous calls, but requires that the method name be suffixed with the word 'Sync'. It can then be treated like a regular Java call. The example below shows the synchronous version of the ``add`` method being called synchronously.
+However, node-java does allow for synchronous calls, but requires that the method name be suffixed with the word 'Sync'. The example below shows the ``add`` method being called synchronously.
 
 ```javascript
 var list = new ArrayList();
@@ -47,7 +47,7 @@ var list = new ArrayList();
 list.addSync('item1');
 ```
 
-All gremlin-node calls are synchronous by default, so there is no need to add 'Sync' to method calls. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
+There is no need to add 'Sync' to gremlin-node functions, as they are synchronous by default. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
 
 * All method calls require brackets __()__, even if there are no arguments.
 * __Closures__ passed in as string.
@@ -61,7 +61,17 @@ All gremlin-node calls are synchronous by default, so there is no need to add 'S
     g.v(1).outE().has("weight", T.gte, "0.5f").property("weight")
     ```
 
-As mentioned above, gremlin-node is a javascript wrapper. We are, however, able to get access to the actual gremlin pipeline by calling the ``pipe`` or ``iterator`` methods. These methods return the Java version of the Gremlin pipeline, which you can make calls against. But remember, now that we are calling Java methods, we need to provide a callback or append 'Sync' to the method names. This will become clearer as we go along. 
+As mentioned above, gremlin-node is a javascript wrapper. You are, however, able to access the gremlin pipeline by calling the ``pipe`` or ``iterator`` methods. These methods return the Java version of the Gremlin pipeline. You need to provide a callback or append 'Sync' to the method names for calls against this object. This will become clearer as we go along. 
+
+##Connect to Graph
+
+The example below connects to a remote Orient Graph. You can use this to instantiate any Blueprints Graph. The first argument needs to be the fully qualified Class name, and the remaining arguments are any parameters required for the relevant graph.
+
+```javascript
+    var graph = g.Graph('com.tinkerpop.blueprints.impls.orient.OrientGraph','remote:localhost/tinkerpop', 'admin', 'admin');
+```
+
+Passing the graph to a variable, enables you to call graph specific methods, such as ``graph.shutdown()``.
 
 ## API
  Still to come...meanwhile the examples below should get you started.
@@ -174,7 +184,6 @@ node>       g.v(1).out().toJSON();
 ```
 
 ##TODO
-* Add other Blueprints Graphs
 * Create, Update, Delete
 * Indexing
 * Error trapping
