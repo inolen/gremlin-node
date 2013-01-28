@@ -8,7 +8,6 @@
         fs = require('fs'),
         path = require('path');
 
-
     function isJarFile(element, index, array){
         return element.split('.').slice(-1) == 'jar';
     }

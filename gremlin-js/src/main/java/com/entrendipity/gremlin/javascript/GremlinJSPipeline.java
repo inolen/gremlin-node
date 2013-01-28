@@ -61,8 +61,4 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         }
         return (GremlinGroovyPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
-
-//    public GremlinGroovyPipeline<S, ?> gather(final Closure closure) {
-//        return (GremlinGroovyPipeline<S, ?>) super.gather(new GroovyPipeFunction(closure));
-//    }
 }
