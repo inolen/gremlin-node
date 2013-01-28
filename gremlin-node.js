@@ -48,13 +48,12 @@
         return fileList.filter(isJarFile);
     };
 
-    //default dir
+    //default lib dir
     java.classpath.push(path.join(__dirname , "lib"));
     
     //add jar files
     var jar = readdirSyncRecursive(__dirname);
     for(var i=0,l=jar.length; i<l; i++){
-        console.log(path.join(__dirname, jar[i]));
         java.classpath.push(path.join(__dirname, jar[i]));
     }
 
@@ -91,7 +90,7 @@
     exports.Table = Table;
     exports.Tree = Tree;
 
-    var ENGINE = new GremlinGroovyScriptEngine();// ScriptEngineFactory.getScriptEngineSync();
+    var ENGINE = new GremlinGroovyScriptEngine();
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
     var NULL = java.callStaticMethodSync("org.codehaus.groovy.runtime.NullObject","getNullObject");
 
@@ -103,16 +102,15 @@
 
     //Maybe pass in graph type specified in a options obj
     //then call the relevant graph impl constructor
-    function GremlinJSPipeline(db) {
-        console.log('in here');
-        if(!db){
+    function GremlinJSPipeline() {
+        if(!_db){
             console.log('No database set. Using mock TinkerGraph.');
             this.graph = Graph();  
-            //_db = this.graph;
+            _db = this.graph;
         } else {
-            this.graph = db;
+            this.graph = _db;
         }
-        console.log('graph' + this.graph.toString());
+        console.log(this.graph.toString());
         this.engine = ENGINE;
         this.ctx = CONTEXT;
         this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
@@ -131,7 +129,6 @@
         } else {
             switch(argsLen){
                 case 0:
-
                     connectionString = className;
                     _db = new TinkerGraph(connectionString);
                     break;
@@ -155,10 +152,9 @@
                     break;
             }
         }
-
         return _db;
     }
-exports.Graph = Graph;
+    exports.Graph = Graph;
     /***********************************************************************************/
 
     exports.v = function(){
@@ -175,7 +171,7 @@ exports.Graph = Graph;
     }
 
     exports.e = function(){
-        var gremlin = new GremlinJSPipeline(/*_db*/),
+        var gremlin = new GremlinJSPipeline(),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             argsLen = args.length,
             list = new ArrayList();
@@ -232,7 +228,7 @@ exports.Graph = Graph;
     /// TRANSFORM PIPES ///
     ///////////////////////
     exports._ = function() {
-        var gremlin = new GremlinJSPipeline(/*_db*/);
+        var gremlin = new GremlinJSPipeline();
         gremlin.gremlinPipeline = new GremlinPipeline();
         gremlin.gremlinPipeline._Sync();
         return gremlin;
@@ -272,7 +268,7 @@ exports.Graph = Graph;
     }
 
     exports.E = function(key, value){
-        var gremlin = new GremlinJSPipeline(/*_db*/),
+        var gremlin = new GremlinJSPipeline(),
             k,
             o = {};
         if (!key) {
@@ -293,9 +289,7 @@ exports.Graph = Graph;
     }
 
     GremlinJSPipeline.prototype.gather = function (closure) {
-        console.log('gather');
         if (_isClosure(closure)) {
-            console.log(this.graph.toString());
             this.engine.getBindingsSync(this.ctx).putSync("V", this.gremlinPipeline);
             this.gremlinPipeline = this.engine.evalSync('V.gather' + closure );
         } else {
@@ -430,7 +424,7 @@ exports.Graph = Graph;
 
     //can also pass in JSON
     exports.V = function(key, value){
-        var gremlin = new GremlinJSPipeline(/*_db*/),
+        var gremlin = new GremlinJSPipeline(),
             k,
             o = {};
         if (!key) {
@@ -719,7 +713,6 @@ exports.Graph = Graph;
         } else {
             closure = slice.call(arguments);
         }
-        console.log("V.table" + param + closure);
         this.gremlinPipeline = this.engine.evalSync("V.table" + param + closure); 
         return this;
     }

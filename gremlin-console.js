@@ -1,6 +1,7 @@
 var g = require('gremlin-node'),
     T = g.Tokens,
-    repl = require("repl");
+    repl = require("repl")/*,
+    require('repl.history')(repl, './.node_history')*/;
 
 process.stdout.write('\n');
 process.stdout.write('         \\,,,/' + '\n');

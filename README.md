@@ -21,7 +21,6 @@ Then in node:
 
 ```
 var g = require(“gremlin-node”),
-
     T = g.Tokens;
 ```
 
