@@ -1,6 +1,6 @@
 {
   "name": "gremlin-node",
-  "description": "Node implementation of Gremlin",
+  "description": "Gremlin for graph databases that implement the Blueprints property graph data model.",
   "version": "0.1.8a",
   "keywords": ["graph", "database", "tinkerpop", "gremlin", "blueprints"],
   "homepage": "https://github.com/entrendipity/gremlin-node",
