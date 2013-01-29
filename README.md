@@ -1,7 +1,7 @@
 gremlin-node
 ============
 
-NodeJS implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki). Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods.
+Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods.
 
 N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database and OrientDB (remote: connection only) for proof of concept. We will add the other Blueprints databases soon.
 
