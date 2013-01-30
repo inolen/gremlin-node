@@ -1,12 +1,7 @@
 {
   "name": "gremlin-node",
-<<<<<<< HEAD
   "description": "Gremlin for graph databases that implement the Blueprints property graph data model.",
-  "version": "0.1.8a",
-=======
-  "description": "Node implementation of Gremlin",
   "version": "0.1.9a",
->>>>>>> 0.1.9a
   "keywords": ["graph", "database", "tinkerpop", "gremlin", "blueprints"],
   "homepage": "https://github.com/entrendipity/gremlin-node",
   "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],

@@ -28,7 +28,7 @@ var g = require(“gremlin-node”),
 
 ## Introduction
 
-NodeJS adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
+Node.js adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
 
 ```javascript
 var list = new ArrayList();
