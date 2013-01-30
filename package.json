@@ -1,0 +1,20 @@
+{
+  "name": "gremlin-node",
+  "description": "Node implementation of Gremlin",
+  "version": "0.1.8a",
+  "keywords": ["graph", "database", "tinkerpop", "gremlin", "blueprints"],
+  "homepage": "https://github.com/entrendipity/gremlin-node",
+  "authors": ["Frank Panetta <frank.panetta@entrendipity.com.au>"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/entrendipity/gremlin-node.git"
+  },
+  "dependencies": {
+    "java": ">=0.1.2"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "main": "gremlin-node.js"
+}
