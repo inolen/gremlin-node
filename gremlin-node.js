@@ -8,7 +8,6 @@
         fs = require('fs'),
         path = require('path');
 
-
     function isJarFile(element, index, array){
         return element.split('.').slice(-1) == 'jar';
     }
@@ -110,7 +109,7 @@
         } else {
             this.graph = _db;
         }
-        console.log(this.graph.toString());
+        //console.log(this.graph.toString());
         this.engine = ENGINE;
         this.ctx = CONTEXT;
         this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
