@@ -119,7 +119,9 @@
     }
 
     /********************** BLUEPRINT GRAPHS ******************************************/
-
+    var setGraph = function ( db ) {
+       _db = db
+    }
     var Graph = function(className, connectionString) {
         var args = slice.call(arguments, 1),
             argsLen = args.length;
@@ -154,6 +156,8 @@
         return _db;
     }
     exports.Graph = Graph;
+    exports.SetGraph = setGraph;
+    exports.java = java;
     /***********************************************************************************/
 
     exports.v = function(){
@@ -513,7 +517,7 @@
         if(args.length == 2){
             this.gremlinPipeline.hasSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1].split(".")[1]]);
             this.gremlinPipeline.hasSync(args[0], token, args[2]);
         }
         
