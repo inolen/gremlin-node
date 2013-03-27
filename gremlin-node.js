@@ -238,6 +238,10 @@
 
     }
 
+    GremlinJSPipeline.prototype.printPipe = function(){
+      console.log(this.gremlinPipeline.toString())
+      return this;
+    }
     GremlinJSPipeline.prototype.step = function(closure) {
         if(_isClosure(closure)){
             this.engine.getBindingsSync(this.ctx).putSync("V", this.gremlinPipeline);
@@ -517,7 +521,10 @@
         if(args.length == 2){
             this.gremlinPipeline.hasSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1].split(".")[1]]);
+            var cmp = args[1]
+            if(args[1].indexOf("T.") != -1 )
+              cmp  = args[1].split(".")[1] 
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
             this.gremlinPipeline.hasSync(args[0], token, args[2]);
         }
         
@@ -531,7 +538,10 @@
         if(args.length == 2){
             this.gremlinPipeline.hasNotSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            var cmp = args[1]
+            if(args[1].indexOf("T.") )
+              cmp  = args[1].split(".")[1] 
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
             this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
         }
         return this;
@@ -642,7 +652,7 @@
 
         if(!_isClosure(arguments[0])){
             rest = 1;
-            engine.getBindingsSync(this.ctx).put("map", arguments[0]);
+            this.engine.getBindingsSync(this.ctx).put("map", arguments[0]);
             param += "(map)"
         } 
 
