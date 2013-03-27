@@ -452,12 +452,12 @@
     ////////////////////
 
     GremlinJSPipeline.prototype.index = function(idx) {
-        this.gremlinPipeline.range(idx, idx);
+        this.gremlinPipeline.rangeSync(idx, idx);
         return this;
     }
 
     GremlinJSPipeline.prototype.range = function(low, high) {
-        this.gremlinPipeline.range(low, high);
+        this.gremlinPipeline.rangeSync(low, high);
         return this;
     }
 
