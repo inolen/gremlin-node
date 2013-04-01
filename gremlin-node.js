@@ -800,7 +800,7 @@
     }
 
     GremlinJSPipeline.prototype.toJSON = function() {
-        return _JSON.convertSync(this.gremlinPipeline);
+        return JSON.parse(_JSON.convertSync(this.gremlinPipeline).toString());
     }
     
     GremlinJSPipeline.prototype.iterate = function() {
