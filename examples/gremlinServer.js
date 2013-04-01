@@ -1,4 +1,4 @@
-g = require('./local/gremlin-node/gremlin-node'),
+g = require('gremlin-node'),
 T = g.Tokens;
 
 console.log('1==>'+g.V('name', 'marko').out('knows').property('name').toList().toString());
@@ -21,34 +21,12 @@ console.log('fill==>'+list.toString());
 
 
 var map = new g.HashMap();
-g.V().groupBy(map, function(it){return it;}
-                 , function(it){ 
-                        return g.v(it.getIdSync()).out().pipe();
-                }).iterate();
+g.V().groupBy(map, '{it}{it.out}').iterate();
 
 console.log('map ==>'+ map.toString());
 
 
-var r = g.V().out().groupBy(
-        //{it.name}
-        function(it) { return it.getPropertySync('name'); },
-        //{it.in}
-        function(it) { return g.v(it.getIdSync()).in().pipe(); },
-        //{it.unique().findAll{i -> i.age > 30}.name}
-        function(it){
-            var v, 
-                list = new g.ArrayList();
-            while(it.hasNextSync()){
-                v = it.nextSync();
-                if(v.getPropertySync('age') > 30){
-                    if(!list.containsSync(v.getPropertySync('name'))){
-                        list.addSync(v.getPropertySync('name'));    
-                    }
-                }
-            }
-            return list;
-        }
-        ).cap().toArray();
+var r = g.V().out().groupBy('{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}').cap().toArray();
 console.log('7==>'+ r.toString());
 
 var m = new g.ArrayList();
@@ -95,13 +73,5 @@ console.log('back2==>'+g.V().as('x').outE('knows').inV().has('age', T.gt, 30).ba
 
 console.log('memoize==>'+g.V().out().as('here').out().memoize('here').property('name').toArray());
 
-var map3 = new g.HashMap();
-
-g.V().groupBy(map3, function(it){return it;}
-                 , function(it){ 
-                        return g.v(it.getIdSync()).out().pipe();
-                            
-        }).iterate()
-console.log('map3 ==>'+ map3.toString());
 
 
