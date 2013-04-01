@@ -119,7 +119,9 @@
     }
 
     /********************** BLUEPRINT GRAPHS ******************************************/
-
+    var setGraph = function ( db ) {
+       _db = db
+    }
     var Graph = function(className, connectionString) {
         var args = slice.call(arguments, 1),
             argsLen = args.length;
@@ -154,6 +156,8 @@
         return _db;
     }
     exports.Graph = Graph;
+    exports.SetGraph = setGraph;
+    exports.java = java;
     /***********************************************************************************/
 
     exports.v = function(){
@@ -234,6 +238,10 @@
 
     }
 
+    GremlinJSPipeline.prototype.printPipe = function(){
+      console.log(this.gremlinPipeline.toString())
+      return this;
+    }
     GremlinJSPipeline.prototype.step = function(closure) {
         if(_isClosure(closure)){
             this.engine.getBindingsSync(this.ctx).putSync("V", this.gremlinPipeline);
@@ -448,12 +456,12 @@
     ////////////////////
 
     GremlinJSPipeline.prototype.index = function(idx) {
-        this.gremlinPipeline.range(idx, idx);
+        this.gremlinPipeline.rangeSync(idx, idx);
         return this;
     }
 
     GremlinJSPipeline.prototype.range = function(low, high) {
-        this.gremlinPipeline.range(low, high);
+        this.gremlinPipeline.rangeSync(low, high);
         return this;
     }
 
@@ -513,7 +521,10 @@
         if(args.length == 2){
             this.gremlinPipeline.hasSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            var cmp = args[1]
+            if(args[1].indexOf("T.") != -1 )
+              cmp  = args[1].split(".")[1] 
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
             this.gremlinPipeline.hasSync(args[0], token, args[2]);
         }
         
@@ -527,7 +538,10 @@
         if(args.length == 2){
             this.gremlinPipeline.hasNotSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
+            var cmp = args[1]
+            if(args[1].indexOf("T.") )
+              cmp  = args[1].split(".")[1] 
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
             this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
         }
         return this;
@@ -638,7 +652,7 @@
 
         if(!_isClosure(arguments[0])){
             rest = 1;
-            engine.getBindingsSync(this.ctx).put("map", arguments[0]);
+            this.engine.getBindingsSync(this.ctx).put("map", arguments[0]);
             param += "(map)"
         } 
 
