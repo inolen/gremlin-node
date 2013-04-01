@@ -1,8 +1,9 @@
-g = require('gremlin-node');
+g = require('./local/gremlin-node/gremlin-node'),
+T = g.Tokens;
 
 console.log('1==>'+g.V('name', 'marko').out('knows').property('name').toList().toString());
 
-console.log('2==>'+g.E().has('weight', 'T.gt', '0.5f').toList().toString());
+console.log('2==>'+g.E().has('weight', T.gt, '0.5f').toList().toString());
 
 console.log('3==>'+g.V().and(g._().both("knows"), g._().both("created")).toArray().toString());
 
@@ -69,7 +70,7 @@ console.log('11==>'+x.toString());
 console.log('12==>'+g.V().retain([g.v(1), g.v(2)]).toList().toString());
 
 
-var xx = g.E().has('weight', 'T.gt', '0.5f');
+var xx = g.E().has('weight', T.gt, '0.5f');
 console.log('13==>'+xx.inV().toList().toString());
 
 
@@ -88,9 +89,9 @@ console.log('cap==>'+g.V('lang', 'java').in('created').property('name').groupCou
 //Should throw err because tree needs arguments
 //console.log('tree1==>'+g.v(1).out().out().tree().toList() );
 
-console.log('back==>'+g.V().out('knows').has('age', 'T.gt', 30).back(2).property('age').toArray());
+console.log('back==>'+g.V().out('knows').has('age', T.gt, 30).back(2).property('age').toArray());
 
-console.log('back2==>'+g.V().as('x').outE('knows').inV().has('age', 'T.gt', 30).back('x').property('age').toArray());
+console.log('back2==>'+g.V().as('x').outE('knows').inV().has('age', T.gt, 30).back('x').property('age').toArray());
 
 console.log('memoize==>'+g.V().out().as('here').out().memoize('here').property('name').toArray());
 

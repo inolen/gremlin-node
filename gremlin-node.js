@@ -521,10 +521,7 @@
         if(args.length == 2){
             this.gremlinPipeline.hasSync(args[0], _ifIsNull(args[1]));    
         } else {
-            var cmp = args[1]
-            if(args[1].indexOf("T.") != -1 )
-              cmp  = args[1].split(".")[1] 
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
             this.gremlinPipeline.hasSync(args[0], token, args[2]);
         }
         
@@ -538,10 +535,7 @@
         if(args.length == 2){
             this.gremlinPipeline.hasNotSync(args[0], _ifIsNull(args[1]));    
         } else {
-            var cmp = args[1]
-            if(args[1].indexOf("T.") )
-              cmp  = args[1].split(".")[1] 
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[cmp]);
+            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
             this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
         }
         return this;
