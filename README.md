@@ -76,8 +76,8 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 ###OrientGraph
 
 ```javascript
-    OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
-    graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
+    var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
+    var graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
     g.SetGraph(graphDB);
 ```
 
