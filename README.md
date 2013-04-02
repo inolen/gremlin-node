@@ -67,32 +67,32 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 ###TinkerGraph
 
 ```javascript
-    var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
-    var tg = TinkerGraphFactory.createTinkerGraphSync();
-    g.SetGraph(tg);
+var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+var tg = TinkerGraphFactory.createTinkerGraphSync();
+g.SetGraph(tg);
 ```
 
 ###OrientGraph
 
 ```javascript
-    var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
-    var graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
-    g.SetGraph(graphDB);
+var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
+var graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
+g.SetGraph(graphDB);
 ```
 
 ###Titan
 
 ```javascript
-	var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
+var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
 
-	conf = new BaseConfiguration();
-	conf.setPropertySync("storage.backend","cassandra");
-	conf.setPropertySync("storage.hostname","127.0.0.1");
-	conf.setPropertySync("storage.keyspace","titan");
+conf = new BaseConfiguration();
+conf.setPropertySync("storage.backend","cassandra");
+conf.setPropertySync("storage.hostname","127.0.0.1");
+conf.setPropertySync("storage.keyspace","titan");
 
-	var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
-	gt = TitanFactory.openSync(conf);
-	g.SetGraph(gt);
+var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
+gt = TitanFactory.openSync(conf);
+g.SetGraph(gt);
 ```
 
 ##Working with the Database
@@ -110,8 +110,8 @@ For example, here is how you would asynchronously add a Vertex, once you have co
 And heres how you would add a Vertex synchronously.
 
 ```javascript
-    var newVertex = tg.addVertexSync(101);
-    newVertex.name = 'frank';
+var newVertex = tg.addVertexSync(101);
+newVertex.name = 'frank';
 ```
 
 ## Examples
@@ -132,7 +132,6 @@ gremlin>  g.v(1, 4).out('knows', 'created').in
 node>     g.v(1, 4).out('knows', 'created').in();
 
 node>     g.v([1, 4]).out(['knows', 'created']).in(); 
-
 ```
 
 __Example 2: [i]__
@@ -170,7 +169,6 @@ node>     g.V().and(g._().both("knows"), g._().both("created"));
 gremlin>  g.v(1).outE.or(_().has('id', T.eq, "9"), _().has('weight', T.lt, 0.6f))
 
 node>     g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f')); 
-
 ```
 
 __Example 6: groupBy__
@@ -209,7 +207,6 @@ gremlin>    g.v(1).out.aggregate(x).out.retain(x)
 node>       var x = new g.ArrayList();
 
 node>       g.v(1).out().aggregate(x).out().retain(x);
-
 ```
 
 __Example 10: accessing returned values__
@@ -220,10 +217,6 @@ node>       g.v(1).out().toList();
 
 node>       g.v(1).out().toJSON();
 ```
-
-##TODO
-* Indexing
-* Testing
 
 ## Author
 
