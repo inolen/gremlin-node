@@ -90,23 +90,22 @@
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
     var NULL = java.callStaticMethodSync("org.codehaus.groovy.runtime.NullObject","getNullObject");
 
-    var MAX_VALUE = 2147483647;
+    var MAX_VALUE = java.newInstanceSync("java.lang.Long", 2147483647);
     var MIN_VALUE = 0;
 
     var _db;
     var _JSON = new JSONResultConverter(null,MIN_VALUE,MAX_VALUE, null);
 
-    //Maybe pass in graph type specified in a options obj
-    //then call the relevant graph impl constructor
     function GremlinJSPipeline() {
+        var TinkerGraphFactory;
         if(!_db){
             console.log('No database set. Using mock TinkerGraph.');
-            this.graph = Graph();  
+            TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+            this.graph = TinkerGraphFactory.createTinkerGraphSync(); 
             _db = this.graph;
         } else {
             this.graph = _db;
         }
-        //console.log(this.graph.toString());
         this.engine = ENGINE;
         this.ctx = CONTEXT;
         this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
@@ -185,11 +184,6 @@
             }
             return type === typeName;
     }
-
-    // //use for to add functions to gremlin console
-    // exports.addFunction = function(name, func){
-    //     GremlinJSPipeline.prototype[name] = func;
-    // }
 
     ///////////////////////
     /// TRANSFORM PIPES ///
