@@ -73,7 +73,7 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
     g.SetGraph(graphDB);
 ```
 
-###Titan Graph.
+###Titan
 
 ```javascript
 
