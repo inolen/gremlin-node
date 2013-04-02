@@ -102,9 +102,9 @@ Once you have connected to the database, you are able to call all implementation
 For example, here is how you would asynchronously add a Vertex, once you have connected to a TinkerGraph as described above.
 
 ```javascript
-    tg.addVertex(100, function(err, newVertex){
-        newVertex.name = 'stephen';
-    });
+tg.addVertex(100, function(err, newVertex){
+    newVertex.name = 'stephen';
+});
 ```
 
 And heres how you would add a Vertex synchronously.
