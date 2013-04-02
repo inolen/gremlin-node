@@ -95,8 +95,8 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 	var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
 	gt = TitanFactory.openSync(conf);
 	g.SetGraph(gt);
-
 ```
+
 ##Working with the Database
 
 Once you have connected to the database, you are able to call all implementation specific database methods.
@@ -108,7 +108,6 @@ For example, here is how you would asynchronously add a Vertex, once you have co
     tg.addVertex(100, function(err, newVertex){
         newVertex.name = 'stephen';
     });
-
 ```
 
 And heres how you would add a Vertex synchronously.
@@ -117,7 +116,6 @@ And heres how you would add a Vertex synchronously.
 
     var newVertex = tg.addVertexSync(101);
     newVertex.name = 'frank';
-
 ```
 
 ## Examples
