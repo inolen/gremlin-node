@@ -108,8 +108,6 @@ For example, here is how you would asynchronously add a Vertex, once you have co
     tg.addVertex(100, function(err, newVertex){
         newVertex.name = 'stephen';
     });
-    
-});
 
 ```
 
