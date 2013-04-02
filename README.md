@@ -97,9 +97,30 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 	g.SetGraph(gt);
 
 ```
+##Working with the Database
 
-## API
- Still to come...meanwhile the examples below should get you started.
+Once you have connected to the database, you are able to call all implementation specific database methods.
+
+For example, here is how you would asynchronously add a Vertex, once you have connected to a TinkerGraph as described above.
+
+```javascript
+
+    tg.addVertex(100, function(err, newVertex){
+        newVertex.name = 'stephen';
+    });
+    
+});
+
+```
+
+And heres how you would add a Vertex synchronously.
+
+```javascript
+
+    var newVertex = tg.addVertexSync(101);
+    newVertex.name = 'frank';
+
+```
 
 ## Examples
 
@@ -209,9 +230,7 @@ node>       g.v(1).out().toJSON();
 ```
 
 ##TODO
-* Create, Update, Delete
 * Indexing
-* Error trapping
 * Testing
 
 ## Author

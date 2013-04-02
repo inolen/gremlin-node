@@ -80,3 +80,14 @@ console.log('memoize==>'+g.V().out().as('here').out().memoize('here').property('
 console.log('JSON==>'+g.v(1).out('knows').toJSON());
 console.log('JSON property==>'+g.v(1).out('knows').toJSON()[0].name);
 
+tg.addVertex(100, function(err, newVertex){
+    newVertex.name = 'stephen';
+    console.log('Added Vertex Async==>'+newVertex.toString());
+    console.log('Added Vertex property==>'+newVertex.name.toString());
+});
+
+var val = tg.addVertexSync(101);
+val.name = 'frank';
+console.log('Added Vertex Sync==>'+val.toString());
+console.log('Added Vertex property==>'+val.name.toString());
+

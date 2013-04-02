@@ -115,7 +115,7 @@
     }
 
     /********************** BLUEPRINT GRAPHS ******************************************/
-    var setGraph = function ( db ) {
+    var setGraph = function(db) {
        _db = db
     }
 
