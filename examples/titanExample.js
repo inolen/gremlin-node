@@ -13,6 +13,6 @@ var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
 gt = TitanFactory.openSync(conf);
 g.SetGraph(gt);
 
-var grandfather = g.V('name','hercules').out('father').out('father').toJSON().getSync(0)
-var gobj = JSON.parse(grandfather.toString())
-console.log(gobj["name"])
+var grandfather = g.V('name','hercules').out('father').out('father').toJSON()[0].name
+
+console.log(grandfather);

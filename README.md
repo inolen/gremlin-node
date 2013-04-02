@@ -3,7 +3,7 @@ gremlin-node
 
 Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java, allowing gremlin-node to access java classes and methods.
 
-N.B. Gremlin-node is still in development and only implements the TinkerGraph mock database and OrientDB (remote: connection only) for proof of concept. We will add the other Blueprints databases soon.
+N.B. Gremlin-node is still in development.
 
 ## Dependancies
 
@@ -65,13 +65,30 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 
 ##Connect to Graph
 
-The example below connects to a remote Orient Graph. You can use this to instantiate any Blueprints Graph. The first argument needs to be the fully qualified Class name, and the remaining arguments are any parameters required for the relevant graph.
+###OrientGraph
 
 ```javascript
-    var graph = g.Graph('com.tinkerpop.blueprints.impls.orient.OrientGraph','remote:localhost/tinkerpop', 'admin', 'admin');
+    OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
+    graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
+    g.SetGraph(graphDB);
 ```
 
-Passing the graph to a variable, enables you to call graph specific methods, such as ``graph.shutdown()``.
+###Titan Graph.
+
+```javascript
+
+	var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
+
+	conf = new BaseConfiguration();
+	conf.setPropertySync("storage.backend","cassandra");
+	conf.setPropertySync("storage.hostname","127.0.0.1");
+	conf.setPropertySync("storage.keyspace","titan");
+
+	var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
+	gt = TitanFactory.openSync(conf);
+	g.SetGraph(gt);
+
+```
 
 ## API
  Still to come...meanwhile the examples below should get you started.

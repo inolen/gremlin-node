@@ -56,9 +56,6 @@
         java.classpath.push(path.join(__dirname, jar[i]));
     }
 
-    var TinkerGraph = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraph");
-    var TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
-
     var GremlinGroovyScriptEngine = java.import("com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine");
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
 
@@ -122,40 +119,7 @@
     var setGraph = function ( db ) {
        _db = db
     }
-    var Graph = function(className, connectionString) {
-        var args = slice.call(arguments, 1),
-            argsLen = args.length;
-        if (!className) {
-            _db = java.callStaticMethodSync("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory", "createTinkerGraph");
-        } else {
-            switch(argsLen){
-                case 0:
-                    connectionString = className;
-                    _db = new TinkerGraph(connectionString);
-                    break;
-                case 1:
-                    _db = java.newInstanceSync(className, args[0]);
-                    break;
-                case 2:
-                    _db = java.newInstanceSync(className, args[0], args[1]);
-                    break;
-                case 3:
-                    _db = java.newInstanceSync(className, args[0], args[1], args[2]);
-                    break;
-                case 4:
-                    _db = java.newInstanceSync(className, args[0], args[1], args[2], args[3]);
-                    break;
-                case 5:
-                    _db = java.newInstanceSync(className, args[0], args[1], args[2], args[3], args[4]);
-                    break;
-                default:
-                    _db = undefined;
-                    break;
-            }
-        }
-        return _db;
-    }
-    exports.Graph = Graph;
+
     exports.SetGraph = setGraph;
     exports.java = java;
     /***********************************************************************************/
