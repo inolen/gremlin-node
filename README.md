@@ -22,7 +22,7 @@ Within the module directory, place the relevant .jar files for the desired Bluep
 Then in node:
 
 ```
-var g = require(“gremlin-node”),
+var g = require(“gremlin”),
     T = g.Tokens;
 ```
 

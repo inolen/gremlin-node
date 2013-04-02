@@ -1,4 +1,4 @@
-var g = require('gremlin-node'),
+var g = require('gremlin'),
     T = g.Tokens,
     repl = require("repl")/*,
     require('repl.history')(repl, './.node_history')*/;

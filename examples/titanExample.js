@@ -1,4 +1,4 @@
-var g = require("gremlin-node")
+var g = require("gremlin")
 
 /* Copy all of your titan Libs to Libs folder before running this example */
 
