@@ -1,6 +1,10 @@
 g = require('gremlin-node'),
 T = g.Tokens;
 
+var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+var tg = TinkerGraphFactory.createTinkerGraphSync();
+g.SetGraph(tg);
+
 console.log('1==>'+g.V('name', 'marko').out('knows').property('name').toList().toString());
 
 console.log('2==>'+g.E().has('weight', T.gt, '0.5f').toList().toString());
@@ -73,5 +77,6 @@ console.log('back2==>'+g.V().as('x').outE('knows').inV().has('age', T.gt, 30).ba
 
 console.log('memoize==>'+g.V().out().as('here').out().memoize('here').property('name').toArray());
 
-
+console.log('JSON==>'+g.v(1).out('knows').toJSON());
+console.log('JSON property==>'+g.v(1).out('knows').toJSON()[0].name);
 

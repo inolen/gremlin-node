@@ -65,6 +65,14 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 
 ##Connect to Graph
 
+###TinkerGraph
+
+```javascript
+    var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+    var tg = TinkerGraphFactory.createTinkerGraphSync();
+    g.SetGraph(tg);
+```
+
 ###OrientGraph
 
 ```javascript
