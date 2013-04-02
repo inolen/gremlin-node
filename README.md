@@ -14,7 +14,7 @@ Bridge API to connect with existing Java APIs. Please read the [__node-java__](h
 ## Installation
 
 ```bash
-$ npm install gremlin-node
+$ npm install gremlin
 ```
 
 Within the module directory, place the relevant .jar files for the desired Blueprints. You can put them into the lib directory or create a new folder. You can organise them how you please. Gremlin-node will find them. Class files will however, need to be placed in the ``lib`` directory.
