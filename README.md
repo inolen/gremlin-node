@@ -36,7 +36,6 @@ var list = new ArrayList();
 list.add("itemA", function(err, result) {
     if(err) { console.error(err); return; }
 });
-
 ```
 
 However, node-java does allow for synchronous calls, but requires that the method name be suffixed with the word 'Sync'. The example below shows the ``add`` method being called synchronously.
@@ -84,7 +83,6 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 ###Titan
 
 ```javascript
-
 	var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
 
 	conf = new BaseConfiguration();
@@ -104,7 +102,6 @@ Once you have connected to the database, you are able to call all implementation
 For example, here is how you would asynchronously add a Vertex, once you have connected to a TinkerGraph as described above.
 
 ```javascript
-
     tg.addVertex(100, function(err, newVertex){
         newVertex.name = 'stephen';
     });
@@ -113,7 +110,6 @@ For example, here is how you would asynchronously add a Vertex, once you have co
 And heres how you would add a Vertex synchronously.
 
 ```javascript
-
     var newVertex = tg.addVertexSync(101);
     newVertex.name = 'frank';
 ```
