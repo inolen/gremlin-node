@@ -1,4 +1,4 @@
-g = require('gremlin'),
+g = require('../gremlin-node'),
 T = g.Tokens;
 
 var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
