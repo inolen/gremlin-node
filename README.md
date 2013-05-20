@@ -73,15 +73,15 @@ As mentioned above, gremlin-node is a javascript wrapper. You are, however, able
 
 ```javascript
 var TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
-var tg = TinkerGraphFactory.createTinkerGraphSync();
-g.SetGraph(tg);
+var graphDB = TinkerGraphFactory.createTinkerGraphSync();
+g.SetGraph(graphDB);
 ```
 
 ###OrientGraph
 
 ```javascript
 var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
-var graphDB = new OrientGraph('remote:localhost/tinkerpop', 'admin', 'admin');
+var graphDB = new OrientGraph('local:/path/to/database/files', 'admin', 'admin');
 g.SetGraph(graphDB);
 ```
 
@@ -96,27 +96,27 @@ conf.setPropertySync("storage.hostname","127.0.0.1");
 conf.setPropertySync("storage.keyspace","titan");
 
 var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
-gt = TitanFactory.openSync(conf);
-g.SetGraph(gt);
+graphDB = TitanFactory.openSync(conf);
+g.SetGraph(graphDB);
 ```
 
 ##Working with the Database
 
-Once you have connected to the database, you are able to call all implementation specific database methods.
+Once you have connected to the database, you are able to call all implementation specific database methods synchronously.
 
-For example, here is how you would asynchronously add a Vertex, once you have connected to a TinkerGraph as described above.
-
-```javascript
-tg.addVertex(100, function(err, newVertex){
-    newVertex.name = 'stephen';
-});
-```
-
-And heres how you would add a Vertex synchronously.
+For example heres how you would add two Vertices and an Edge and associate them in an OrientDB graph.
 
 ```javascript
-var newVertex = tg.addVertexSync(101);
-newVertex.name = 'frank';
+var luca = graphDB.addVertexSync(null);
+luca.setPropertySync( "name", "Luca" );
+
+var marko = graphDB.addVertexSync(null);
+marko.setPropertySync( "name", "Marko" );
+
+var lucaKnowsMarko = graphDB.addEdgeSync(null, luca, marko, "knows");
+
+graphDB.commitSync();
+graphDB.shutdownSync();
 ```
 
 ## Examples
@@ -221,6 +221,51 @@ node>       g.v(1).out().iterator().toListSync();
 node>       g.v(1).out().toList();
 
 node>       g.v(1).out().toJSON();
+```
+
+__Example 11: Adding Vertices and Edge__
+```
+node>       var luca = graphDB.addVertexSync(null);
+node>       luca.setPropertySync( "name", "Luca" );
+
+node>       var marko = graphDB.addVertexSync(null);
+node>       marko.setPropertySync( "name", "Marko" );
+
+node>       var lucaKnowsMarko = graphDB.addEdgeSync(null, luca, marko, "knows");
+
+node>       graphDB.commitSync();
+```
+
+__Example 12: Updating Vertices__
+```
+node>       var marko = g.V("name", "Marko").iterator().nextSync();
+node>       marko.setPropertySync("name", "Frank");
+
+node>       var luca = g.v("8:27").iterator().nextSync();
+node>       luca.setPropertySync("name", "John");
+
+node>       graphDB.commitSync();
+
+```
+
+__Example 13: Removing a Vertex__
+```
+node>       var marko = g.v(1).iterator().nextSync();
+node>		marko.removeSync();
+node>		graphDB.commitSync();
+
+```
+
+__Example 14: Removing Vertices__
+```
+node>       var vertices = g.V().iterator();
+node>		var element;
+node>		while(vertices.hasNextSync()){
+				element = vertices.nextSync();
+				element.removeSync();
+			};
+node>		graphDB.commitSync();
+
 ```
 
 ## Author
