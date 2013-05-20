@@ -11,6 +11,11 @@ N.B. Gremlin-node is still in development.
 
 Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and it's dependancies. N.B. One of it's dependancies is python 2.x.
 
+
+[_maven_](http://maven.apache.org/index.html)
+
+Maven will allow the installation of the base jar files. Database specific .jar files will need to be sourced from the relevant vendors and placed in the ``lib`` directory.
+
 ## Installation
 
 ```bash
