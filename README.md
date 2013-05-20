@@ -79,6 +79,8 @@ g.SetGraph(graphDB);
 
 ###OrientGraph
 
+Gremlin-node supports OrientGraph 1.3, out of the box, both for local and remote connections. 
+
 ```javascript
 var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
 var graphDB = new OrientGraph('local:/path/to/database/files', 'admin', 'admin');
