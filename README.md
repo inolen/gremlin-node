@@ -104,7 +104,7 @@ g.SetGraph(graphDB);
 
 Once you have connected to the database, you are able to call all implementation specific database methods synchronously.
 
-For example heres how you would add two Vertices and an Edge and associate them in an OrientDB graph.
+For example here's how you would add two Vertices and an Edge and associate them in an OrientDB graph.
 
 ```javascript
 var luca = graphDB.addVertexSync(null);
@@ -118,6 +118,8 @@ var lucaKnowsMarko = graphDB.addEdgeSync(null, luca, marko, "knows");
 graphDB.commitSync();
 graphDB.shutdownSync();
 ```
+
+N.B. Remember to call shutdown if you no longer need the Database.
 
 ## Examples
 
