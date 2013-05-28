@@ -34,6 +34,8 @@ var g = require(“gremlin”),
     Type = g.ClassTypes;
 ```
 
+Once installation is complete, ensure that you delete the ``target`` directory.
+
 ## Introduction
 
 Node.js adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
