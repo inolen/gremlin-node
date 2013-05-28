@@ -61,10 +61,15 @@
 
     var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
 
+    var Class = java.import("java.lang.Class");
     var ArrayList = java.import('java.util.ArrayList');
     var HashMap = java.import('java.util.HashMap');
     var Table = java.import("com.tinkerpop.pipes.util.structures.Table");
     var Tree = java.import("com.tinkerpop.pipes.util.structures.Tree");
+
+    var Direction = java.import("com.tinkerpop.blueprints.Direction");
+    var Tokens = java.import("com.tinkerpop.gremlin.Tokens$T");
+    var Compare = java.import("com.tinkerpop.blueprints.Query$Compare");
 
     var toString = Object.prototype.toString,
         push = Array.prototype.push,
@@ -72,15 +77,26 @@
 
     var closureRegex = /^\{.*\}$/;
 
-    var Tokens = {
-        'gt': 'gt',
-        'lt': 'lt',
-        'eq': 'eq',
-        'gte': 'gte',
-        'lte': 'lte',
-        'neq': 'neq'
-    }        
+    var ClassTypes = {
+        'String': { 'class': Class.forNameSync("java.lang.String") },
+        'Vertex': { 'class': GremlinPipeline.getVertexTypeClassSync() },
+        'Edge': { 'class': GremlinPipeline.getEdgeTypeClassSync() },
+        'Byte': { 'class': Class.forNameSync("java.lang.Byte") },
+        'Character': { 'class': Class.forNameSync("java.lang.Character") },
+        'Double': { 'class': Class.forNameSync("java.lang.Double") },
+        'Float': { 'class': Class.forNameSync("java.lang.Float") },
+        'Integer': { 'class': Class.forNameSync("java.lang.Integer") },
+        'Long': { 'class': Class.forNameSync("java.lang.Long") },
+        'Short': { 'class': Class.forNameSync("java.lang.Short") },
+        'Number': { 'class': Class.forNameSync("java.lang.Number") },
+        'BigDecimal': { 'class': Class.forNameSync("java.math.BigDecimal") },
+        'BigInteger': { 'class': Class.forNameSync("java.math.BigInteger") }
+    }
+
+    exports.ClassTypes = ClassTypes;
     exports.Tokens = Tokens;
+    exports.Compare = Compare;
+    exports.Direction = Direction;
     exports.ArrayList = ArrayList;
     exports.HashMap = HashMap;
     exports.Table = Table;
@@ -200,6 +216,7 @@
       console.log(this.gremlinPipeline.toString())
       return this;
     }
+
     GremlinJSPipeline.prototype.step = function(closure) {
         if(_isClosure(closure)){
             this.engine.getBindingsSync(this.ctx).putSync("V", this.gremlinPipeline);
@@ -404,7 +421,7 @@
                     }
                 }
             }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync(key, value));    
+            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.querySync().hasSync(key, value).verticesSync()/*gremlin.graph.getVerticesSync(key, value)*/);    
         }
         return gremlin;
     }
@@ -473,28 +490,23 @@
     }
 
     GremlinJSPipeline.prototype.has = function() {
-        var args = slice.call(arguments),
-            token;
+        var args = slice.call(arguments);
 
         if(args.length == 2){
             this.gremlinPipeline.hasSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
-            this.gremlinPipeline.hasSync(args[0], token, args[2]);
+            this.gremlinPipeline.hasSync(args[0], args[1], args[2]);
         }
-        
         return this;
     }
 
     GremlinJSPipeline.prototype.hasNot = function() {
-        var args = slice.call(arguments),
-            token;
+        var args = slice.call(arguments)
 
         if(args.length == 2){
             this.gremlinPipeline.hasNotSync(args[0], _ifIsNull(args[1]));    
         } else {
-            token = java.getStaticFieldValue("com.tinkerpop.gremlin.Tokens$T", Tokens[args[1]]);
-            this.gremlinPipeline.hasNotSync(args[0], token, args[2]);
+            this.gremlinPipeline.hasNotSync(args[0], args[1], args[2]);
         }
         return this;
     }
@@ -782,7 +794,12 @@
     GremlinJSPipeline.prototype.toArray = function(){
         return this.gremlinPipeline.toListSync().toArraySync();
     }
-        //Need to look at fill and make Async ???
+
+    GremlinJSPipeline.prototype.consoleOut = function(){
+        return console.log(this.gremlinPipeline.toListSync().toString());
+    }
+    
+    //Need to look at fill and make Async ???
     GremlinJSPipeline.prototype.fill = function(collection) {
         this.gremlinPipeline.fillSync(collection);
         return collection;

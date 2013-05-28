@@ -1,6 +1,8 @@
 package com.entrendipity.gremlin.javascript;
 
+import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
+import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.gremlin.Tokens;
 import com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline;
 
@@ -19,35 +21,35 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         super(starts);
     }
 
-    public GremlinGroovyPipeline<S, ? extends Element> has(final String key, final String value) {
+    public GremlinJSPipeline<S, ? extends Element> has(final String key, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, Float.parseFloat(value));
+            return (GremlinJSPipeline<S, ? extends Element>)super.has(key, Float.parseFloat(value));
         }
-        return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, value);
+        return (GremlinJSPipeline<S, ? extends Element>)super.has(key, value);
     }
 
-    public GremlinGroovyPipeline<S, ? extends Element> has(final String key, final Tokens.T comparison, final String value) {
+    public GremlinJSPipeline<S, ? extends Element> has(final String key, final Tokens.T comparison, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, comparison, Float.parseFloat(value));
+            return (GremlinJSPipeline<S, ? extends Element>)super.has(key, comparison, Float.parseFloat(value));
         }
-        return (GremlinGroovyPipeline<S, ? extends Element>)super.has(key, comparison, value);
+        return (GremlinJSPipeline<S, ? extends Element>)super.has(key, comparison, value);
     }
 
     public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, Float.parseFloat(value));
+            return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, Float.parseFloat(value));
         }
-        return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, value);
+        return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, value);
     }
 
     public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final Tokens.T comparison, final String value) {
         if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, comparison, Float.parseFloat(value));
+            return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, comparison, Float.parseFloat(value));
         }
-        return (GremlinGroovyPipeline<S, ? extends Element>)super.hasNot(key, comparison, value);
+        return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, comparison, value);
     }
 
-    public GremlinGroovyPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
+    public GremlinJSPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
         Object tmpStartValue = startValue;
         Object tmpEndValue = endValue;
         if (startValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(startValue))){
@@ -56,6 +58,14 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         if (endValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(endValue))){
             tmpEndValue = Float.parseFloat(endValue);
         }
-        return (GremlinGroovyPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
+        return (GremlinJSPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
+    }
+
+    public static Class<Vertex> getVertexTypeClass(){
+        return Vertex.class;
+    }
+
+    public static Class<Edge> getEdgeTypeClass(){
+        return Edge.class;
     }
 }

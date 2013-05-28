@@ -6,7 +6,7 @@
   <groupId>com.entrendipity</groupId>
   <artifactId>gremlin-node</artifactId>
   <packaging>pom</packaging>
-  <version>0.1.12a</version>
+  <version>0.1.13a</version>
   <name>gremlin</name>
 
   <properties>
@@ -17,8 +17,8 @@
     <dependencies>
       <dependency>
          <groupId>com.thinkaurelius.titan</groupId>
-         <artifactId>titan-core</artifactId>
-         <version>0.3.0</version>
+         <artifactId>titan-all</artifactId>
+         <version>0.3.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -31,7 +31,7 @@
   <dependencies>
     <dependency>
       <groupId>com.thinkaurelius.titan</groupId>
-      <artifactId>titan-core</artifactId>
+      <artifactId>titan-all</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

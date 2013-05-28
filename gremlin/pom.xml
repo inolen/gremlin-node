@@ -6,7 +6,7 @@
 
     <groupId>com.entrendipity</groupId>
     <artifactId>GremlinJSPipeline</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.13a</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

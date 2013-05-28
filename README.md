@@ -21,14 +21,17 @@ Maven enables the installation of the base jar files. Database specific .jar fil
 ```bash
 $ npm install gremlin
 ```
+Gremlin-node includes the required .jar files for Tinkergraph, OrientDB graphEd and Titan.
 
-Within the module directory, place the relevant .jar files for the desired Blueprints. You can put them into the lib directory or create a new folder. You can organise them how you please. Gremlin-node will find them. Class files will however, need to be placed in the ``lib`` directory.
+For other Blueprints database implementations, you will need to obtain the relevant .jars files and place them in the lib directory or create a new folder for them. You can organise them how you please. Gremlin-node will find them. Class files will however, must be placed in the ``lib`` root directory.
 
 Then in node:
 
 ```
 var g = require(“gremlin”),
-    T = g.Tokens;
+    T = g.Tokens,
+    Direction = g.Direction,
+    Type = g.ClassTypes;
 ```
 
 ## Introduction
@@ -59,7 +62,7 @@ There is no need to add 'Sync' to gremlin-node functions, as they are synchronou
     ```e.g.
     g.v(1).out().gather('{it.size()}')
     ```
-* __Float__'s are not native javascript Types so need to be passed in as a string to gremlin-node methods. Floats need to be suffixed with a 'f'.
+* __Float__ is not a native javascript Type. In order pass an argument as a Float, pass in a string suffixed with a 'f'.
 
     ```e.g.
     g.v(1).outE().has("weight", T.gte, "0.5f").property("weight")
@@ -78,8 +81,6 @@ g.SetGraph(graphDB);
 ```
 
 ###OrientGraph
-
-Gremlin-node supports OrientGraph 1.3, out of the box, for both local and remote connections. 
 
 ```javascript
 var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
@@ -104,7 +105,7 @@ g.SetGraph(graphDB);
 
 ##Working with the Database
 
-Once you have connected to the database, you are able to call all implementation specific database methods synchronously.
+Once you have connected to the database, you are able to call all implementation specific database methods synchronously. (You can try calling these asynchronously, but I have found that some methods work and some don't).
 
 For example here's how you would add two Vertices and an Edge and associate them in an OrientDB graph.
 
@@ -270,6 +271,32 @@ node>		while(vertices.hasNextSync()){
 			};
 node>		graphDB.commitSync();
 
+```
+
+__Example 15: Titan Indexing__
+```javascript
+var g = require("gremlin"),
+    T = g.Tokens,
+    Direction = g.Direction,
+    Type = g.ClassTypes;
+
+//Get a reference to Titan specific Enum
+var UniqCon = g.java.import("com.thinkaurelius.titan.core.TypeMaker$UniquenessConsistency");
+
+var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
+
+conf = new BaseConfiguration();
+conf.setPropertySync("storage.backend","cassandra");
+conf.setPropertySync("storage.hostname","127.0.0.1");
+conf.setPropertySync("storage.keyspace","titan");
+
+var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
+var graphDB = TitanFactory.openSync(conf);
+g.SetGraph(graphDB);
+
+//Create index
+graphDB.makeTypeSync().nameSync("foo").dataTypeSync(Type.String.class).indexedSync(Type.Vertex.class)
+    .uniqueSync(Direction.BOTH, UniqCon.NO_LOCK).makePropertyKeySync();
 ```
 
 ## Author
