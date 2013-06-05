@@ -153,7 +153,7 @@
     }
 
     exports.e = function(){
-        var gremlin = new GremlinJSPipeline(),
+        var gremlin = new GremlinJSPipeline(_db),
             args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
             argsLen = args.length,
             list = new ArrayList();
