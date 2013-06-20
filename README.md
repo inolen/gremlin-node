@@ -5,11 +5,11 @@ Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.
 
 N.B. Gremlin-node is still in development.
 
-## Dependancies
+## Dependencies
 
 [__node-java__](https://github.com/nearinfinity/node-java)
 
-Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and it's dependancies. N.B. One of it's dependancies is python 2.x.
+Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and it's dependencies. N.B. One of it's dependencies is python 2.x.
 
 
 [__maven__](http://maven.apache.org/index.html)
