@@ -159,6 +159,9 @@
             argsLen = args.length,
             list = new ArrayList();
         for (var i = 0; i < argsLen; i++) {
+            if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
+                args[i] = args[i].substring(2, args[i].length - 1);
+            }
             list.addSync(gremlin.graph.getVertexSync(args[i]));
         };
         gremlin.gremlinPipeline = new GremlinPipeline(list);
