@@ -8,6 +8,8 @@
         fs = require('fs'),
         path = require('path');
 
+    java.options.push('-Djava.awt.headless=true');
+
     function isJarFile(element, index, array){
         return element.split('.').slice(-1) == 'jar';
     }
