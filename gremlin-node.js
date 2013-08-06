@@ -756,12 +756,12 @@
     }
 
     GremlinJSPipeline.prototype.exhaustMerge = function() {
-        thie.gremlinPipeline.exhaustMergeSync();
+        this.gremlinPipeline.exhaustMergeSync();
         return this;
     }
 
     GremlinJSPipeline.prototype.fairMerge = function() {
-        thie.gremlinPipeline.fairMergeSync();
+        this.gremlinPipeline.fairMergeSync();
         return this;
     }
 
