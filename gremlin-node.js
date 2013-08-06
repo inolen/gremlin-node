@@ -312,6 +312,21 @@
         return this;
     }
 
+    GremlinJSPipeline.prototype.linkBoth = function(label, other) {
+        this.gremlinPipeline.linkBothSync(label, other);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.linkIn = function(label, other) {
+        this.gremlinPipeline.linkInSync(label, other);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.linkOut = function(label, other) {
+        this.gremlinPipeline.linkOutSync(label, other);
+        return this;
+    }
+
     GremlinJSPipeline.prototype.map = function() {
         var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
         this.gremlinPipeline.mapSync(java.newArray("java.lang.String", args));

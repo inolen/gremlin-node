@@ -301,6 +301,17 @@ graphDB.makeTypeSync().nameSync("foo").dataTypeSync(Type.String.class).indexedSy
     .uniqueSync(Direction.BOTH, UniqCon.NO_LOCK).makePropertyKeySync();
 ```
 
+__Example 7: linkBoth/linkIn/linkOut__
+
+```
+gremlin>  marko = g.v(1)
+gremlin>  g.V.except([marko]).linkBoth('connected', marko)
+
+// This type of operation, retrieving the underlying vertex using nextSync()
+// cannot be done on a JS variable
+node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync());
+```
+
 ## Author
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
