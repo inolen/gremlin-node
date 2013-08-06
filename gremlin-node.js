@@ -60,6 +60,7 @@
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
 
     var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
+    var JSONObject = java.import('org.json.JSONObject');
 
     var Class = java.import("java.lang.Class");
     var ArrayList = java.import('java.util.ArrayList');
@@ -101,6 +102,16 @@
     exports.HashMap = HashMap;
     exports.Table = Table;
     exports.Tree = Tree;
+
+    var tempmap = new HashMap();
+    tempmap.constructor.prototype.toJSON = function() {
+        this.removeSync(null);
+        return JSON.parse(JSONObject(this).toStringSync());
+    };
+    tempmap.constructor.prototype.toJSONSafe = function() {
+        return this.cloneSync().toJSON();
+    };
+
 
     var ENGINE = new GremlinGroovyScriptEngine();
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
