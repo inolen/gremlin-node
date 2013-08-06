@@ -228,6 +228,12 @@
 
     }
 
+    exports.start = function(obj) {
+        var gremlin = new GremlinJSPipeline();
+        gremlin.gremlinPipeline = new GremlinPipeline(obj);
+        return gremlin;
+    }
+
     GremlinJSPipeline.prototype.printPipe = function(){
       console.log(this.gremlinPipeline.toString())
       return this;
