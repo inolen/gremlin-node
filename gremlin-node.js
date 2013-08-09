@@ -63,6 +63,7 @@
 
     var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
     var JSONObject = java.import('org.json.JSONObject');
+    var JSONArray = java.import('org.json.JSONArray');
 
     var Class = java.import("java.lang.Class");
     var ArrayList = java.import('java.util.ArrayList');
@@ -112,6 +113,10 @@
     };
     tempmap.constructor.prototype.toJSONSafe = function() {
         return this.cloneSync().toJSON();
+    };
+    var temparray = new ArrayList();
+    temparray.constructor.prototype.toJSON = function() {
+        return JSON.parse(JSONArray(this).toStringSync());
     };
 
 
