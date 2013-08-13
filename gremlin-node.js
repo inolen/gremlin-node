@@ -147,6 +147,7 @@
         this.gremlinPipeline = {};
         this.Type = 'GremlinJSPipeline';
     }
+    exports.GremlinJSPipeline = GremlinJSPipeline;
 
     /********************** BLUEPRINT GRAPHS ******************************************/
     var setGraph = function(db) {
