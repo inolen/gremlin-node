@@ -592,6 +592,11 @@
         return this;
     }
 
+    GremlinJSPipeline.prototype.retainStep = function (step) {
+        this.gremlinPipeline.retainStepSync(step);
+        return this;
+    }
+
     GremlinJSPipeline.prototype.simplePath = function() {
         this.gremlinPipeline.simplePathSync();
         return this;

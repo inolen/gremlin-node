@@ -54,6 +54,11 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         return (GremlinJSPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
 
+    public GremlinJSPipeline<S, ? extends Element> retainStep(final String key) {
+        return (GremlinJSPipeline<S, ? extends Element>)super.retain(key);
+    }
+
+
     public static Class<Vertex> getVertexTypeClass(){
         return Vertex.class;
     }
