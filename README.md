@@ -34,7 +34,7 @@ var g = require(“gremlin”),
     Type = g.ClassTypes;
 ```
 
-Once installation is complete, ensure that you delete the ``target`` directory.
+Once installation is complete, ensure that you delete the ``target`` directory. Please note that gremlin-node now uses Blueprints 2.4.0 and has upgraded database dependencies. If you are upgrading from an old version you should remove all the old jar files from ``lib/dependencies`` prior to running npm install.
 
 ## Introduction
 
