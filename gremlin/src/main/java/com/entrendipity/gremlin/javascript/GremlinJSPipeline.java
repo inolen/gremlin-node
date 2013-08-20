@@ -42,16 +42,9 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, value);
     }
 
-    public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final Tokens.T comparison, final String value) {
-        if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, comparison, Float.parseFloat(value));
-        }
-        return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, comparison, value);
-    }
-
     public GremlinJSPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
-        Object tmpStartValue = startValue;
-        Object tmpEndValue = endValue;
+        Comparable tmpStartValue = startValue;
+        Comparable tmpEndValue = endValue;
         if (startValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(startValue))){
             tmpStartValue = Float.parseFloat(startValue);
         }
@@ -60,6 +53,11 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
         }
         return (GremlinJSPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
+
+    public GremlinJSPipeline<S, ? extends Element> retainStep(final String key) {
+        return (GremlinJSPipeline<S, ? extends Element>)super.retain(key);
+    }
+
 
     public static Class<Vertex> getVertexTypeClass(){
         return Vertex.class;
