@@ -34,7 +34,7 @@ var g = require(“gremlin”),
     Type = g.ClassTypes;
 ```
 
-Once installation is complete, ensure that you delete the ``target`` directory.
+Once installation is complete, ensure that you delete the ``target`` directory. Please note that gremlin-node now uses Blueprints 2.4.0 and has upgraded database dependencies. If you are upgrading from an old version you should remove all the old jar files from ``lib/dependencies`` prior to running npm install.
 
 ## Introduction
 
@@ -301,14 +301,28 @@ graphDB.makeTypeSync().nameSync("foo").dataTypeSync(Type.String.class).indexedSy
     .uniqueSync(Direction.BOTH, UniqCon.NO_LOCK).makePropertyKeySync();
 ```
 
+__Example 7: linkBoth/linkIn/linkOut__
+
+```
+gremlin>  marko = g.v(1)
+gremlin>  g.V.except([marko]).linkBoth('connected', marko)
+
+// This type of operation, retrieving the underlying vertex using nextSync()
+// cannot be done on a JS variable
+node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync());
+```
+
 ## Author
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
+
+Jared Camins-Esakov
 
 ##License
 ###The MIT License (MIT)
 
 Copyright (c) 2013 entrendipity pty ltd
+Parts copyright (c) 2013 C & P Bibliography Services, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

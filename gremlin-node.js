@@ -8,6 +8,8 @@
         fs = require('fs'),
         path = require('path');
 
+    java.options.push('-Djava.awt.headless=true');
+
     function isJarFile(element, index, array){
         return element.split('.').slice(-1) == 'jar';
     }
@@ -60,6 +62,8 @@
     var GremlinPipeline = java.import("com.entrendipity.gremlin.javascript.GremlinJSPipeline");
 
     var JSONResultConverter = java.import("com.tinkerpop.rexster.gremlin.converter.JSONResultConverter");
+    var JSONObject = java.import('org.json.JSONObject');
+    var JSONArray = java.import('org.json.JSONArray');
 
     var Class = java.import("java.lang.Class");
     var ArrayList = java.import('java.util.ArrayList');
@@ -102,6 +106,20 @@
     exports.Table = Table;
     exports.Tree = Tree;
 
+    var tempmap = new HashMap();
+    tempmap.constructor.prototype.toJSON = function() {
+        this.removeSync(null);
+        return JSON.parse(JSONObject(this).toStringSync());
+    };
+    tempmap.constructor.prototype.toJSONSafe = function() {
+        return this.cloneSync().toJSON();
+    };
+    var temparray = new ArrayList();
+    temparray.constructor.prototype.toJSON = function() {
+        return JSON.parse(JSONArray(this).toStringSync());
+    };
+
+
     var ENGINE = new GremlinGroovyScriptEngine();
     var CONTEXT = java.getStaticFieldValue("javax.script.ScriptContext", "ENGINE_SCOPE");
     var NULL = java.callStaticMethodSync("org.codehaus.groovy.runtime.NullObject","getNullObject");
@@ -129,6 +147,7 @@
         this.gremlinPipeline = {};
         this.Type = 'GremlinJSPipeline';
     }
+    exports.GremlinJSPipeline = GremlinJSPipeline;
 
     /********************** BLUEPRINT GRAPHS ******************************************/
     var setGraph = function(db) {
@@ -146,6 +165,9 @@
             argsLen = args.length,
             list = new ArrayList();
         for (var i = 0; i < argsLen; i++) {
+            if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
+                args[i] = args[i].substring(2, args[i].length - 1);
+            }
             list.addSync(gremlin.graph.getVertexSync(args[i]));
         };
         gremlin.gremlinPipeline = new GremlinPipeline(list);
@@ -210,6 +232,12 @@
         gremlin.gremlinPipeline._Sync();
         return gremlin;
 
+    }
+
+    exports.start = function(obj) {
+        var gremlin = new GremlinJSPipeline();
+        gremlin.gremlinPipeline = new GremlinPipeline(obj);
+        return gremlin;
     }
 
     GremlinJSPipeline.prototype.printPipe = function(){
@@ -309,6 +337,21 @@
 
     GremlinJSPipeline.prototype.label = function() {
         this.gremlinPipeline.labelSync();
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.linkBoth = function(label, other) {
+        this.gremlinPipeline.linkBothSync(label, other);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.linkIn = function(label, other) {
+        this.gremlinPipeline.linkInSync(label, other);
+        return this;
+    }
+
+    GremlinJSPipeline.prototype.linkOut = function(label, other) {
+        this.gremlinPipeline.linkOutSync(label, other);
         return this;
     }
 
@@ -549,6 +592,11 @@
         return this;
     }
 
+    GremlinJSPipeline.prototype.retainStep = function (step) {
+        this.gremlinPipeline.retainStepSync(step);
+        return this;
+    }
+
     GremlinJSPipeline.prototype.simplePath = function() {
         this.gremlinPipeline.simplePathSync();
         return this;
@@ -725,12 +773,12 @@
     }
 
     GremlinJSPipeline.prototype.exhaustMerge = function() {
-        thie.gremlinPipeline.exhaustMergeSync();
+        this.gremlinPipeline.exhaustMergeSync();
         return this;
     }
 
     GremlinJSPipeline.prototype.fairMerge = function() {
-        thie.gremlinPipeline.fairMergeSync();
+        this.gremlinPipeline.fairMergeSync();
         return this;
     }
 
