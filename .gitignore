@@ -4,6 +4,7 @@ gremlin-js/.DS_Store
 .DS_Store
 .idea/
 lib/dependencies
+node_modules/
 target/
 gremlin-js/src/main/java/com/entrendipity/gremlin/javascript/converter.java
 
