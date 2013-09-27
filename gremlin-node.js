@@ -71,13 +71,11 @@ temparray.constructor.prototype.toJSON = function() {
 };
 
 var ENGINE = new GremlinGroovyScriptEngine();
-var CONTEXT = java.getStaticFieldValue('javax.script.ScriptContext', 'ENGINE_SCOPE');
-var NULL = java.callStaticMethodSync('org.codehaus.groovy.runtime.NullObject','getNullObject');
+var NULL = java.callStaticMethodSync('org.codehaus.groovy.runtime.NullObject', 'getNullObject');
 
 var MAX_VALUE = java.newInstanceSync('java.lang.Long', 2147483647);
 var MIN_VALUE = 0;
 
-var _db;
 var _JSON = new JSONResultConverter(null,MIN_VALUE,MAX_VALUE, null);
 
 function _isClosure(val) {
@@ -117,7 +115,9 @@ function _isType(o, typeName){
         return type === typeName;
 }
 
-var g = module.exports = {};
+var g = module.exports = function (graph) {
+    this.graph = graph;
+};
 
 g.java = java;
 g.ClassTypes = ClassTypes;
@@ -129,16 +129,12 @@ g.HashMap = HashMap;
 g.Table = Table;
 g.Tree = Tree;
 
-g.SetGraph = function (db) {
-    _db = db;
-}
-
-g.V = function(key, value){
-    var gremlin = new GremlinJSPipeline(),
+g.prototype.V = function(key, value){
+    var gremlin = new GremlinJSPipeline(this.graph),
         k,
         o = {};
     if (!key) {
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync());
+        gremlin.gremlinPipeline = new GremlinPipeline(this.graph.getVerticesSync());
     } else {
         if (_isObject(key)) {
             o = key;
@@ -149,13 +145,13 @@ g.V = function(key, value){
                 }
             }
         }
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.querySync().hasSync(key, value).verticesSync()/*gremlin.graph.getVerticesSync(key, value)*/);
+        gremlin.gremlinPipeline = new GremlinPipeline(this.graph.querySync().hasSync(key, value).verticesSync()/*gremlin.graph.getVerticesSync(key, value)*/);
     }
     return gremlin;
 };
 
-g.v = function(){
-    var gremlin = new GremlinJSPipeline(_db),
+g.prototype.v = function(){
+    var gremlin = new GremlinJSPipeline(this.graph),
         args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
         argsLen = args.length,
         list = new ArrayList();
@@ -163,18 +159,18 @@ g.v = function(){
         if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
             args[i] = args[i].substring(2, args[i].length - 1);
         }
-        list.addSync(gremlin.graph.getVertexSync(args[i]));
+        list.addSync(this.graph.getVertexSync(args[i]));
     };
     gremlin.gremlinPipeline = new GremlinPipeline(list);
     return gremlin;
 };
 
-g.E = function(key, value){
-    var gremlin = new GremlinJSPipeline(),
+g.prototype.E = function(key, value){
+    var gremlin = new GremlinJSPipeline(this.graph),
         k,
         o = {};
     if (!key) {
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync());
+        gremlin.gremlinPipeline = new GremlinPipeline(this.graph.getEdgesSync());
     } else {
         if (_isObject(key)) {
             o = key;
@@ -185,32 +181,32 @@ g.E = function(key, value){
                 }
             }
         }
-        gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync(key, value));
+        gremlin.gremlinPipeline = new GremlinPipeline(this.graph.getEdgesSync(key, value));
     }
     return gremlin;
 };
 
-g.e = function(){
-    var gremlin = new GremlinJSPipeline(_db),
+g.prototype.e = function(){
+    var gremlin = new GremlinJSPipeline(this.graph),
         args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
         argsLen = args.length,
         list = new ArrayList();
     for (var i = 0; i < argsLen; i++) {
-        list.addSync(gremlin.graph.getEdgeSync(args[i]));
+        list.addSync(this.graph.getEdgeSync(args[i]));
     };
     gremlin.gremlinPipeline = new GremlinPipeline(list);
     return gremlin;
 };
 
-g._ = function() {
-    var gremlin = new GremlinJSPipeline();
+g.prototype._ = function() {
+    var gremlin = new GremlinJSPipeline(this.graph);
     gremlin.gremlinPipeline = new GremlinPipeline();
     gremlin.gremlinPipeline._Sync();
     return gremlin;
 };
 
-g.start = function(obj) {
-    var gremlin = new GremlinJSPipeline();
+g.prototype.start = function(obj) {
+    var gremlin = new GremlinJSPipeline(this.graph);
     gremlin.gremlinPipeline = new GremlinPipeline(obj);
     return gremlin;
 };
@@ -219,19 +215,10 @@ g.start = function(obj) {
 /// TRANSFORM PIPES ///
 ///////////////////////
 
-var GremlinJSPipeline = g.GremlinJSPipeline = function() {
-    var TinkerGraphFactory;
-    if(!_db){
-        console.log('No database set. Using mock TinkerGraph.');
-        TinkerGraphFactory = g.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
-        this.graph = TinkerGraphFactory.createTinkerGraphSync(); 
-        _db = this.graph;
-    } else {
-        this.graph = _db;
-    }
-    this.engine = ENGINE;
-    this.ctx = CONTEXT;
-    this.engine.getBindingsSync(this.ctx).putSync('g', this.graph);
+var GremlinJSPipeline = g.GremlinJSPipeline = function(graph) {
+    this.graph = graph;
+    this.bindings = ENGINE.createBindingsSync();
+    this.bindings.putSync('g', this.graph);
 
     this.gremlinPipeline = {};
     this.Type = 'GremlinJSPipeline';
@@ -244,8 +231,8 @@ GremlinJSPipeline.prototype.printPipe = function(){
 
 GremlinJSPipeline.prototype.step = function(closure) {
     if(_isClosure(closure)){
-        this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-        this.gremlinPipeline = this.engine.evalSync('V.step' + closure);
+        this.bindings.putSync('V', this.gremlinPipeline);
+        this.gremlinPipeline = ENGINE.evalSync('V.step' + closure, this.bindings);
     } else {
         this.gremlinPipeline.stepSync(java.newInstanceSync('com.tinkerpop.pipes.Pipe', closure.pipe()));
     }
@@ -276,8 +263,8 @@ GremlinJSPipeline.prototype.cap = function() {
 
 GremlinJSPipeline.prototype.gather = function(closure) {
     if (_isClosure(closure)) {
-        this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-        this.gremlinPipeline = this.engine.evalSync('V.gather' + closure );
+        this.bindings.putSync('V', this.gremlinPipeline);
+        this.gremlinPipeline = ENGINE.evalSync('V.gather' + closure , this.bindings);
     } else {
         this.gremlinPipeline.gatherSync();
     }
@@ -349,8 +336,8 @@ GremlinJSPipeline.prototype.memoize = function() {
 
 GremlinJSPipeline.prototype.order = function(closure) {
     if (_isClosure(closure)) {
-        this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-        this.gremlinPipeline = this.engine.evalSync('V.order' + closure);
+        this.bindings.putSync('V', this.gremlinPipeline);
+        this.gremlinPipeline = ENGINE.evalSync('V.order' + closure, this.bindings);
     } else {
         this.gremlinPipeline.orderSync();
     }
@@ -376,8 +363,8 @@ GremlinJSPipeline.prototype.outV = function(){
 
 GremlinJSPipeline.prototype.path = function() {
     closure = slice.call(arguments);
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.path' + closure);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.path' + closure, this.bindings);
     return this;
 };
 
@@ -407,8 +394,8 @@ GremlinJSPipeline.prototype.select = function() {
         }
     }
     closure = slice.call(arguments, rest);
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.select'+ params + closure);         
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.select'+ params + closure, this.bindings);         
     return this;
 };
 
@@ -418,8 +405,8 @@ GremlinJSPipeline.prototype.shuffle = function() {
 };
 
 GremlinJSPipeline.prototype.transform = function(closure) {
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.transform' + closure);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.transform' + closure, this.bindings);
     return this;
 };
 
@@ -455,8 +442,8 @@ GremlinJSPipeline.prototype.back = function(step) {
 
 GremlinJSPipeline.prototype.dedup = function(closure) {
     if (_isClosure(closure)) {
-        this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-        this.gremlinPipeline = this.engine.evalSync('V.dedup' + closure);
+        this.bindings.putSync('V', this.gremlinPipeline);
+        this.gremlinPipeline = ENGINE.evalSync('V.dedup' + closure, this.bindings);
     } else {
         this.gremlinPipeline.dedupSync();
     }
@@ -481,8 +468,8 @@ GremlinJSPipeline.prototype.except = function() {
 };
 
 GremlinJSPipeline.prototype.filter = function(closure) {
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.filter' + closure);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.filter' + closure, this.bindings);
     return this;
 };
 
@@ -572,14 +559,14 @@ GremlinJSPipeline.prototype.aggregate = function(collection, closure) {
         return this;
     }
 
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
+    this.bindings.putSync('V', this.gremlinPipeline);
     if(_isClosure(collection)){
         closure = collection;
     } else {
-        this.engine.getBindingsSync(this.ctx).putSync('coll', collection);
+        this.bindings.putSync('coll', collection);
         param += '(coll)';
     }
-    this.gremlinPipeline = this.engine.evalSync('V.aggregate' + param + closure);
+    this.gremlinPipeline = ENGINE.evalSync('V.aggregate' + param + closure, this.bindings);
     return this;
 };
 
@@ -600,14 +587,14 @@ GremlinJSPipeline.prototype.groupBy = function(map, closure) {
         return this;
     }
 
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
+    this.bindings.putSync('V', this.gremlinPipeline);
     if(_isClosure(map)){
         closure = map;
     } else {
-        this.engine.getBindingsSync(this.ctx).putSync('map', map);
+        this.bindings.putSync('map', map);
         param += '(map)'
     }
-    this.gremlinPipeline = this.engine.evalSync('V.groupBy' + param + closure);
+    this.gremlinPipeline = ENGINE.evalSync('V.groupBy' + param + closure, this.bindings);
     return this;
 };
 
@@ -618,13 +605,13 @@ GremlinJSPipeline.prototype.groupCount = function() {
 
     if(!_isClosure(arguments[0])){
         rest = 1;
-        this.engine.getBindingsSync(this.ctx).put('map', arguments[0]);
+        this.bindings.put('map', arguments[0]);
         param += '(map)'
     } 
 
     closure = slice.call(arguments, rest);
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.groupCount' + param + closure);   
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.groupCount' + param + closure, this.bindings);   
     return this;
 };
 
@@ -634,8 +621,8 @@ GremlinJSPipeline.prototype.optional = function(step) {
 };
 
 GremlinJSPipeline.prototype.sideEffect = function(closure) {
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.sideEffect' + closure);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.sideEffect' + closure, this.bindings);
     return this;
 };
 
@@ -651,14 +638,14 @@ GremlinJSPipeline.prototype.store = function(collection, closure) {
         return this;
     }
 
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
+    this.bindings.putSync('V', this.gremlinPipeline);
     if(_isClosure(collection)){
         closure = collection;
     } else {
-        this.engine.getBindingsSync(this.ctx).putSync('coll', collection);
+        this.bindings.putSync('coll', collection);
         param += '(coll)'
     }
-    this.gremlinPipeline = this.engine.evalSync('V.store' + param + closure);
+    this.gremlinPipeline = ENGINE.evalSync('V.store' + param + closure, this.bindings);
     return this;
 };
 
@@ -679,33 +666,33 @@ GremlinJSPipeline.prototype.table = function() {
         return this;
     }
 
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
+    this.bindings.putSync('V', this.gremlinPipeline);
     if(collection){
-        this.engine.getBindingsSync(this.ctx).put('tbl', arguments[0]);
-        this.engine.getBindingsSync(this.ctx).put('coll', arguments[1]);
+        this.bindings.put('tbl', arguments[0]);
+        this.bindings.put('coll', arguments[1]);
         param += '(tbl,coll)';
         closure = slice.call(arguments, 2);
     } else if (table) {
-        this.engine.getBindingsSync(this.ctx).put('tbl', arguments[0]);
+        this.bindings.put('tbl', arguments[0]);
         param += '(tbl)';
         closure = slice.call(arguments, 1);
     } else {
         closure = slice.call(arguments);
     }
-    this.gremlinPipeline = this.engine.evalSync('V.table' + param + closure); 
+    this.gremlinPipeline = ENGINE.evalSync('V.table' + param + closure, this.bindings); 
     return this;
 };
 
 GremlinJSPipeline.prototype.tree = function(tree, closure) {
     var param = '';
 
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
+    this.bindings.putSync('V', this.gremlinPipeline);
     if(!closure){
         closure = tree;
         tree = '';
 
     } else {
-        engine.getBindingsSync(this.ctx).put('tree', arguments[0]);
+        engine.getBindingsSync(CONTEXT).put('tree', arguments[0]);
         param += '(tree)';
     }
     return this;
@@ -740,8 +727,8 @@ GremlinJSPipeline.prototype.ifThenElse = function(ifClosure, thenClosure, elseCl
     thenClosure = thenClosure || '';
     elseClosure = elseClosure || '';
     
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.ifThenElse' + ifClosure + thenClosure + elseClosure);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.ifThenElse' + ifClosure + thenClosure + elseClosure, this.bindings);
     return this;
 };
 
@@ -756,8 +743,8 @@ GremlinJSPipeline.prototype.loop = function(/*step, whileFunction, emitFunction*
         param += '(' + arguments[0] + ')'
     } 
     closureArgs = slice.call(arguments, rest).toString().replace(',','');
-    this.engine.getBindingsSync(this.ctx).putSync('V', this.gremlinPipeline);
-    this.gremlinPipeline = this.engine.evalSync('V.loop' + param + closureArgs);
+    this.bindings.putSync('V', this.gremlinPipeline);
+    this.gremlinPipeline = ENGINE.evalSync('V.loop' + param + closureArgs, this.bindings);
     return this;
 };
 
