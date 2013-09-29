@@ -33,7 +33,8 @@ var Tree = java.import('com.tinkerpop.pipes.util.structures.Tree');
 
 var Direction = java.import('com.tinkerpop.blueprints.Direction');
 var Tokens = java.import('com.tinkerpop.gremlin.Tokens$T');
-var Compare = java.import('com.tinkerpop.blueprints.Query$Compare');
+var Compare = java.import('com.tinkerpop.blueprints.Compare');
+var Contains = java.import('com.tinkerpop.blueprints.Contains');
 
 var toString = Object.prototype.toString,
     push = Array.prototype.push,
@@ -141,13 +142,18 @@ var GraphWrapper = function(graph) {
 };
 
 GraphWrapper.prototype._ = function() {
-    var gremlin = new GremlinJSPipeline(this.graph);
-    gremlin.pipeline._Sync();
-    return gremlin;
+    var pipeline = new GremlinJSPipeline(this.graph);
+    pipeline.pipeline._Sync();
+    return pipeline;
 };
 
 GraphWrapper.prototype.start = function(obj) {
-    return new GremlinJSPipeline(obj);
+    var pipeline = new GremlinJSPipeline(this.graph);
+    return pipeline.start(obj);
+};
+
+GraphWrapper.prototype.query = function() {
+    return new QueryWrapper(this.graph.querySync());
 };
 
 GraphWrapper.prototype.V = function() {
@@ -191,17 +197,6 @@ GraphWrapper.prototype.eSync = function() {
         list.addSync(this.graph.getEdgeSync(args[i]));
     };
     return new GremlinJSPipeline(list);
-};
-
-GraphWrapper.prototype._ = function() {
-    var gremlin = new GremlinJSPipeline(this.graph);
-    gremlin.pipeline._Sync();
-    return gremlin;
-};
-
-GraphWrapper.prototype.start = function(obj) {
-    var pipeline = new GremlinJSPipeline(this.graph);
-    return pipeline.start(obj);
 };
 
 
@@ -870,4 +865,57 @@ GremlinJSPipeline.prototype.get = function(index) {
 
 GremlinJSPipeline.prototype.equals = function(object) {
     return this.pipeline.equalsSync(object);
+};
+
+
+///////////////////////
+// JS QUERY WRAPPER ///
+///////////////////////
+
+var QueryWrapper = function(query) {
+    this.query = query;
+};
+
+QueryWrapper.prototype.has = function() {
+    var args = slice.call(arguments);
+    this.query.hasSync.apply(this.query, args);
+    return this;
+};
+
+QueryWrapper.prototype.hasNot = function() {
+    var args = slice.call(arguments);
+    this.query.hasNotSync.apply(this.query, args);
+    return this;
+};
+
+QueryWrapper.prototype.interval = function() {
+    var args = slice.call(arguments);
+    this.query.intervalSync.apply(this.query, args);
+    return this;
+};
+
+QueryWrapper.prototype.limit = function() {
+    var args = slice.call(arguments);
+    this.query.limitSync.apply(this.query, args);
+    return this;
+};
+
+QueryWrapper.prototype.vertices = function() {
+    var args = slice.call(arguments);
+    this.query.vertices.apply(this.query, args);
+};
+
+QueryWrapper.prototype.verticesSync = function() {
+    var args = slice.call(arguments);
+    return this.query.verticesSync.apply(this.query, args);
+};
+
+QueryWrapper.prototype.edges = function() {
+    var args = slice.call(arguments);
+    this.query.edges.apply(this.query, args);
+};
+
+QueryWrapper.prototype.edgesSync = function() {
+    var args = slice.call(arguments);
+    return this.query.edgesSync.apply(this.query, args);
 };
