@@ -115,9 +115,8 @@ function _isType(o, typeName){
         return type === typeName;
 }
 
-var g = module.exports = function (graph) {
-    this.graph = graph;
-};
+
+var g = module.exports = {};
 
 g.java = java;
 g.ClassTypes = ClassTypes;
@@ -129,37 +128,45 @@ g.HashMap = HashMap;
 g.Table = Table;
 g.Tree = Tree;
 
-g.prototype.V = function() {
+g.wrap = function(graph) {
+    return new GraphWrapper(graph);
+};
+
+/////////////////////
+/// GRAPH WRAPPER ///
+/////////////////////
+
+var GraphWrapper = function(graph) {
+    this.graph = graph;
+};
+
+GraphWrapper.prototype._ = function() {
+    var gremlin = new GremlinJSPipeline(this.graph);
+    gremlin.pipeline._Sync();
+    return gremlin;
+};
+
+GraphWrapper.prototype.start = function(obj) {
+    return new GremlinJSPipeline(obj);
+};
+
+GraphWrapper.prototype.V = function() {
     var args = slice.call(arguments);
     var pipeline = new GremlinJSPipeline(this.graph);
     return pipeline.V.apply(pipeline, args);
 };
 
-g.prototype.E = function() {
+GraphWrapper.prototype.E = function() {
     var args = slice.call(arguments);
     var pipeline = new GremlinJSPipeline(this.graph);
     return pipeline.E.apply(pipeline, args);
 };
 
-g.prototype.e = function() {
+GraphWrapper.prototype.v = function() {
     throw new Error('TODO');
 };
 
-g.prototype.eSync = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-        argsLen = args.length,
-        list = new ArrayList();
-    for (var i = 0; i < argsLen; i++) {
-        list.addSync(this.graph.getEdgeSync(args[i]));
-    };
-    return new GremlinJSPipeline(list);
-};
-
-g.prototype.v = function() {
-    throw new Error('TODO');
-};
-
-g.prototype.vSync = function() {
+GraphWrapper.prototype.vSync = function() {
     var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
         argsLen = args.length,
         list = new ArrayList();
@@ -172,20 +179,35 @@ g.prototype.vSync = function() {
     return new GremlinJSPipeline(list);
 };
 
-g.prototype._ = function() {
+GraphWrapper.prototype.e = function() {
+    throw new Error('TODO');
+};
+
+GraphWrapper.prototype.eSync = function() {
+    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
+        argsLen = args.length,
+        list = new ArrayList();
+    for (var i = 0; i < argsLen; i++) {
+        list.addSync(this.graph.getEdgeSync(args[i]));
+    };
+    return new GremlinJSPipeline(list);
+};
+
+GraphWrapper.prototype._ = function() {
     var gremlin = new GremlinJSPipeline(this.graph);
     gremlin.pipeline._Sync();
     return gremlin;
 };
 
-g.prototype.start = function(obj) {
+GraphWrapper.prototype.start = function(obj) {
     var pipeline = new GremlinJSPipeline(this.graph);
     return pipeline.start(obj);
 };
 
-///////////////////////
-/// TRANSFORM PIPES ///
-///////////////////////
+
+///////////////////////////
+/// JS PIPELINE WRAPPER ///
+///////////////////////////
 
 var GremlinJSPipeline = function(start) {
     this.bindings = ENGINE.createBindingsSync();
@@ -194,7 +216,7 @@ var GremlinJSPipeline = function(start) {
     }
     this.pipeline = new GremlinPipeline(start);
     this.Type = 'GremlinJSPipeline';
-}
+};
 
 GremlinJSPipeline.prototype.printPipe = function(){
   console.log(this.pipeline.toString())
@@ -460,7 +482,7 @@ GremlinJSPipeline.prototype.E = function() {
 GremlinJSPipeline.prototype.has = function() {
     var args = slice.call(arguments);
     if(args.length == 2){
-        this.pipeline.hasSync(args[0], _ifIsNull(args[1]));    
+        this.pipeline.hasSync(args[0], _ifIsNull(args[1]));
     } else {
         this.pipeline.hasSync(args[0], args[1], args[2]);
     }
@@ -471,7 +493,7 @@ GremlinJSPipeline.prototype.hasNot = function() {
     var args = slice.call(arguments)
 
     if(args.length == 2){
-        this.pipeline.hasNotSync(args[0], _ifIsNull(args[1]));    
+        this.pipeline.hasNotSync(args[0], _ifIsNull(args[1]));
     } else {
         this.pipeline.hasNotSync(args[0], args[1], args[2]);
     }
