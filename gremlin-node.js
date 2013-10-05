@@ -1,21 +1,34 @@
-var java = require('java'),
-    fs = require('fs'),
+var fs = require('fs'),
     path = require('path'),
     wrench = require('wrench');
 
-java.options.push('-Djava.awt.headless=true');
+module.exports = function(opts) {
 
-function isJarFile(element, index, array){
-    return element.split('.').slice(-1) == 'jar';
+opts = opts || {};
+opts.options = opts.options || [];
+opts.classpath = opts.classpath || [];
+
+var java = require('java');
+
+java.options.push('-Djava.awt.headless=true');
+for (var i = 0; i < opts.options.length; i++) {
+    java.options.push(opts.options[i]);
 }
 
 //default lib dir
 java.classpath.push(path.join(__dirname , 'lib'));
 
 //add jar files
-var jar = wrench.readdirSyncRecursive(__dirname).filter(isJarFile);
-for(var i=0,l=jar.length; i<l; i++){
-    java.classpath.push(path.join(__dirname, jar[i]));
+var jars = wrench
+    .readdirSyncRecursive(__dirname)
+    .filter(function isJarFile(element, index, array){
+        return element.split('.').slice(-1) == 'jar';
+    });
+for (var i = 0; i < jars.length; i++) {
+    java.classpath.push(path.join(__dirname, jars[i]));
+}
+for (var i = 0; i < opts.classpath.length; i++) {
+    java.classpath.push(opts.classpath[i]);
 }
 
 var GremlinGroovyScriptEngine = java.import('com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine');
@@ -36,12 +49,6 @@ var Tokens = java.import('com.tinkerpop.gremlin.Tokens$T');
 var Compare = java.import('com.tinkerpop.blueprints.Compare');
 var Contains = java.import('com.tinkerpop.blueprints.Contains');
 
-var toString = Object.prototype.toString,
-    push = Array.prototype.push,
-    slice = Array.prototype.slice;
-
-var closureRegex = /^\{.*\}$/;
-
 var ClassTypes = {
     'String': { 'class': Class.forNameSync('java.lang.String') },
     'Vertex': { 'class': GremlinPipeline.getVertexTypeClassSync() },
@@ -58,27 +65,21 @@ var ClassTypes = {
     'BigInteger': { 'class': Class.forNameSync('java.math.BigInteger') }
 }
 
-var tempmap = new HashMap();
-tempmap.constructor.prototype.toJSON = function() {
-    this.removeSync(null);
-    return JSON.parse(JSONObject(this).toStringSync());
-};
-tempmap.constructor.prototype.toJSONSafe = function() {
-    return this.cloneSync().toJSON();
-};
-var temparray = new ArrayList();
-temparray.constructor.prototype.toJSON = function() {
-    return JSON.parse(JSONArray(this).toStringSync());
-};
-
 var ENGINE = new GremlinGroovyScriptEngine();
 var NULL = java.callStaticMethodSync('org.codehaus.groovy.runtime.NullObject', 'getNullObject');
-
 var MAX_VALUE = java.newInstanceSync('java.lang.Long', 2147483647);
 var MIN_VALUE = 0;
+var _JSON = new JSONResultConverter(null, MIN_VALUE, MAX_VALUE, null);
 
-var _JSON = new JSONResultConverter(null,MIN_VALUE,MAX_VALUE, null);
+///////////////
+/// UTILITY ///
+///////////////
 
+var toString = Object.prototype.toString,
+    push = Array.prototype.push,
+    slice = Array.prototype.slice;
+
+var closureRegex = /^\{.*\}$/;
 function _isClosure(val) {
     return _isString(val) && val.search(closureRegex) > -1;   
 }
@@ -115,23 +116,6 @@ function _isType(o, typeName){
         }
         return type === typeName;
 }
-
-
-var g = module.exports = {};
-
-g.java = java;
-g.ClassTypes = ClassTypes;
-g.Tokens = Tokens;
-g.Compare = Compare;
-g.Direction = Direction;
-g.ArrayList = ArrayList;
-g.HashMap = HashMap;
-g.Table = Table;
-g.Tree = Tree;
-
-g.wrap = function(graph) {
-    return new GraphWrapper(graph);
-};
 
 /////////////////////
 /// GRAPH WRAPPER ///
@@ -919,3 +903,21 @@ QueryWrapper.prototype.edgesSync = function() {
     var args = slice.call(arguments);
     return this.query.edgesSync.apply(this.query, args);
 };
+
+return {
+    java: java,
+    ClassTypes: ClassTypes,
+    Tokens: Tokens,
+    Compare: Compare,
+    Contains: Contains,
+    Direction: Direction,
+    ArrayList: ArrayList,
+    HashMap: HashMap,
+    Table: Table,
+    Tree: Tree,
+    wrap: function(graph) {
+        return new GraphWrapper(graph);
+    }
+};
+
+}
