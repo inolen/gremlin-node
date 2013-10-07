@@ -1,3 +1,5 @@
+async = require('async');
+
 (function (definition) {
 
     definition(exports);
@@ -97,15 +99,6 @@
         'BigInteger': { 'class': Class.forNameSync("java.math.BigInteger") }
     }
 
-    exports.ClassTypes = ClassTypes;
-    exports.Tokens = Tokens;
-    exports.Compare = Compare;
-    exports.Direction = Direction;
-    exports.ArrayList = ArrayList;
-    exports.HashMap = HashMap;
-    exports.Table = Table;
-    exports.Tree = Tree;
-
     var tempmap = new HashMap();
     tempmap.constructor.prototype.toJSON = function() {
         this.removeSync(null);
@@ -127,64 +120,9 @@
     var MAX_VALUE = java.newInstanceSync("java.lang.Long", 2147483647);
     var MIN_VALUE = 0;
 
-    var _db;
     var _JSON = new JSONResultConverter(null,MIN_VALUE,MAX_VALUE, null);
 
-    function GremlinJSPipeline() {
-        var TinkerGraphFactory;
-        if(!_db){
-            console.log('No database set. Using mock TinkerGraph.');
-            TinkerGraphFactory = g.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
-            this.graph = TinkerGraphFactory.createTinkerGraphSync(); 
-            _db = this.graph;
-        } else {
-            this.graph = _db;
-        }
-        this.engine = ENGINE;
-        this.ctx = CONTEXT;
-        this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
-
-        this.gremlinPipeline = {};
-        this.Type = 'GremlinJSPipeline';
-    }
-    exports.GremlinJSPipeline = GremlinJSPipeline;
-
-    /********************** BLUEPRINT GRAPHS ******************************************/
-    var setGraph = function(db) {
-       _db = db
-    }
-
-    exports.SetGraph = setGraph;
-    exports.java = java;
-    /***********************************************************************************/
-
-    exports.v = function(){
-
-        var gremlin = new GremlinJSPipeline(_db),
-            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-            argsLen = args.length,
-            list = new ArrayList();
-        for (var i = 0; i < argsLen; i++) {
-            if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
-                args[i] = args[i].substring(2, args[i].length - 1);
-            }
-            list.addSync(gremlin.graph.getVertexSync(args[i]));
-        };
-        gremlin.gremlinPipeline = new GremlinPipeline(list);
-        return gremlin;
-    }
-
-    exports.e = function(){
-        var gremlin = new GremlinJSPipeline(_db),
-            args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-            argsLen = args.length,
-            list = new ArrayList();
-        for (var i = 0; i < argsLen; i++) {
-            list.addSync(gremlin.graph.getEdgeSync(args[i]));
-        };
-        gremlin.gremlinPipeline = new GremlinPipeline(list);
-        return gremlin;
-    }
+    var _db;
 
     function _isClosure(val) {
         return _isString(val) && val.search(closureRegex) > -1;   
@@ -223,19 +161,235 @@
             return type === typeName;
     }
 
+    function GremlinJSPipeline(_db) {
+        var TinkerGraphFactory;
+        if(!_db){
+            console.log('No database set. Using mock TinkerGraph.');
+            TinkerGraphFactory = java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+            this.graph = TinkerGraphFactory.createTinkerGraphSync(); 
+        } else {
+            this.graph = _db;
+        }
+        this.engine = ENGINE;
+        this.ctx = CONTEXT;
+        this.engine.getBindingsSync(this.ctx).putSync("g", this.graph);
+
+        this.gremlinPipeline = {};
+        this.Type = 'GremlinJSPipeline';
+    }
+
+    /********************** BLUEPRINT GRAPHS ******************************************/
+
+    exports.java = java;
+    exports.GremlinJSPipeline = GremlinJSPipeline;
+    exports.ClassTypes = ClassTypes;
+    exports.Tokens = Tokens;
+    exports.Compare = Compare;
+    exports.Direction = Direction;
+    exports.ArrayList = ArrayList;
+    exports.HashMap = HashMap;
+    exports.Table = Table;
+    exports.Tree = Tree;
+
+    exports.setGraph = function(db) {
+        _db = db;
+    };
+
+    exports.newTransaction = function() {
+        return new Transaction(_db.newTransactionSync());
+    }
+
+    var Transaction = function(_db) {
+        this._db = _db;
+    }
+
+    Transaction.prototype.addVertex = function(id, callback) {
+        this._db.addVertex(id, callback);
+    };
+
+    Transaction.prototype.addEdge = function(id, from, to, label, callback) {
+        this._db.addEdge(id, from, to, label, callback);
+    };
+
+    Transaction.prototype.v = function(_, callback){
+        var gremlin = new GremlinJSPipeline(this._db),
+            list = new ArrayList(),
+            args = [],
+            k,
+            cb;
+
+        if (_isArray(arguments[0])) {
+            args = arguments[0];
+            cb = callback;
+        } else {
+            for (k in arguments) {
+                args.push(arguments[k]);
+            }
+            cb = args.pop()
+        }
+        async.eachSeries(
+            args,
+            function(item, callback) {
+                if (typeof item === 'string' && item.substring(0, 2) === 'v[') {
+                    item = item.substring(2, item.length - 1);
+                }
+                gremlin.graph.getVertex(item, function(err, vertex) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    list.addSync(vertex);
+                    return callback();
+                });
+            },
+            function(err) {
+                gremlin.gremlinPipeline = new GremlinPipeline(list);
+                return cb(err, gremlin);
+            }
+        );
+    }
+
+    Transaction.prototype.e = function(_, callback){
+        var gremlin = new GremlinJSPipeline(this._db),
+            list = new ArrayList(),
+            args = [],
+            k,
+            cb;
+        if (_isArray(arguments[0])) {
+            args = arguments[0];
+            cb = callback;
+        } else {
+            for (k in arguments) {
+                args.push(arguments[k]);
+            }
+            cb = args.pop()
+        }
+        async.eachSeries(
+            args,
+            function(item, callback) {
+                gremlin.graph.getEdge(item, function(err, edge) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    list.addSync(edge);
+                    callback();
+                });
+            },
+            function(err) {
+                gremlin.gremlinPipeline = new GremlinPipeline(list);
+                cb(err, gremlin);
+            }
+        );
+    }
+
+    Transaction.prototype.V = function(key, value, callback){
+        var gremlin = new GremlinJSPipeline(this._db),
+            args = [],
+            callback,
+            value,
+            key,
+            k,
+            o = {};
+        for (k in arguments) {
+            args.push(arguments[k]);
+        }
+        callback = args.pop();
+        value = args.pop();
+        key = args.pop();
+        if (key && _isObject(key)) {
+            o = key;
+            key = null;
+            for (k in o) {
+                if (key.hasOwnProperty(k)) {
+                    key = k;
+                    value = o[k];
+                    break;
+                }
+            }
+        }
+        if (!key) {
+            gremlin.graph.querySync().vertices(function(err, vertices) {
+                if (err) {
+                    return callback(err);
+                }
+                gremlin.gremlinPipeline = new GremlinPipeline(vertices);
+                return callback(null, gremlin);
+            });
+        } else {
+            gremlin.graph.querySync().hasSync(key, value).vertices(function(err, vertices) {
+                if (err) {
+                    return callback(err);
+                }
+                gremlin.gremlinPipeline = new GremlinPipeline(vertices);
+                return callback(null, gremlin);
+            });
+        }
+    }
+
+    Transaction.prototype.E = function(key, value, callback){
+        var gremlin = new GremlinJSPipeline(this._db),
+            args = [],
+            callback,
+            value,
+            key,
+            k,
+            o = {};
+        for (k in arguments) {
+            args.push(arguments[k]);
+        }
+        callback = args.pop();
+        value = args.pop();
+        key = args.pop();
+        if (key && _isObject(key)) {
+            o = key;
+            key = null;
+            for (k in o){
+                if (key.hasOwnProperty(k)) {
+                    key = k;
+                    value = o[k];
+                    break;
+                }
+            }
+        }
+        if (!key) {
+            gremlin.graph.querySync().edges(function(err, edges) {
+                if (err) {
+                    return callback(err);
+                }
+                gremlin.gremlinPipeline = new GremlinPipeline(edges);
+                return callback(null, gremlin);
+            });
+        } else {
+            gremlin.graph.getEdges(key, value, function(err, edges) {
+                if (err) {
+                    return callback(err);
+                }
+                gremlin.gremlinPipeline = new GremlinPipeline(edges);
+                return callback(err, gremlin);
+            });
+        }
+    }
+
+    Transaction.prototype.rollback = function(callback) {
+        this._db.rollback(callback);
+    }
+
+    Transaction.prototype.commit = function(callback) {
+        this._db.commit(callback);
+    }
+
     ///////////////////////
     /// TRANSFORM PIPES ///
     ///////////////////////
-    exports._ = function() {
-        var gremlin = new GremlinJSPipeline();
+    Transaction.prototype._ = function() {
+        var gremlin = new GremlinJSPipeline(this._db);
         gremlin.gremlinPipeline = new GremlinPipeline();
         gremlin.gremlinPipeline._Sync();
         return gremlin;
 
     }
 
-    exports.start = function(obj) {
-        var gremlin = new GremlinJSPipeline();
+    Transaction.prototype.start = function(obj) {
+        var gremlin = new GremlinJSPipeline(this._db);
         gremlin.gremlinPipeline = new GremlinPipeline(obj);
         return gremlin;
     }
@@ -275,27 +429,6 @@
     GremlinJSPipeline.prototype.cap = function() {
         this.gremlinPipeline.capSync();
         return this;
-    }
-
-    exports.E = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
-            k,
-            o = {};
-        if (!key) {
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync());    
-        } else {
-            if (_isObject(key)) {
-                o = key;
-                for(k in o){
-                    if(key.hasOwnProperty(k)){
-                        key = k;
-                        value = o[k];
-                    }
-                }
-            }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getEdgesSync(key, value));    
-        }
-        return gremlin;
     }
 
     GremlinJSPipeline.prototype.gather = function (closure) {
@@ -446,28 +579,6 @@
         this.gremlinPipeline = this.engine.evalSync("V.transform" + closure);
         return this;
     }    
-
-    //can also pass in JSON
-    exports.V = function(key, value){
-        var gremlin = new GremlinJSPipeline(),
-            k,
-            o = {};
-        if (!key) {
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.getVerticesSync());    
-        } else {
-            if (_isObject(key)) {
-                o = key;
-                for(k in o){
-                    if(key.hasOwnProperty(k)){
-                        key = k;
-                        value = o[k];
-                    }
-                }
-            }
-            gremlin.gremlinPipeline = new GremlinPipeline(gremlin.graph.querySync().hasSync(key, value).verticesSync()/*gremlin.graph.getVerticesSync(key, value)*/);    
-        }
-        return gremlin;
-    }
 
     ////////////////////
     /// FILTER PIPES ///
@@ -807,12 +918,17 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.count = function() {
-        return this.gremlinPipeline.countSync();
+    GremlinJSPipeline.prototype.count = function(callback) {
+        this.gremlinPipeline.count(callback);
     }
 
-    GremlinJSPipeline.prototype.toJSON = function() {
-        return JSON.parse(_JSON.convertSync(this.gremlinPipeline).toString());
+    GremlinJSPipeline.prototype.toJSON = function(callback) {
+        _JSON.convert(this.gremlinPipeline, function(err, data) {
+            if (err) {
+                return callback(err);
+            }
+            callback(null, JSON.parse(data.toString()));
+        });
     }
     
     GremlinJSPipeline.prototype.iterate = function() {
@@ -827,30 +943,37 @@
         return this.gremlinPipeline;
     }
 
-    GremlinJSPipeline.prototype.next = function(number){
-        if(number){
-            return this.gremlinPipeline.nextSync(number);    
+    GremlinJSPipeline.prototype.next = function(number, callback){
+        if(callback){
+            return this.gremlinPipeline.next(number, callback);
+        } else {
+            // first parameter is callback
+            callback = number;
+            return this.gremlinPipeline.next(callback);
         }
-        return this.gremlinPipeline.nextSync();
-        
     }
 
-    GremlinJSPipeline.prototype.toList = function(){
-        return this.gremlinPipeline.toListSync();
+    GremlinJSPipeline.prototype.toList = function(callback){
+        this.gremlinPipeline.toList(callback);
     }
 
-    GremlinJSPipeline.prototype.toArray = function(){
-        return this.gremlinPipeline.toListSync().toArraySync();
+    GremlinJSPipeline.prototype.toArray = function(callback){
+        this.gremlinPipeline.toList(function(err, data) {
+            if (err) {
+                return callback(err);
+            }
+            data.toArray(callback);
+        });
     }
 
     GremlinJSPipeline.prototype.consoleOut = function(){
         return console.log(this.gremlinPipeline.toListSync().toString());
     }
     
-    //Need to look at fill and make Async ???
-    GremlinJSPipeline.prototype.fill = function(collection) {
-        this.gremlinPipeline.fillSync(collection);
-        return collection;
+    GremlinJSPipeline.prototype.fill = function(collection, callback) {
+        this.gremlinPipeline.fill(collection, function(err, data) {
+            callback(err, collection); // or maybe data should be returned?
+        });
     }
 
     GremlinJSPipeline.prototype.enablePath = function() {
@@ -863,42 +986,45 @@
         return this;
     }
 
-    GremlinJSPipeline.prototype.size = function() {
-        return this.gremlinPipeline.sizeSync();
+    GremlinJSPipeline.prototype.size = function(callback) {
+        this.gremlinPipeline.size(callback);
     }
 
-    GremlinJSPipeline.prototype.reset = function() {
-        this.gremlinPipeline.resetSync();
+    GremlinJSPipeline.prototype.reset = function(callback) {
+        this.gremlinPipeline.reset(callback);
     }
     
-    GremlinJSPipeline.prototype.hasNext = function() {
-        return this.gremlinPipeline.hasNextSync();
+    GremlinJSPipeline.prototype.hasNext = function(callback) {
+        this.gremlinPipeline.hasNext(callback);
     }
 
-    GremlinJSPipeline.prototype.getCurrentPath = function() {
-        return this.gremlinPipeline.getCurrentPathSync();
+    GremlinJSPipeline.prototype.getCurrentPath = function(callback) {
+        this.gremlinPipeline.getCurrentPath(callback);
     }
 
-    GremlinJSPipeline.prototype.getPipes = function() {
-        return this.gremlinPipeline.getPipesSync();
+    GremlinJSPipeline.prototype.getPipes = function(callback) {
+        this.gremlinPipeline.getPipes(callback);
     }
 
-    GremlinJSPipeline.prototype.getStarts = function() {
-        return this.gremlinPipeline.getStartsSync();
+    GremlinJSPipeline.prototype.getStarts = function(callback) {
+        this.gremlinPipeline.getStarts(callback);
     }
 
-    GremlinJSPipeline.prototype.remove = function(index) {
-        if(index){
-            return this.gremlinPipeline.removeSync(index);
+    GremlinJSPipeline.prototype.remove = function(index, callback) {
+        if(callback){
+            return this.gremlinPipeline.remove(index, callback);
+        } else {
+            // first param is callback
+            callback = index;
+            return this.gremlinPipeline.remove(callback);
         }
-        return this.gremlinPipeline.removeSync();
     }
 
-    GremlinJSPipeline.prototype.get = function(index) {
-        return this.gremlinPipeline.getSync(index);
+    GremlinJSPipeline.prototype.get = function(index, callback) {
+        this.gremlinPipeline.get(index, callback);
     }
 
-    GremlinJSPipeline.prototype.equals = function(object) {
-        return this.gremlinPipeline.equalsSync(object);
+    GremlinJSPipeline.prototype.equals = function(object, callback) {
+        this.gremlinPipeline.equals(object, callback);
     }
 });
