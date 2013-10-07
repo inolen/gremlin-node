@@ -5,6 +5,7 @@ import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.gremlin.Tokens;
 import com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline;
+import java.lang.NumberFormatException;
 
 /**
  * @author Frank Panetta (frank.panetta@entrendipity.com.au)
@@ -22,22 +23,31 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
     }
 
     public GremlinJSPipeline<S, ? extends Element> has(final String key, final String value) {
-        if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinJSPipeline<S, ? extends Element>)super.has(key, Float.parseFloat(value));
+        if (value.endsWith(FLOAT_SUFFIX)){
+            try {
+                return (GremlinJSPipeline<S, ? extends Element>)super.has(key, Float.parseFloat(value));
+            } catch (NumberFormatException e) {
+            }
         }
         return (GremlinJSPipeline<S, ? extends Element>)super.has(key, value);
     }
 
     public GremlinJSPipeline<S, ? extends Element> has(final String key, final Tokens.T comparison, final String value) {
-        if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinJSPipeline<S, ? extends Element>)super.has(key, comparison, Float.parseFloat(value));
+        if (value.endsWith(FLOAT_SUFFIX)){
+            try {
+                return (GremlinJSPipeline<S, ? extends Element>)super.has(key, comparison, Float.parseFloat(value));
+            } catch (NumberFormatException e) {
+            }
         }
         return (GremlinJSPipeline<S, ? extends Element>)super.has(key, comparison, value);
     }
 
     public GremlinGroovyPipeline<S, ? extends Element> hasNot(final String key, final String value) {
-        if (value.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(value))){
-            return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, Float.parseFloat(value));
+        if (value.endsWith(FLOAT_SUFFIX)){
+            try {
+                return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, Float.parseFloat(value));
+            } catch (NumberFormatException e) {
+            }
         }
         return (GremlinJSPipeline<S, ? extends Element>)super.hasNot(key, value);
     }
@@ -45,11 +55,17 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
     public GremlinJSPipeline<S, ? extends Element> interval(final String key, final String startValue, final String endValue) {
         Comparable tmpStartValue = startValue;
         Comparable tmpEndValue = endValue;
-        if (startValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(startValue))){
-            tmpStartValue = Float.parseFloat(startValue);
+        if (startValue.endsWith(FLOAT_SUFFIX)){
+            try {
+                tmpStartValue = Float.parseFloat(startValue);
+            } catch (NumberFormatException e) {
+            }
         }
-        if (endValue.endsWith(FLOAT_SUFFIX) && !Float.isNaN(Float.parseFloat(endValue))){
-            tmpEndValue = Float.parseFloat(endValue);
+        if (endValue.endsWith(FLOAT_SUFFIX)){
+            try {
+                tmpEndValue = Float.parseFloat(endValue);
+            } catch (NumberFormatException e) {
+            }
         }
         return (GremlinJSPipeline<S, ? extends Element>)super.interval(key, tmpStartValue, tmpEndValue);
     }
