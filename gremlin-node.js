@@ -51,8 +51,8 @@ var Contains = java.import('com.tinkerpop.blueprints.Contains');
 
 var ClassTypes = {
     'String': { 'class': Class.forNameSync('java.lang.String') },
-    'Vertex': { 'class': GremlinPipeline.getVertexTypeClassSync() },
-    'Edge': { 'class': GremlinPipeline.getEdgeTypeClassSync() },
+    'Vertex': { 'class': java.getClassLoader().loadClassSync('com.tinkerpop.blueprints.Vertex') },
+    'Edge': { 'class': java.getClassLoader().loadClassSync('com.tinkerpop.blueprints.Edge') },
     'Byte': { 'class': Class.forNameSync('java.lang.Byte') },
     'Character': { 'class': Class.forNameSync('java.lang.Character') },
     'Double': { 'class': Class.forNameSync('java.lang.Double') },
@@ -86,7 +86,7 @@ function _isClosure(val) {
 
 function _isFunction(o) {
     return toString.call(o) === '[object Function]';
-};
+}
 
 function _isString(o) {
     return toString.call(o) === '[object String]';
@@ -105,16 +105,15 @@ function _isNull(o) {
 
 function _ifIsNull(o) {
     return _isNull(o) ? NULL : o;
-};
+}
 
 function _isType(o, typeName){
-    var type;
+    var clazz = java.getClassLoader().loadClassSync(typeName);
     try {
-            type = o.getClassSync().toString().split('.').slice(-1)[0];
-        } catch(err) {
-            return false;
-        }
-        return type === typeName;
+        return clazz.isInstanceSync(o);
+    } catch(err) {
+        return false;
+    }
 }
 
 /////////////////////
@@ -428,7 +427,7 @@ GremlinJSPipeline.prototype.except = function() {
         argsLen = args.length,
         list;
 
-    if(_isType(args[0], 'ArrayList')){
+    if(_isType(args[0], 'java.util.Collection')){
         this.pipeline.exceptSync(args[0]);
     } else {
         list = new ArrayList();

@@ -1,8 +1,6 @@
 package com.entrendipity.gremlin.javascript;
 
-import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
-import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.gremlin.Tokens;
 import com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline;
 import java.lang.NumberFormatException;
@@ -72,14 +70,5 @@ public class GremlinJSPipeline<S, E> extends GremlinGroovyPipeline<S, E> {
 
     public GremlinJSPipeline<S, ? extends Element> retainStep(final String key) {
         return (GremlinJSPipeline<S, ? extends Element>)super.retain(key);
-    }
-
-
-    public static Class<Vertex> getVertexTypeClass(){
-        return Vertex.class;
-    }
-
-    public static Class<Edge> getEdgeTypeClass(){
-        return Edge.class;
     }
 }
