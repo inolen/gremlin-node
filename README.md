@@ -318,8 +318,7 @@ Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen
 
 ## Contributors
 
-Anthony Pesch (inolen)
-
+Anthony Pesch - [inolen](https://github.com/inolen)
 Jared Camins-Esakov
 
 ##License
