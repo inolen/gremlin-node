@@ -116,6 +116,44 @@ function _isType(o, typeName){
     }
 }
 
+function _toList(iterable, callback) {
+    iterable.iterator(function (err, it) {
+        if (err) return callback(err);
+        var list = new ArrayList();
+        while (it.hasNextSync()) {
+            list.addSync(it.nextSync());
+        }
+        callback(null, list);
+    });
+}
+
+function _toListSync(iterable) {
+    var it = iterable.iteratorSync();
+    var list = new ArrayList();
+    while (it.hasNextSync()) {
+        list.addSync(it.nextSync());
+    }
+    return list;
+}
+
+function _toJSON(obj, callback) {
+    _JSON.convert(obj, function (err, json) {
+        if (err) return callback(err);
+        try {
+            json = JSON.parse(json.toString());
+        } catch (e) {
+            return callback(e);
+        }
+        return callback(null, json);
+    });
+}
+
+function _toJSONSync(obj) {
+    var json = _JSON.convertSync(obj);
+    json = JSON.parse(json.toString());
+    return json;
+}
+
 /////////////////////
 /// GRAPH WRAPPER ///
 /////////////////////
@@ -741,19 +779,11 @@ GremlinJSPipeline.prototype.count = function() {
 };
 
 GremlinJSPipeline.prototype.toJSON = function(callback) {
-    _JSON.convert(this.pipeline, function (err, json) {
-        if (err) return callback(err);
-        try {
-            json = JSON.parse(json.toString());
-        } catch (e) {
-            return callback(e);
-        }
-        return callback(null, json);
-    });
+    _toJSON(this.pipeline, callback);
 };
 
 GremlinJSPipeline.prototype.toJSONSync = function() {
-    return JSON.parse(_JSON.convertSync(this.pipeline).toString());
+    return _toJSONSync(this.pipeline);
 };
 
 GremlinJSPipeline.prototype.iterate = function() {
@@ -885,20 +915,10 @@ QueryWrapper.prototype.limit = function() {
 
 QueryWrapper.prototype.vertices = function() {
     var args = slice.call(arguments);
-    this.query.vertices.apply(this.query, args);
-};
-
-QueryWrapper.prototype.verticesSync = function() {
-    var args = slice.call(arguments);
     return this.query.verticesSync.apply(this.query, args);
 };
 
 QueryWrapper.prototype.edges = function() {
-    var args = slice.call(arguments);
-    this.query.edges.apply(this.query, args);
-};
-
-QueryWrapper.prototype.edgesSync = function() {
     var args = slice.call(arguments);
     return this.query.edgesSync.apply(this.query, args);
 };
@@ -914,6 +934,10 @@ return {
     HashMap: HashMap,
     Table: Table,
     Tree: Tree,
+    toList: _toList,
+    toListSync: _toListSync,
+    toJSON: _toJSON,
+    toJSONSync: _toJSONSync,
     wrap: function(graph) {
         return new GraphWrapper(graph);
     }
