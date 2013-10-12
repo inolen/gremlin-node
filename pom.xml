@@ -10,127 +10,107 @@
   <name>gremlin</name>
 
   <properties>
+    <blueprints.version>2.4.0</blueprints.version>
+    <gremlin.version>2.4.0</gremlin.version>
+    <pipes.version>2.4.0</pipes.version>
+    <rexster.version>2.4.0</rexster.version>
+    <titan.version>0.3.2</titan.version>
+    <orientdb.version>1.5.0</orientdb.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-         <groupId>com.thinkaurelius.titan</groupId>
-         <artifactId>titan-all</artifactId>
-         <version>0.3.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.1</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
-    <dependency>
-      <groupId>com.thinkaurelius.titan</groupId>
-      <artifactId>titan-all</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thinkaurelius.titan</groupId>
-      <artifactId>titan-lucene</artifactId>
-      <version>0.3.2</version>
-    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
+      <version>3.1</version>
     </dependency>
-
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-core</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.gremlin</groupId>
-            <artifactId>gremlin-groovy</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.rexster</groupId>
-            <artifactId>rexster-server</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.gremlin</groupId>
-            <artifactId>gremlin-java</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <!-- PROVIDED DEPENDENCIES -->
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-graph-jung</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-graph-sail</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-neo4j-graph</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.tinkerpop.blueprints</groupId>-->
-            <!--<artifactId>blueprints-neo4jbatch-graph</artifactId>-->
-            <!--<version>2.4.0</version>-->
-            <!--<scope>provided</scope>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-orient-graph</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-dex-graph</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-sail-graph</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop.blueprints</groupId>
-            <artifactId>blueprints-rexster-graph</artifactId>
-            <version>2.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tinkerpop</groupId>
-            <artifactId>pipes</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-
+    <dependency>
+      <groupId>com.tinkerpop.gremlin</groupId>
+      <artifactId>gremlin-java</artifactId>
+      <version>${gremlin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.gremlin</groupId>
+      <artifactId>gremlin-groovy</artifactId>
+      <version>${blueprints.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.rexster</groupId>
+      <artifactId>rexster-server</artifactId>
+      <version>${rexster.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-core</artifactId>
+      <version>${blueprints.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-graph-jung</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-graph-sail</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-neo4j-graph</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-orient-graph</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-dex-graph</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-sail-graph</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop.blueprints</groupId>
+      <artifactId>blueprints-rexster-graph</artifactId>
+      <version>${blueprints.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tinkerpop</groupId>
+      <artifactId>pipes</artifactId>
+      <version>${pipes.version}</version>
+    </dependency>
+    <!-- Titan -->
+    <dependency>
+      <groupId>com.thinkaurelius.titan</groupId>
+      <artifactId>titan-all</artifactId>
+       <version>${titan.version}</version>
+    </dependency>
+    <!-- OrientDB -->
     <dependency>
       <groupId>com.orientechnologies</groupId>
       <artifactId>orientdb-enterprise</artifactId>
-      <version>1.5.0</version>
+      <version>${orientdb.version}</version>
     </dependency>
-
     <dependency>
       <groupId>com.orientechnologies</groupId>
       <artifactId>orientdb-client</artifactId>
-      <version>1.5.0</version>
+      <version>${orientdb.version}</version>
     </dependency>
+  </dependencies>
 
-    </dependencies>
   <build>
     <plugins>
       <plugin>
