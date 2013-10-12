@@ -316,6 +316,8 @@ node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync(
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
 
+## Contributors
+Anthony Pesch (inolen)
 Jared Camins-Esakov
 
 ##License
