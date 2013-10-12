@@ -10,9 +10,6 @@
     "blueprints"
   ],
   "homepage": "https://github.com/entrendipity/gremlin-node",
-  "authors": [
-    "Frank Panetta <frank.panetta@entrendipity.com.au>"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/entrendipity/gremlin-node.git"
@@ -38,6 +35,7 @@
   },
   "author": "Frank Panetta",
   "contributors": [
-    "Jared Camins"
+    { "name": "Anthony Pesch", "email": "inolen@gmail.com"},
+    { "name": "Jared Camins"}
   ]
 }
