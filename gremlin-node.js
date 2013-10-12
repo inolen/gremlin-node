@@ -1,34 +1,31 @@
 var fs = require('fs'),
-    path = require('path'),
-    wrench = require('wrench');
+    glob = require('glob'),
+    path = require('path');
 
 module.exports = function(opts) {
+
+var java = require('java');
 
 opts = opts || {};
 opts.options = opts.options || [];
 opts.classpath = opts.classpath || [];
 
-var java = require('java');
+//add default globbed lib/**/*.jar classpath
+opts.classpath.push(path.join(__dirname, 'lib', '**', '*.jar'));
 
+//add options
 java.options.push('-Djava.awt.headless=true');
 for (var i = 0; i < opts.options.length; i++) {
     java.options.push(opts.options[i]);
 }
 
-//default lib dir
-java.classpath.push(path.join(__dirname , 'lib'));
-
 //add jar files
-var jars = wrench
-    .readdirSyncRecursive(__dirname)
-    .filter(function isJarFile(element, index, array){
-        return element.split('.').slice(-1) == 'jar';
-    });
-for (var i = 0; i < jars.length; i++) {
-    java.classpath.push(path.join(__dirname, jars[i]));
-}
 for (var i = 0; i < opts.classpath.length; i++) {
-    java.classpath.push(opts.classpath[i]);
+    var pattern = opts.classpath[i];
+    var filenames = glob.sync(pattern);
+    for (var j = 0; j < filenames.length; j++) {
+        java.classpath.push(filenames[j]);
+    }
 }
 
 var GremlinGroovyScriptEngine = java.import('com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine');
