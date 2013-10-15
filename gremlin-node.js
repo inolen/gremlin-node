@@ -797,7 +797,7 @@ GremlinJSPipeline.prototype.pipe = function() {
 
 GremlinJSPipeline.prototype.hasNext = function() {
     var args = slice.call(arguments);
-    return this.pipeline.hasNextSync.apply(this.pipeline, args);
+    return this.pipeline.hasNext.apply(this.pipeline, args);
 };
 
 GremlinJSPipeline.prototype.hasNextSync = function() {
