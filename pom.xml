@@ -14,7 +14,7 @@
     <gremlin.version>2.4.0</gremlin.version>
     <pipes.version>2.4.0</pipes.version>
     <rexster.version>2.4.0</rexster.version>
-    <titan.version>0.3.2</titan.version>
+    <titan.version>0.4.0</titan.version>
     <orientdb.version>1.5.0</orientdb.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
