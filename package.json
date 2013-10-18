@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "java": ">=0.2.5",
-    "glob": "~3.2.6"
+    "glob": "~3.2.6",
+    "async": "~0.2.9"
   },
   "license": "MIT",
   "engines": {
