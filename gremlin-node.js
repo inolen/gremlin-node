@@ -1,4 +1,5 @@
-var fs = require('fs'),
+var async = require('async'),
+    fs = require('fs'),
     glob = require('glob'),
     path = require('path');
 
@@ -114,23 +115,11 @@ function _isType(o, typeName){
 }
 
 function _toList(iterable, callback) {
-    iterable.iterator(function (err, it) {
-        if (err) return callback(err);
-        var list = new ArrayList();
-        while (it.hasNextSync()) {
-            list.addSync(it.nextSync());
-        }
-        callback(null, list);
-    });
+    java.callStaticMethod('com.google.common.collect.Lists', 'newArrayList', iterable, callback);
 }
 
 function _toListSync(iterable) {
-    var it = iterable.iteratorSync();
-    var list = new ArrayList();
-    while (it.hasNextSync()) {
-        list.addSync(it.nextSync());
-    }
-    return list;
+    java.callStaticMethodSync('com.google.common.collect.Lists', 'newArrayList', iterable);
 }
 
 function _toJSON(obj, callback) {
@@ -187,7 +176,24 @@ GraphWrapper.prototype.E = function() {
 };
 
 GraphWrapper.prototype.v = function() {
-    throw new Error('TODO');
+    var self = this;
+    var args = slice.call(arguments);
+    var callback = args[args.length-1];
+    args = _isArray(args[0]) ? args[0] : args.slice(0, -1);
+    var list = new ArrayList();
+    async.each(args, function (arg, cb) {
+        if (typeof arg === 'string' && arg.substring(0, 2) === 'v[') {
+            arg = arg.substring(2, arg.length - 1);
+        }
+        self.graph.getVertex(arg, function (err, v) {
+            if (err) return cb(err);
+            list.addSync(v);
+            cb(null);
+        });
+    }, function (err) {
+        if (err) return callback(err);
+        callback(null, new GremlinJSPipeline(list));
+    });
 };
 
 GraphWrapper.prototype.vSync = function() {
@@ -788,7 +794,8 @@ GremlinJSPipeline.prototype.iterate = function() {
 };
 
 GremlinJSPipeline.prototype.iterator = function() {
-    return this.pipeline;
+    var args = slice.call(arguments);
+    return this.pipeline.iterator.apply(this.pipeline, args);
 };
 
 GremlinJSPipeline.prototype.pipe = function() {
