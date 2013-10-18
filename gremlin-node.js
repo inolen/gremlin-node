@@ -494,22 +494,19 @@ GremlinJSPipeline.prototype.E = function() {
 
 GremlinJSPipeline.prototype.has = function() {
     var args = slice.call(arguments);
-    if(args.length == 2){
-        this.pipeline.hasSync(args[0], _ifIsNull(args[1]));
-    } else {
-        this.pipeline.hasSync(args[0], args[1], args[2]);
+    for (var i = 0; i < args.length; i++) {
+        args[i] = _ifIsNull(args[i]);
     }
+    this.pipeline.hasSync.apply(this.pipeline, args);
     return this;
 };
 
 GremlinJSPipeline.prototype.hasNot = function() {
-    var args = slice.call(arguments)
-
-    if(args.length == 2){
-        this.pipeline.hasNotSync(args[0], _ifIsNull(args[1]));
-    } else {
-        this.pipeline.hasNotSync(args[0], args[1], args[2]);
+    var args = slice.call(arguments);
+    for (var i = 0; i < args.length; i++) {
+        args[i] = _ifIsNull(args[i]);
     }
+    this.pipeline.hasNotSync.apply(this.pipeline, args);
     return this;
 };
 
