@@ -312,17 +312,13 @@ gremlin>  g.V.except([marko]).linkBoth('connected', marko)
 node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync());
 ```
 
-## Performance Tuning
-
-Please refer to [Tuning Linux & the JVM for Graph Databases](https://github.com/tinkerpop/blueprints/wiki/Tuning-Linux-&-the-JVM-for-Graph-Databases) for implementation specific performance tuning.
-
 ## Author
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
 
-Anthony Pesch - [inolen](https://github.com/inolen)
-
 ## Contributors
+
+Anthony Pesch - [inolen](https://github.com/inolen)
 
 Jared Camins-Esakov
 
