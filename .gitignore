@@ -9,3 +9,5 @@ target/
 gremlin-js/src/main/java/com/entrendipity/gremlin/javascript/converter.java
 
 *.iml
+
+*.log
