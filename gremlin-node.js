@@ -114,11 +114,18 @@ function _isType(o, typeName){
 }
 
 function _toList(obj, callback) {
+    if (obj.getClassSync().isArraySync()) {
+        java.callStaticMethod('java.util.Arrays', 'asList', obj, callback);
+        return;
+    }
     java.callStaticMethod('com.google.common.collect.Lists', 'newArrayList', obj, callback);
 }
 
 function _toListSync(obj) {
-    java.callStaticMethodSync('com.google.common.collect.Lists', 'newArrayList', obj);
+    if (obj.getClassSync().isArraySync()) {
+        return java.callStaticMethodSync('java.util.Arrays', 'asList', obj);
+    }
+    return java.callStaticMethodSync('com.google.common.collect.Lists', 'newArrayList', obj);
 }
 
 function _toJSON(obj, callback) {
