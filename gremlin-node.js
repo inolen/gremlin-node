@@ -30,7 +30,7 @@ for (var i = 0; i < opts.classpath.length; i++) {
 }
 
 var GremlinGroovyScriptEngine = java.import('com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine');
-var GremlinPipeline = java.import('com.entrendipity.gremlin.javascript.GremlinJSPipeline');
+var GremlinPipeline = java.import('com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline');
 
 var JSONResultConverter = java.import('com.tinkerpop.rexster.gremlin.converter.JSONResultConverter');
 var JSONObject = java.import('org.json.JSONObject');
@@ -63,7 +63,6 @@ var ClassTypes = {
     'BigInteger': { 'class': Class.forNameSync('java.math.BigInteger') }
 }
 
-var ENGINE = new GremlinGroovyScriptEngine();
 var NULL = java.callStaticMethodSync('org.codehaus.groovy.runtime.NullObject', 'getNullObject');
 var MAX_VALUE = java.newInstanceSync('java.lang.Long', 2147483647);
 var MIN_VALUE = 0;
@@ -138,6 +137,14 @@ function _toJSONSync(obj) {
     var json = _JSON.convertSync(obj);
     json = JSON.parse(json.toString());
     return json;
+}
+
+function _getEngine() {
+    if (_getEngine.engine) {
+        return _getEngine.engine;
+    }
+    _getEngine.engine = new GremlinGroovyScriptEngine();
+    return _getEngine.engine;
 }
 
 /////////////////////
@@ -229,7 +236,7 @@ GraphWrapper.prototype.eSync = function() {
 ///////////////////////////
 
 var GremlinJSPipeline = function(start) {
-    this.bindings = ENGINE.createBindingsSync();
+    this.bindings = _getEngine().createBindingsSync();
     if (_isType(start, 'com.tinkerpop.blueprints.Graph')){
         this.bindings.putSync('g', start);
     }
@@ -245,7 +252,7 @@ GremlinJSPipeline.prototype.printPipe = function(){
 GremlinJSPipeline.prototype.step = function(closure) {
     if(_isClosure(closure)){
         this.bindings.putSync('V', this.pipeline);
-        this.pipeline = ENGINE.evalSync('V.step' + closure, this.bindings);
+        this.pipeline = _getEngine().evalSync('V.step' + closure, this.bindings);
     } else {
         this.pipeline.stepSync(java.newInstanceSync('com.tinkerpop.pipes.Pipe', closure.pipe()));
     }
@@ -277,7 +284,7 @@ GremlinJSPipeline.prototype.cap = function() {
 GremlinJSPipeline.prototype.gather = function(closure) {
     if (_isClosure(closure)) {
         this.bindings.putSync('V', this.pipeline);
-        this.pipeline = ENGINE.evalSync('V.gather' + closure , this.bindings);
+        this.pipeline = _getEngine().evalSync('V.gather' + closure , this.bindings);
     } else {
         this.pipeline.gatherSync();
     }
@@ -350,7 +357,7 @@ GremlinJSPipeline.prototype.memoize = function() {
 GremlinJSPipeline.prototype.order = function(closure) {
     if (_isClosure(closure)) {
         this.bindings.putSync('V', this.pipeline);
-        this.pipeline = ENGINE.evalSync('V.order' + closure, this.bindings);
+        this.pipeline = _getEngine().evalSync('V.order' + closure, this.bindings);
     } else {
         this.pipeline.orderSync();
     }
@@ -377,7 +384,7 @@ GremlinJSPipeline.prototype.outV = function(){
 GremlinJSPipeline.prototype.path = function() {
     closure = slice.call(arguments);
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.path' + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.path' + closure, this.bindings);
     return this;
 };
 
@@ -408,7 +415,7 @@ GremlinJSPipeline.prototype.select = function() {
     }
     closure = slice.call(arguments, rest);
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.select'+ params + closure, this.bindings);         
+    this.pipeline = _getEngine().evalSync('V.select'+ params + closure, this.bindings);         
     return this;
 };
 
@@ -419,7 +426,7 @@ GremlinJSPipeline.prototype.shuffle = function() {
 
 GremlinJSPipeline.prototype.transform = function(closure) {
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.transform' + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.transform' + closure, this.bindings);
     return this;
 };
 
@@ -456,7 +463,7 @@ GremlinJSPipeline.prototype.back = function(step) {
 GremlinJSPipeline.prototype.dedup = function(closure) {
     if (_isClosure(closure)) {
         this.bindings.putSync('V', this.pipeline);
-        this.pipeline = ENGINE.evalSync('V.dedup' + closure, this.bindings);
+        this.pipeline = _getEngine().evalSync('V.dedup' + closure, this.bindings);
     } else {
         this.pipeline.dedupSync();
     }
@@ -482,7 +489,7 @@ GremlinJSPipeline.prototype.except = function() {
 
 GremlinJSPipeline.prototype.filter = function(closure) {
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.filter' + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.filter' + closure, this.bindings);
     return this;
 };
 
@@ -587,7 +594,7 @@ GremlinJSPipeline.prototype.aggregate = function(collection, closure) {
         this.bindings.putSync('coll', collection);
         param += '(coll)';
     }
-    this.pipeline = ENGINE.evalSync('V.aggregate' + param + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.aggregate' + param + closure, this.bindings);
     return this;
 };
 
@@ -620,7 +627,7 @@ GremlinJSPipeline.prototype.groupBy = function(map, closure) {
         this.bindings.putSync('map', map);
         param += '(map)'
     }
-    this.pipeline = ENGINE.evalSync('V.groupBy' + param + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.groupBy' + param + closure, this.bindings);
     return this;
 };
 
@@ -637,7 +644,7 @@ GremlinJSPipeline.prototype.groupCount = function() {
 
     closure = slice.call(arguments, rest);
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.groupCount' + param + closure, this.bindings);   
+    this.pipeline = _getEngine().evalSync('V.groupCount' + param + closure, this.bindings);   
     return this;
 };
 
@@ -648,7 +655,7 @@ GremlinJSPipeline.prototype.optional = function(step) {
 
 GremlinJSPipeline.prototype.sideEffect = function(closure) {
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.sideEffect' + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.sideEffect' + closure, this.bindings);
     return this;
 };
 
@@ -671,7 +678,7 @@ GremlinJSPipeline.prototype.store = function(collection, closure) {
         this.bindings.putSync('coll', collection);
         param += '(coll)'
     }
-    this.pipeline = ENGINE.evalSync('V.store' + param + closure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.store' + param + closure, this.bindings);
     return this;
 };
 
@@ -705,7 +712,7 @@ GremlinJSPipeline.prototype.table = function() {
     } else {
         closure = slice.call(arguments);
     }
-    this.pipeline = ENGINE.evalSync('V.table' + param + closure, this.bindings); 
+    this.pipeline = _getEngine().evalSync('V.table' + param + closure, this.bindings); 
     return this;
 };
 
@@ -754,7 +761,7 @@ GremlinJSPipeline.prototype.ifThenElse = function(ifClosure, thenClosure, elseCl
     elseClosure = elseClosure || '';
     
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.ifThenElse' + ifClosure + thenClosure + elseClosure, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.ifThenElse' + ifClosure + thenClosure + elseClosure, this.bindings);
     return this;
 };
 
@@ -770,7 +777,7 @@ GremlinJSPipeline.prototype.loop = function(/*step, whileFunction, emitFunction*
     } 
     closureArgs = slice.call(arguments, rest).toString().replace(',','');
     this.bindings.putSync('V', this.pipeline);
-    this.pipeline = ENGINE.evalSync('V.loop' + param + closureArgs, this.bindings);
+    this.pipeline = _getEngine().evalSync('V.loop' + param + closureArgs, this.bindings);
     return this;
 };
 
@@ -819,11 +826,13 @@ GremlinJSPipeline.prototype.nextSync = function() {
 };
 
 GremlinJSPipeline.prototype.toList = function() {
-    return this.pipeline.toListSync();
+    var args = slice.call(arguments);
+    return this.pipeline.toList.apply(this.pipeline, args);
 };
 
 GremlinJSPipeline.prototype.toArray = function() {
-    return this.pipeline.toListSync().toArraySync();
+    var args = slice.call(arguments);
+    return this.pipeline.toArray.apply(this.pipeline, args);
 };
 
 GremlinJSPipeline.prototype.consoleOut = function() {
@@ -939,6 +948,7 @@ return {
     toListSync: _toListSync,
     toJSON: _toJSON,
     toJSONSync: _toJSONSync,
+    getEngine: _getEngine,
     wrap: function(graph) {
         return new GraphWrapper(graph);
     }
