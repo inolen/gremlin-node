@@ -30,7 +30,7 @@ for (var i = 0; i < opts.classpath.length; i++) {
 }
 
 var GremlinGroovyScriptEngine = java.import('com.tinkerpop.gremlin.groovy.jsr223.GremlinGroovyScriptEngine');
-var GremlinPipeline = java.import('com.entrendipity.gremlin.javascript.GremlinJSPipeline');
+var GremlinPipeline = java.import('com.tinkerpop.gremlin.groovy.GremlinGroovyPipeline');
 
 var JSONResultConverter = java.import('com.tinkerpop.rexster.gremlin.converter.JSONResultConverter');
 var JSONObject = java.import('org.json.JSONObject');
