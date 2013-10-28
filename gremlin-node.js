@@ -113,12 +113,19 @@ function _isType(o, typeName){
     }
 }
 
-function _toList(iterable, callback) {
-    java.callStaticMethod('com.google.common.collect.Lists', 'newArrayList', iterable, callback);
+function _toList(obj, callback) {
+    if (obj.getClassSync().isArraySync()) {
+        java.callStaticMethod('java.util.Arrays', 'asList', obj, callback);
+        return;
+    }
+    java.callStaticMethod('com.google.common.collect.Lists', 'newArrayList', obj, callback);
 }
 
-function _toListSync(iterable) {
-    java.callStaticMethodSync('com.google.common.collect.Lists', 'newArrayList', iterable);
+function _toListSync(obj) {
+    if (obj.getClassSync().isArraySync()) {
+        return java.callStaticMethodSync('java.util.Arrays', 'asList', obj);
+    }
+    return java.callStaticMethodSync('com.google.common.collect.Lists', 'newArrayList', obj);
 }
 
 function _toJSON(obj, callback) {
@@ -155,30 +162,61 @@ var GraphWrapper = function(graph) {
     this.graph = graph;
 };
 
+GraphWrapper.prototype._getTransaction = function() {
+    // Transactions in TransactionalGraph's are often, by default, bound against the
+    // executing thread (e.g. as a ThreadLocal variable). This behavior is not very
+    // helpful in JavaScript because while the main execution is in fact performed
+    // on a single thread, often a pool of threads exist to service asynchronous tasks,
+    // making our tasks often operate on an incorrect transaction instance.
+    //
+    // Due to this, we try and avoid this default thread-bound functionality and manage
+    // our own life-cycle if the supplied graph instance provides the interface to create
+    // a transaction independent of the executing thread.
+    //
+    if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
+        return this.graph;
+    }
+    if (!this.graph.txn) {
+        this.graph.txn = this.graph.newTransactionSync();
+    }
+    return this.graph.txn;
+};
+
+GraphWrapper.prototype._clearTransaction = function() {
+    if (this.graph.txn) {
+        this.graph.txn = null;
+    }
+};
+
 GraphWrapper.prototype._ = function() {
-    var pipeline = new GremlinJSPipeline(this.graph);
+    var txn = this._getTransaction();
+    var pipeline = new GremlinJSPipeline(txn);
     pipeline.pipeline._Sync();
     return pipeline;
 };
 
 GraphWrapper.prototype.start = function(obj) {
-    var pipeline = new GremlinJSPipeline(this.graph);
+    var txn = this._getTransaction();
+    var pipeline = new GremlinJSPipeline(txn);
     return pipeline.start(obj);
 };
 
 GraphWrapper.prototype.query = function() {
-    return new QueryWrapper(this.graph.querySync());
+    var txn = this._getTransaction();
+    return new QueryWrapper(txn.querySync());
 };
 
 GraphWrapper.prototype.V = function() {
     var args = slice.call(arguments);
-    var pipeline = new GremlinJSPipeline(this.graph);
+    var txn = this._getTransaction();
+    var pipeline = new GremlinJSPipeline(txn);
     return pipeline.V.apply(pipeline, args);
 };
 
 GraphWrapper.prototype.E = function() {
     var args = slice.call(arguments);
-    var pipeline = new GremlinJSPipeline(this.graph);
+    var txn = this._getTransaction();
+    var pipeline = new GremlinJSPipeline(txn);
     return pipeline.E.apply(pipeline, args);
 };
 
@@ -204,14 +242,14 @@ GraphWrapper.prototype.v = function() {
 };
 
 GraphWrapper.prototype.vSync = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-        argsLen = args.length,
-        list = new ArrayList();
-    for (var i = 0; i < argsLen; i++) {
+    var txn = this._getTransaction();
+    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+    var list = new ArrayList();
+    for (var i = 0; i < args.length; i++) {
         if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
             args[i] = args[i].substring(2, args[i].length - 1);
         }
-        list.addSync(this.graph.getVertexSync(args[i]));
+        list.addSync(txn.getVertexSync(args[i]));
     };
     return new GremlinJSPipeline(list);
 };
@@ -221,13 +259,25 @@ GraphWrapper.prototype.e = function() {
 };
 
 GraphWrapper.prototype.eSync = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-        argsLen = args.length,
-        list = new ArrayList();
-    for (var i = 0; i < argsLen; i++) {
-        list.addSync(this.graph.getEdgeSync(args[i]));
+    var txn = this._getTransaction();
+    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
+    var list = new ArrayList();
+    for (var i = 0; i < args.length; i++) {
+        list.addSync(txn.getEdgeSync(args[i]));
     };
     return new GremlinJSPipeline(list);
+};
+
+GraphWrapper.prototype.commit = function(callback) {
+    var txn = this._getTransaction();
+    this._clearTransaction();
+    txn.commit(callback);
+};
+
+GraphWrapper.prototype.rollback = function(callback) {
+    var txn = this._getTransaction();
+    this._clearTransaction();
+    txn.rollback(callback);
 };
 
 
