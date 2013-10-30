@@ -23,7 +23,7 @@ $ npm install gremlin
 ```
 Gremlin-node includes the required .jar files for Tinkergraph, OrientDB graphEd and Titan.
 
-For other Blueprints database implementations, you will need to obtain the relevant .jars files and place them in the lib directory or create a new folder for them. You can organise them how you please. Gremlin-node will find them. Class files will however, must be placed in the ``lib`` root directory.
+For other Blueprints database implementations, you will need to obtain the relevant .jars files and place them in the lib directory or create a new folder for them. You can organise them how you please, Gremlin-node will find them. Class files however, must be placed in the ``lib`` root directory.
 
 Then in node:
 
