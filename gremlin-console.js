@@ -1,7 +1,11 @@
-var g = require('gremlin'),
-    T = g.Tokens,
-    repl = require("repl")/*,
+var gremlin = require('./gremlin-node')(),
+    T = gremlin.Tokens,
+    repl = require('repl')/*,
     require('repl.history')(repl, './.node_history')*/;
+
+var TinkerGraphFactory = gremlin.java.import("com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory");
+var TitanFactory = gremlin.java.import("com.thinkaurelius.titan.core.TitanFactory");
+var GraphOfTheGodsFactory = gremlin.java.import("com.thinkaurelius.titan.example.GraphOfTheGodsFactory");
 
 process.stdout.write('\n');
 process.stdout.write('         \\,,,/' + '\n');
@@ -13,7 +17,8 @@ var r = repl.start({
   input: process.stdin,
   output: process.stdout,
   terminal: true,
-  writer: outFunc
+  writer: outFunc,
+  ignoreUndefined: true
 })
 
 function _isObject(o) {
@@ -21,19 +26,23 @@ function _isObject(o) {
 }
 
 function outFunc(it){ 
-  var arr;
+  var arr, msg;
   if(_isObject(it) && it.Type == 'GremlinJSPipeline'){
-      arr = it.toList();
+      arr = it.pipeline.toListSync();
       for (var i = 0, l = arr.sizeSync(); i < l; i++) {
           process.stdout.write('==>'+arr.getSync(i)+'\n');
       };
   } else {
-      process.stdout.write('==>'+it+'\n');
+      msg = it.graph ? it.graph.toString() : it.toString();
+      process.stdout.write('==>'+ msg +'\n');
   }
   return '';
 }
 
-r.context.g = g;
+r.context.gremlin = gremlin;
+r.context.TinkerGraphFactory = TinkerGraphFactory;
+r.context.TitanFactory = TitanFactory; //TitanFactory.openSync('./tmp/titan');
+r.context.GraphOfTheGodsFactory = GraphOfTheGodsFactory;
 
 r.on('exit', function () {
   console.log('Good-bye from Gremlin!');
