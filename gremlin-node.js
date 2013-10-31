@@ -105,14 +105,18 @@ function _ifIsNull(o) {
     return _isNull(o) ? NULL : o;
 }
 
-function _isType(o, typeName){
-    var clazz = java.getClassLoader().loadClassSync(typeName);
+function _isType(o, typeName) {
+    var clazz = _isType.cache[typeName];
+    if (!clazz) {
+        clazz = _isType.cache[typeName] = java.getClassLoader().loadClassSync(typeName);
+    }
     try {
         return clazz.isInstanceSync(o);
     } catch(err) {
         return false;
     }
 }
+_isType.cache = {};
 
 function _toList(obj, callback) {
     if (_isArray(obj)) {
@@ -188,13 +192,13 @@ GraphWrapper.prototype._getTransaction = function() {
     // our own life-cycle if the supplied graph instance provides the interface to create
     // a transaction independent of the executing thread.
     //
+    if (this.graph.txn) {
+        return this.graph.txn;
+    }
     if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
         return this.graph;
     }
-    if (!this.graph.txn) {
-        this.graph.txn = this.graph.newTransactionSync();
-    }
-    return this.graph.txn;
+    return (this.graph.txn = this.graph.newTransactionSync());
 };
 
 GraphWrapper.prototype._clearTransaction = function() {
