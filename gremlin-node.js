@@ -96,24 +96,36 @@ function _isObject(o) {
 function _isArray(o) {
     return toString.call(o) === '[object Array]';
 }
+
 function _isNull(o) {
     return toString.call(o) === '[object Null]' || toString.call(o) === '[object Undefined]';
-};
+}
 
 function _ifIsNull(o) {
     return _isNull(o) ? NULL : o;
 }
 
-function _isType(o, typeName){
-    var clazz = java.getClassLoader().loadClassSync(typeName);
+function _isType(o, typeName) {
+    var clazz = _isType.cache[typeName];
+    if (!clazz) {
+        clazz = _isType.cache[typeName] = java.getClassLoader().loadClassSync(typeName);
+    }
     try {
         return clazz.isInstanceSync(o);
     } catch(err) {
         return false;
     }
 }
+_isType.cache = {};
 
 function _toList(obj, callback) {
+    if (_isArray(obj)) {
+        var list = new ArrayList();
+        for (var i = 0; i < obj.length; i++) {
+            list.addSync(obj[i]);
+        }
+        return callback(null, list);
+    }
     if (obj.getClassSync().isArraySync()) {
         java.callStaticMethod('java.util.Arrays', 'asList', obj, callback);
         return;
@@ -122,6 +134,13 @@ function _toList(obj, callback) {
 }
 
 function _toListSync(obj) {
+    if (_isArray(obj)) {
+        var list = new ArrayList();
+        for (var i = 0; i < obj.length; i++) {
+            list.addSync(obj[i]);
+        }
+        return list;
+    }
     if (obj.getClassSync().isArraySync()) {
         return java.callStaticMethodSync('java.util.Arrays', 'asList', obj);
     }
@@ -129,7 +148,7 @@ function _toListSync(obj) {
 }
 
 function _toJSON(obj, callback) {
-    _JSON.convert(obj, function (err, json) {
+    _JSON.convert(obj, function(err, json) {
         if (err) return callback(err);
         try {
             json = JSON.parse(json.toString());
@@ -173,13 +192,13 @@ GraphWrapper.prototype._getTransaction = function() {
     // our own life-cycle if the supplied graph instance provides the interface to create
     // a transaction independent of the executing thread.
     //
+    if (this.graph.txn) {
+        return this.graph.txn;
+    }
     if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
         return this.graph;
     }
-    if (!this.graph.txn) {
-        this.graph.txn = this.graph.newTransactionSync();
-    }
-    return this.graph.txn;
+    return (this.graph.txn = this.graph.newTransactionSync());
 };
 
 GraphWrapper.prototype._clearTransaction = function() {
@@ -190,14 +209,14 @@ GraphWrapper.prototype._clearTransaction = function() {
 
 GraphWrapper.prototype._ = function() {
     var txn = this._getTransaction();
-    var pipeline = new GremlinJSPipeline(txn);
+    var pipeline = new PipelineWrapper(txn);
     pipeline.pipeline._Sync();
     return pipeline;
 };
 
 GraphWrapper.prototype.start = function(obj) {
     var txn = this._getTransaction();
-    var pipeline = new GremlinJSPipeline(txn);
+    var pipeline = new PipelineWrapper(txn);
     return pipeline.start(obj);
 };
 
@@ -209,14 +228,14 @@ GraphWrapper.prototype.query = function() {
 GraphWrapper.prototype.V = function() {
     var args = slice.call(arguments);
     var txn = this._getTransaction();
-    var pipeline = new GremlinJSPipeline(txn);
+    var pipeline = new PipelineWrapper(txn);
     return pipeline.V.apply(pipeline, args);
 };
 
 GraphWrapper.prototype.E = function() {
     var args = slice.call(arguments);
     var txn = this._getTransaction();
-    var pipeline = new GremlinJSPipeline(txn);
+    var pipeline = new PipelineWrapper(txn);
     return pipeline.E.apply(pipeline, args);
 };
 
@@ -226,18 +245,18 @@ GraphWrapper.prototype.v = function() {
     var callback = args[args.length-1];
     args = _isArray(args[0]) ? args[0] : args.slice(0, -1);
     var list = new ArrayList();
-    async.each(args, function (arg, cb) {
+    async.each(args, function(arg, cb) {
         if (typeof arg === 'string' && arg.substring(0, 2) === 'v[') {
             arg = arg.substring(2, arg.length - 1);
         }
-        self.graph.getVertex(arg, function (err, v) {
+        self.graph.getVertex(arg, function(err, v) {
             if (err) return cb(err);
             list.addSync(v);
             cb(null);
         });
-    }, function (err) {
+    }, function(err) {
         if (err) return callback(err);
-        callback(null, new GremlinJSPipeline(list));
+        callback(null, new PipelineWrapper(list));
     });
 };
 
@@ -251,7 +270,7 @@ GraphWrapper.prototype.vSync = function() {
         }
         list.addSync(txn.getVertexSync(args[i]));
     };
-    return new GremlinJSPipeline(list);
+    return new PipelineWrapper(list);
 };
 
 GraphWrapper.prototype.e = function() {
@@ -265,7 +284,7 @@ GraphWrapper.prototype.eSync = function() {
     for (var i = 0; i < args.length; i++) {
         list.addSync(txn.getEdgeSync(args[i]));
     };
-    return new GremlinJSPipeline(list);
+    return new PipelineWrapper(list);
 };
 
 GraphWrapper.prototype.commit = function(callback) {
@@ -281,707 +300,472 @@ GraphWrapper.prototype.rollback = function(callback) {
 };
 
 
-///////////////////////////
-/// JS PIPELINE WRAPPER ///
-///////////////////////////
+////////////////////////
+/// PIPELINE WRAPPER ///
+////////////////////////
 
-var GremlinJSPipeline = function(start) {
-    this.bindings = _getEngine().createBindingsSync();
-    if (_isType(start, 'com.tinkerpop.blueprints.Graph')){
-        this.bindings.putSync('g', start);
-    }
-    this.pipeline = new GremlinPipeline(start);
-    this.Type = 'GremlinJSPipeline';
-};
-
-GremlinJSPipeline.prototype.printPipe = function(){
-  console.log(this.pipeline.toString())
-  return this;
-};
-
-GremlinJSPipeline.prototype.step = function(closure) {
-    if(_isClosure(closure)){
-        this.bindings.putSync('V', this.pipeline);
-        this.pipeline = _getEngine().evalSync('V.step' + closure, this.bindings);
+function parseVarargs(args, type) {
+    if (_isArray(args[args.length-1])) {
+        va = args.pop();
     } else {
-        this.pipeline.stepSync(java.newInstanceSync('com.tinkerpop.pipes.Pipe', closure.pipe()));
-    }
-    return this;
-};
-
-GremlinJSPipeline.prototype.both = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.bothSync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.bothE = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.bothESync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.bothV = function() {
-    this.pipeline.bothVSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.cap = function() {
-    this.pipeline.capSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.gather = function(closure) {
-    if (_isClosure(closure)) {
-        this.bindings.putSync('V', this.pipeline);
-        this.pipeline = _getEngine().evalSync('V.gather' + closure , this.bindings);
-    } else {
-        this.pipeline.gatherSync();
-    }
-    return this;
-};
-
-GremlinJSPipeline.prototype.id = function() {
-    this.pipeline.idSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.in = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.inSync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.inE = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.inESync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.inV = function() {
-    this.pipeline.inVSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.property = function(key) {
-    this.pipeline.propertySync(key);
-    return this;
-};
-
-GremlinJSPipeline.prototype.label = function() {
-    this.pipeline.labelSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.linkBoth = function(label, other) {
-    this.pipeline.linkBothSync(label, other);
-    return this;
-};
-
-GremlinJSPipeline.prototype.linkIn = function(label, other) {
-    this.pipeline.linkInSync(label, other);
-    return this;
-};
-
-GremlinJSPipeline.prototype.linkOut = function(label, other) {
-    this.pipeline.linkOutSync(label, other);
-    return this;
-};
-
-GremlinJSPipeline.prototype.map = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.mapSync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.memoize = function() {
-    var arg = slice.call(arguments);
-    if (arg.length > 1) {
-        this.pipeline.memoizeSync(arg[0], arg[1]);
-    } else {
-        this.pipeline.memoizeSync(arg[0]);
-    }
-    return this;
-};
-
-GremlinJSPipeline.prototype.order = function(closure) {
-    if (_isClosure(closure)) {
-        this.bindings.putSync('V', this.pipeline);
-        this.pipeline = _getEngine().evalSync('V.order' + closure, this.bindings);
-    } else {
-        this.pipeline.orderSync();
-    }
-    return this;
-};
-
-GremlinJSPipeline.prototype.out = function(){
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.outSync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.outE = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
-    this.pipeline.outESync(java.newArray('java.lang.String', args));
-    return this;
-};
-
-GremlinJSPipeline.prototype.outV = function(){
-    this.pipeline.outVSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.path = function() {
-    closure = slice.call(arguments);
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.path' + closure, this.bindings);
-    return this;
-};
-
-GremlinJSPipeline.prototype.scatter = function() {
-    this.pipeline.scatterSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.select = function() {
-    var len = 0,
-        params = '',
-        rest = 0,
-        closure;
-
-    if (arguments.length == 0) {
-        this.pipeline.selectSync();
-    } else if (!_isClosure(arguments[0])) {
-        len = arguments[0].length;
-        rest = 1;
-        if(!len){
-            params += '(['
-            for (var i=0;i<len;i++){
-                params += '"'+arguments[0][i]+'",';
-            }
-            params = params.substr(0, params.length - 1);
-            params += '])'
+        va = [];
+        // HACK - instead of actually converting JS strings -> java.lang.String
+        // instances as part of javify, we check the type with _isString
+        var test = type === 'java.lang.String' ? _isString : function(o) {
+            return _isType(o, type);
+        };
+        while (test(args[args.length-1])) {
+            va.unshift(args.pop());
         }
     }
-    closure = slice.call(arguments, rest);
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.select'+ params + closure, this.bindings);         
+    args.push(java.newArray(type, va));
+}
+
+function convertPipe(o) {
+    return o instanceof PipelineWrapper ? o.pipeline : o;
+}
+
+function convertClosure(o) {
+    return _isClosure(o) ? _getEngine().evalSync(o) : o;
+}
+
+function javify(arg) {
+    return convertPipe(convertClosure(arg));
+}
+
+var PipelineWrapper = function(start) {
+    if (start && _isType(start, 'java.lang.Iterable')) {
+        throw new Error('Resolve iterable instances asynchronously to iterators to avoid unexpected potential blocking (e.g. it.iterator())');
+    }
+    this.pipeline = start ? new GremlinPipeline(start) : new GremlinPipeline();
+};
+
+PipelineWrapper.prototype.add = function(type, args) {
+    this.pipeline[type + 'Sync'].apply(this.pipeline, args);
     return this;
 };
 
-GremlinJSPipeline.prototype.shuffle = function() {
-    this.pipeline.shuffleSync();
-    return this;
+PipelineWrapper.prototype.V = function() {
+    var args = slice.call(arguments);
+    return this.add('V', args);
 };
 
-GremlinJSPipeline.prototype.transform = function(closure) {
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.transform' + closure, this.bindings);
-    return this;
+PipelineWrapper.prototype.E = function() {
+    var args = slice.call(arguments);
+    return this.add('E', args);
+};
+
+PipelineWrapper.prototype.has = function() {
+    var args = slice.call(arguments).map(_ifIsNull);
+    return this.add('has', args);
+};
+
+PipelineWrapper.prototype.hasNot = function() {
+    var args = slice.call(arguments).map(_ifIsNull);
+    return this.add('hasNot', args);
+};
+
+PipelineWrapper.prototype.interval = function() {
+    var args = slice.call(arguments);
+    return this.add('interval', args);
+};
+
+PipelineWrapper.prototype.bothE = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('bothE', args);
+};
+
+PipelineWrapper.prototype.both = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('both', args);
+};
+
+PipelineWrapper.prototype.bothV = function() {
+    return this.add('bothV');
+};
+
+PipelineWrapper.prototype.idEdge = function() {
+    var args = slice.call(arguments);
+    return this.add('idEdge', args);
+};
+
+PipelineWrapper.prototype.id = function() {
+    return this.add('id');
+};
+
+PipelineWrapper.prototype.idVertex = function() {
+    var args = slice.call(arguments);
+    return this.add('idVertex', args);
+};
+
+PipelineWrapper.prototype.inE = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('inE', args);
+};
+
+PipelineWrapper.prototype.in = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('in', args);
+};
+
+PipelineWrapper.prototype.inV = function() {
+    return this.add('inV');
+};
+
+PipelineWrapper.prototype.label = function() {
+    return this.add('label');
+};
+
+PipelineWrapper.prototype.outE = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('outE', args);
+};
+
+PipelineWrapper.prototype.out = function(){
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('out', args);
+};
+
+PipelineWrapper.prototype.outV = function(){
+    return this.add('outV');
+};
+
+PipelineWrapper.prototype.map = function() {
+    var args = slice.call(arguments);
+    parseVarargs(args, 'java.lang.String');
+    return this.add('map', args);
+};
+
+PipelineWrapper.prototype.property = function() {
+    var args = slice.call(arguments);
+    return this.add('property', args);
+};
+
+PipelineWrapper.prototype.step = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('step', args);
+};
+
+////////////////////
+/// BRANCH PIPES ///
+////////////////////
+
+PipelineWrapper.prototype.copySplit = function() {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'com.tinkerpop.pipes.Pipe');
+    return this.add('copySplit', args);
+};
+
+PipelineWrapper.prototype.exhaustMerge = function() {
+    return this.add('exhaustMerge');
+};
+
+PipelineWrapper.prototype.fairMerge = function() {
+    return this.add('fairMerge');
+};
+
+PipelineWrapper.prototype.ifThenElse = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('ifThenElse', args);
+};
+
+PipelineWrapper.prototype.loop = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('loop', args);
 };
 
 ////////////////////
 /// FILTER PIPES ///
 ////////////////////
 
-GremlinJSPipeline.prototype.index = function(idx) {
-    this.pipeline.rangeSync(idx, idx);
-    return this;
+PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'com.tinkerpop.pipes.Pipe');
+    return this.add('and', args);
 };
 
-GremlinJSPipeline.prototype.range = function(low, high) {
-    this.pipeline.rangeSync(low, high);
-    return this;
+PipelineWrapper.prototype.back = function(step) {
+    var args = slice.call(arguments);
+    return this.add('back', args);
 };
 
-GremlinJSPipeline.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
-    var args = slice.call(arguments),
-        argsLen = args.length,
-        pipes = [];
-    for (var i = 0; i < argsLen; i++) {
-        push.call(pipes, args[i].pipe());
-    };
-    this.pipeline.andSync(java.newArray('com.tinkerpop.pipes.Pipe', pipes));
-    return this;
+PipelineWrapper.prototype.dedup = function(closure) {
+    var args = slice.call(arguments).map(javify);
+    return this.add('dedup', args);
 };
 
-GremlinJSPipeline.prototype.back = function(step) {
-    this.pipeline.backSync(step);
-    return this;
-};
-
-GremlinJSPipeline.prototype.dedup = function(closure) {
-    if (_isClosure(closure)) {
-        this.bindings.putSync('V', this.pipeline);
-        this.pipeline = _getEngine().evalSync('V.dedup' + closure, this.bindings);
+PipelineWrapper.prototype.except = function() {
+    var args = slice.call(arguments);
+    if (_isType(args[0], 'java.util.Collection')) {
+        // assume except(final Collection<E> collection)
+    } else if (_isArray(args[0])) {
+        // assume except(final Collection<E> collection)
+        args[0] = _toListSync(args[0]);
     } else {
-        this.pipeline.dedupSync();
+        // assume except(final String... namedSteps)
+        parseVarargs(args, 'java.lang.String');
     }
-    return this;
+    return this.add('except', args);
 };
 
-GremlinJSPipeline.prototype.except = function() {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-        argsLen = args.length,
-        list;
+PipelineWrapper.prototype.filter = function(closure) {
+    var args = slice.call(arguments).map(javify);
+    return this.add('filter', args);
+};
 
-    if(_isType(args[0], 'java.util.Collection')){
-        this.pipeline.exceptSync(args[0]);
+PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'com.tinkerpop.pipes.Pipe');
+    return this.add('or', args);
+};
+
+PipelineWrapper.prototype.random = function() {
+    var args = slice.call(arguments);
+    return this.add('random', args);
+};
+
+PipelineWrapper.prototype.index = function(idx) {
+    return this.add('range', [idx, idx]);
+};
+
+PipelineWrapper.prototype.range = function() {
+    var args = slice.call(arguments);
+    return this.add('range', args);
+};
+
+PipelineWrapper.prototype.retain = function(/*final Collection<E> collection*/) {
+    var args = slice.call(arguments);
+    if (_isType(args[0], 'java.util.Collection')) {
+        // assume retain(final Collection<E> collection)
+    } else if (_isArray(args[0])) {
+        // assume retain(final Collection<E> collection)
+        args[0] = _toListSync(args[0]);
     } else {
-        list = new ArrayList();
-        for (var i = 0; i < argsLen; i++) {
-            list.addSync(args[i].next());
-        };
-        this.pipeline.exceptSync(list);
+        // assume retain(final String... namedSteps)
+        parseVarargs(args, 'java.lang.String');
     }
-    return this;
+    return this.add('retain', args);
 };
 
-GremlinJSPipeline.prototype.filter = function(closure) {
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.filter' + closure, this.bindings);
-    return this;
-};
-
-GremlinJSPipeline.prototype.V = function() {
-    var args = slice.call(arguments);
-    this.pipeline.VSync.apply(this.pipeline, args);
-    return this;
-};
-
-GremlinJSPipeline.prototype.E = function() {
-    var args = slice.call(arguments);
-    this.pipeline.ESync.apply(this.pipeline, args);
-    return this;
-};
-
-GremlinJSPipeline.prototype.has = function() {
-    var args = slice.call(arguments);
-    for (var i = 0; i < args.length; i++) {
-        args[i] = _ifIsNull(args[i]);
-    }
-    this.pipeline.hasSync.apply(this.pipeline, args);
-    return this;
-};
-
-GremlinJSPipeline.prototype.hasNot = function() {
-    var args = slice.call(arguments);
-    for (var i = 0; i < args.length; i++) {
-        args[i] = _ifIsNull(args[i]);
-    }
-    this.pipeline.hasNotSync.apply(this.pipeline, args);
-    return this;
-};
-
-GremlinJSPipeline.prototype.interval = function(key, startValue, endValue) {
-    this.pipeline.intervalSync(key, startValue, endValue);
-    return this;
-};
-
-GremlinJSPipeline.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
-    var args = slice.call(arguments),
-        argsLen = args.length,
-        pipes = [];
-    for (var i = 0; i < argsLen; i++) {
-        push.call(pipes, args[i].pipe());
-    };
-    this.pipeline.orSync(java.newArray('com.tinkerpop.pipes.Pipe', pipes));
-    return this;
-};
-
-GremlinJSPipeline.prototype.random = function(prob) {
-    this.pipeline.randomSync(prob);
-    return this;
-};
-
-GremlinJSPipeline.prototype.retain = function(/*final Collection<E> collection*/) {
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments),
-        argsLen = args.length,
-        list;
-
-    if(_isType(args[0], 'ArrayList')){
-        this.pipeline.retainSync(args[0]);
-    } else {
-        list = new ArrayList();
-        for (var i = 0; i < argsLen; i++) {
-            list.addSync(args[i].next());
-        };
-        this.pipeline.retainSync(list);
-    }
-    return this;
-};
-
-GremlinJSPipeline.prototype.retainStep = function(step) {
-    this.pipeline.retainStepSync(step);
-    return this;
-};
-
-GremlinJSPipeline.prototype.simplePath = function() {
-    this.pipeline.simplePathSync();
-    return this;
+PipelineWrapper.prototype.simplePath = function() {
+    return this.add('simplePath');
 };
 
 /////////////////////////
-/// SIDE EFFECT PIPES ///
+/// SIDE-EFFECT PIPES ///
 /////////////////////////
 
-GremlinJSPipeline.prototype.aggregate = function(collection, closure) {
-    var param = '';
-
-    if (!collection){
-        this.pipeline.aggregateSync();
-        return this; 
+PipelineWrapper.prototype.aggregate = function() {
+    var args = slice.call(arguments).map(javify);
+    if (_isArray(args[0])) {
+        args[0] = _toListSync(args[0]);
     }
-    if (!closure && !_isClosure(collection)) {
-        this.pipeline.aggregateSync(collection);
-        return this;
-    }
-
-    this.bindings.putSync('V', this.pipeline);
-    if(_isClosure(collection)){
-        closure = collection;
-    } else {
-        this.bindings.putSync('coll', collection);
-        param += '(coll)';
-    }
-    this.pipeline = _getEngine().evalSync('V.aggregate' + param + closure, this.bindings);
-    return this;
+    return this.add('aggregate', args);
 };
 
-GremlinJSPipeline.prototype.as = function(name) {
-    this.pipeline.asSync(name);
-    return this;
+PipelineWrapper.prototype.optional = function() {
+    var args = slice.call(arguments);
+    return this.add('optional', args);
 };
 
-GremlinJSPipeline.prototype.start = function(obj) {
-    this.pipeline.startSync(obj);
-    return this;
+PipelineWrapper.prototype.groupBy = function(map, closure) {
+    var args = slice.call(arguments).map(javify);
+    return this.add('groupBy', args);
 };
 
-GremlinJSPipeline.prototype.groupBy = function(map, closure) {
-    var param = '';
-
-    if (!map){
-        throw 'missing arguments';
-        return this; 
-    }
-    if (!closure && !_isClosure(map)) {
-        this.pipeline.groupBySync(map);
-        return this;
-    }
-
-    this.bindings.putSync('V', this.pipeline);
-    if(_isClosure(map)){
-        closure = map;
-    } else {
-        this.bindings.putSync('map', map);
-        param += '(map)'
-    }
-    this.pipeline = _getEngine().evalSync('V.groupBy' + param + closure, this.bindings);
-    return this;
+PipelineWrapper.prototype.groupCount = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('groupCount', args);
 };
 
-GremlinJSPipeline.prototype.groupCount = function() {
-    var rest = 0,
-        param = '',
-        closure;
-
-    if(!_isClosure(arguments[0])){
-        rest = 1;
-        this.bindings.put('map', arguments[0]);
-        param += '(map)'
-    } 
-
-    closure = slice.call(arguments, rest);
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.groupCount' + param + closure, this.bindings);   
-    return this;
+PipelineWrapper.prototype.linkOut = function() {
+    var args = slice.call(arguments);
+    return this.add('linkOut', args);
 };
 
-GremlinJSPipeline.prototype.optional = function(step) {
-    this.pipeline.optionalSync(step);
-    return this;
+PipelineWrapper.prototype.linkIn = function() {
+    var args = slice.call(arguments);
+    return this.add('linkIn', args);
 };
 
-GremlinJSPipeline.prototype.sideEffect = function(closure) {
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.sideEffect' + closure, this.bindings);
-    return this;
+PipelineWrapper.prototype.linkBoth = function() {
+    var args = slice.call(arguments);
+    return this.add('linkBoth', args);
 };
 
-GremlinJSPipeline.prototype.store = function(collection, closure) {
-    var param = '';
-
-    if (!collection){
-        this.pipeline.storeSync();
-        return this; 
-    }
-    if (!closure && !_isClosure(collection)) {
-        this.pipeline.storeSync(collection);
-        return this;
-    }
-
-    this.bindings.putSync('V', this.pipeline);
-    if(_isClosure(collection)){
-        closure = collection;
-    } else {
-        this.bindings.putSync('coll', collection);
-        param += '(coll)'
-    }
-    this.pipeline = _getEngine().evalSync('V.store' + param + closure, this.bindings);
-    return this;
+PipelineWrapper.prototype.sideEffect = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('sideEffect', args);
 };
 
-GremlinJSPipeline.prototype.table = function() {
-    var argsLen = arguments.length,
-        table = argsLen > 0 ? !_isClosure(arguments[0]) : false,
-        collection = argsLen > 1 ? !_isClosure(arguments[1]) : false,
-        param = '',
-        closure;
-
-
-    if (argsLen == 0){
-        this.pipeline.tableSync(); 
-        return this;
+PipelineWrapper.prototype.store = function() {
+    var args = slice.call(arguments).map(javify);
+    if (_isArray(args[0])) {
+        args[0] = _toListSync(args[0]);
     }
-    if (argsLen == 1 && table) {
-        this.pipeline.tableSync(arguments[0]);       
-        return this;
-    }
-
-    this.bindings.putSync('V', this.pipeline);
-    if(collection){
-        this.bindings.put('tbl', arguments[0]);
-        this.bindings.put('coll', arguments[1]);
-        param += '(tbl,coll)';
-        closure = slice.call(arguments, 2);
-    } else if (table) {
-        this.bindings.put('tbl', arguments[0]);
-        param += '(tbl)';
-        closure = slice.call(arguments, 1);
-    } else {
-        closure = slice.call(arguments);
-    }
-    this.pipeline = _getEngine().evalSync('V.table' + param + closure, this.bindings); 
-    return this;
+    return this.add('store', args);
 };
 
-GremlinJSPipeline.prototype.tree = function(tree, closure) {
-    var param = '';
-
-    this.bindings.putSync('V', this.pipeline);
-    if(!closure){
-        closure = tree;
-        tree = '';
-
-    } else {
-        engine.getBindingsSync(CONTEXT).put('tree', arguments[0]);
-        param += '(tree)';
+PipelineWrapper.prototype.table = function() {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'groovy.lang.Closure');
+    if (_isArray(args[1])) {
+        args[1] = _toListSync(args[1]);
     }
-    return this;
+    return this.add('table', args);
 };
 
-//////////////
-/// BRANCH ///
-//////////////
+PipelineWrapper.prototype.tree = function() {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'groovy.lang.Closure');
+    return this.add('tree', args);
+};
 
-GremlinJSPipeline.prototype.copySplit = function(/*final Pipe<E, ?>... pipes*/) {
-    var args = slice.call(arguments),
-        argsLen = args.length,
-        pipes = [];
-    for (var i = 0; i < argsLen; i++) {
-        push.call(pipes, args[i].pipe());
+///////////////////////
+/// TRANSFORM PIPES ///
+///////////////////////
+
+PipelineWrapper.prototype.gather = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('gather', args);
+};
+
+PipelineWrapper.prototype._ = function() {
+    return this.add('_');
+};
+
+PipelineWrapper.prototype.memoize = function() {
+    var args = slice.call(arguments);
+    return this.add('memoize', args);
+};
+
+PipelineWrapper.prototype.order = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('order', args);
+};
+
+PipelineWrapper.prototype.path = function() {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'groovy.lang.Closure');
+    return this.add('path', args);
+};
+
+PipelineWrapper.prototype.scatter = function() {
+    return this.add('scatter');
+};
+
+PipelineWrapper.prototype.select = function() {
+    var args = slice.call(arguments).map(javify);
+    parseVarargs(args, 'groovy.lang.Closure');
+    if (_isArray(args[0])) {
+        args[0] = _toListSync(args[0]);
+    }
+    return this.add('select', args);
+};
+
+PipelineWrapper.prototype.shuffle = function() {
+    return this.add('shuffle');
+};
+
+PipelineWrapper.prototype.cap = function() {
+    return this.add('cap');
+};
+
+PipelineWrapper.prototype.orderMap = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('orderMap', args);
+};
+
+PipelineWrapper.prototype.transform = function() {
+    var args = slice.call(arguments).map(javify);
+    return this.add('transform', args);
+};
+
+//////////////////////
+/// UTILITY PIPES ///
+//////////////////////
+
+PipelineWrapper.prototype.as = function() {
+    var args = slice.call(arguments);
+    return this.add('as', args);
+};
+
+PipelineWrapper.prototype.start = function(obj) {
+    if (_isType(obj, 'java.lang.Iterable')) {
+        throw new Error('Resolve iterable instances asynchronously to iterators to avoid unexpected potential blocking (e.g. it.iterator())');
+    }
+    return this.add('start', [obj]);
+};
+
+///////////////////////
+/// UTILITY METHODS ///
+///////////////////////
+
+function pipeWrapSync(op) {
+    return function() {
+        var args = slice.call(arguments);
+        return this.pipeline[op].apply(this.pipeline, args);
     };
-    this.pipeline.copySplitSync(java.newArray('com.tinkerpop.pipes.Pipe', pipes));
-    return this;
-};
+}
 
-GremlinJSPipeline.prototype.exhaustMerge = function() {
-    this.pipeline.exhaustMergeSync();
-    return this;
-};
+PipelineWrapper.prototype.count = pipeWrapSync('count');
+PipelineWrapper.prototype.iterate = pipeWrapSync('iterate');
+PipelineWrapper.prototype.iterator = pipeWrapSync('iterator');
+PipelineWrapper.prototype.hasNext = pipeWrapSync('hasNext');
+PipelineWrapper.prototype.next = pipeWrapSync('next');
+PipelineWrapper.prototype.fill = pipeWrapSync('fill');
+PipelineWrapper.prototype.enablePath = pipeWrapSync('enablePath');
+PipelineWrapper.prototype.optimize = pipeWrapSync('optimize');
+PipelineWrapper.prototype.remove = pipeWrapSync('remove');
+PipelineWrapper.prototype.reset = pipeWrapSync('reset');
+PipelineWrapper.prototype.getCurrentPath = pipeWrapSync('getCurrentPath');
+PipelineWrapper.prototype.getStarts = pipeWrapSync('getStarts');
+PipelineWrapper.prototype.get = pipeWrapSync('get');
+PipelineWrapper.prototype.equals = pipeWrapSync('equals');
+PipelineWrapper.prototype.size = pipeWrapSync('size');
+PipelineWrapper.prototype.toList = pipeWrapSync('toList');
+PipelineWrapper.prototype.toArray = pipeWrapSync('toArray');
 
-GremlinJSPipeline.prototype.fairMerge = function() {
-    this.pipeline.fairMergeSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.ifThenElse = function(ifClosure, thenClosure, elseClosure) {
-    thenClosure = thenClosure || '';
-    elseClosure = elseClosure || '';
-    
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.ifThenElse' + ifClosure + thenClosure + elseClosure, this.bindings);
-    return this;
-};
-
-GremlinJSPipeline.prototype.loop = function(/*step, whileFunction, emitFunction*/) {
-    var args = slice.call(arguments),
-        rest = 0,
-        param = '',
-        closureArgs;
-
-    if(!_isClosure(arguments[0])){
-        rest = 1;
-        param += '(' + arguments[0] + ')'
-    } 
-    closureArgs = slice.call(arguments, rest).toString().replace(',','');
-    this.bindings.putSync('V', this.pipeline);
-    this.pipeline = _getEngine().evalSync('V.loop' + param + closureArgs, this.bindings);
-    return this;
-};
-
-GremlinJSPipeline.prototype.count = function() {
-    return this.pipeline.countSync();
-};
-
-GremlinJSPipeline.prototype.toJSON = function(callback) {
+PipelineWrapper.prototype.toJSON = function(callback) {
     _toJSON(this.pipeline, callback);
 };
 
-GremlinJSPipeline.prototype.toJSONSync = function() {
-    return _toJSONSync(this.pipeline);
+PipelineWrapper.prototype.printPipe = function() {
+    console.log(this.pipeline.toString());
 };
 
-GremlinJSPipeline.prototype.iterate = function() {
-    this.pipeline.iterateSync();
+PipelineWrapper.prototype.consoleOut = function() {
+    console.log(this.pipeline.toListSync().toString());
 };
 
-GremlinJSPipeline.prototype.iterator = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.iterator.apply(this.pipeline, args);
-};
+////////////////////
+// QUERY WRAPPER ///
+////////////////////
 
-GremlinJSPipeline.prototype.pipe = function() {
-    return this.pipeline;
-};
-
-GremlinJSPipeline.prototype.hasNext = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.hasNext.apply(this.pipeline, args);
-};
-
-GremlinJSPipeline.prototype.hasNextSync = function() {
-    return this.pipeline.hasNextSync();
-};
-
-GremlinJSPipeline.prototype.next = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.next.apply(this.pipeline, args);
-};
-
-GremlinJSPipeline.prototype.nextSync = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.nextSync.apply(this.pipeline, args);
-};
-
-GremlinJSPipeline.prototype.toList = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.toList.apply(this.pipeline, args);
-};
-
-GremlinJSPipeline.prototype.toArray = function() {
-    var args = slice.call(arguments);
-    return this.pipeline.toArray.apply(this.pipeline, args);
-};
-
-GremlinJSPipeline.prototype.consoleOut = function() {
-    return console.log(this.pipeline.toListSync().toString());
-};
-
-//Need to look at fill and make Async ???
-GremlinJSPipeline.prototype.fill = function(collection) {
-    this.pipeline.fillSync(collection);
-    return collection;
-};
-
-GremlinJSPipeline.prototype.enablePath = function() {
-    this.pipeline.enablePathSync();
-    return this;
-};
-
-GremlinJSPipeline.prototype.optimize = function(optimize) {
-    this.pipeline.optimizeSync(optimize);
-    return this;
-};
-
-GremlinJSPipeline.prototype.size = function() {
-    return this.pipeline.sizeSync();
-};
-
-GremlinJSPipeline.prototype.reset = function() {
-    this.pipeline.resetSync();
-};
-
-GremlinJSPipeline.prototype.getCurrentPath = function() {
-    return this.pipeline.getCurrentPathSync();
-};
-
-GremlinJSPipeline.prototype.getPipes = function() {
-    return this.pipeline.getPipesSync();
-};
-
-GremlinJSPipeline.prototype.getStarts = function() {
-    return this.pipeline.getStartsSync();
-};
-
-GremlinJSPipeline.prototype.remove = function(index) {
-    if(index){
-        return this.pipeline.removeSync(index);
-    }
-    return this.pipeline.removeSync();
-};
-
-GremlinJSPipeline.prototype.get = function(index) {
-    return this.pipeline.getSync(index);
-};
-
-GremlinJSPipeline.prototype.equals = function(object) {
-    return this.pipeline.equalsSync(object);
-};
-
-
-///////////////////////
-// JS QUERY WRAPPER ///
-///////////////////////
+function queryWrapSync(op) {
+    return function() {
+        var args = slice.call(arguments);
+        this.query[op].apply(this.query, args);
+        return this;
+    };
+}
 
 var QueryWrapper = function(query) {
     this.query = query;
 };
 
-QueryWrapper.prototype.has = function() {
-    var args = slice.call(arguments);
-    this.query.hasSync.apply(this.query, args);
-    return this;
-};
-
-QueryWrapper.prototype.hasNot = function() {
-    var args = slice.call(arguments);
-    this.query.hasNotSync.apply(this.query, args);
-    return this;
-};
-
-QueryWrapper.prototype.interval = function() {
-    var args = slice.call(arguments);
-    this.query.intervalSync.apply(this.query, args);
-    return this;
-};
-
-QueryWrapper.prototype.limit = function() {
-    var args = slice.call(arguments);
-    this.query.limitSync.apply(this.query, args);
-    return this;
-};
-
-QueryWrapper.prototype.vertices = function() {
-    var args = slice.call(arguments);
-    return this.query.verticesSync.apply(this.query, args);
-};
-
-QueryWrapper.prototype.edges = function() {
-    var args = slice.call(arguments);
-    return this.query.edgesSync.apply(this.query, args);
-};
+QueryWrapper.prototype.has = queryWrapSync('has');
+QueryWrapper.prototype.hasNot = queryWrapSync('hasNot');
+QueryWrapper.prototype.interval = queryWrapSync('interval');
+QueryWrapper.prototype.limit = queryWrapSync('limit');
+QueryWrapper.prototype.vertices = queryWrapSync('vertices');
+QueryWrapper.prototype.edges = queryWrapSync('edges');
 
 return {
     java: java,
