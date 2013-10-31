@@ -312,13 +312,13 @@ gremlin>  g.V.except([marko]).linkBoth('connected', marko)
 node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync());
 ```
 
-## Author
+## Authors
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
 
-## Contributors
-
 Anthony Pesch - [inolen](https://github.com/inolen)
+
+## Contributors
 
 Jared Camins-Esakov
 
