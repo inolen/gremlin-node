@@ -29,9 +29,7 @@ function outFunc(it){
   var arr, msg;
   if(_isObject(it) && it.Type == 'GremlinJSPipeline'){
       arr = it.pipeline.toListSync();
-      for (var i = 0, l = arr.sizeSync(); i < l; i++) {
-          process.stdout.write('==>'+arr.getSync(i)+'\n');
-      };
+      process.stdout.write('==>' + arr + '\n');
   } else {
       msg = it.graph ? it.graph.toString() : it.toString();
       process.stdout.write('==>'+ msg +'\n');
