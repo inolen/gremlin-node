@@ -291,51 +291,49 @@ GraphWrapper.prototype.E = function() {
 };
 
 GraphWrapper.prototype.v = function() {
-    var self = this;
     var args = slice.call(arguments);
     var callback = args[args.length-1];
     args = _isArray(args[0]) ? args[0] : args.slice(0, -1);
-    var list = new ArrayList();
-    async.each(args, function(arg, cb) {
-        if (typeof arg === 'string' && arg.substring(0, 2) === 'v[') {
-            arg = arg.substring(2, arg.length - 1);
-        }
-        self.graph.getVertex(arg, function(err, v) {
-            if (err) return cb(err);
-            list.addSync(v);
-            cb(null);
-        });
-    }, function(err) {
-        if (err) return callback(err);
-        callback(null, new PipelineWrapper(list));
-    });
-};
-
-GraphWrapper.prototype.vSync = function() {
     var txn = this._getTransaction();
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
     var list = new ArrayList();
-    for (var i = 0; i < args.length; i++) {
-        if (typeof args[i] === 'string' && args[i].substring(0, 2) === 'v[') {
-            args[i] = args[i].substring(2, args[i].length - 1);
-        }
-        list.addSync(txn.getVertexSync(args[i]));
-    };
-    return new PipelineWrapper(list);
+    if (args.length === 1) {
+        txn.getVertex(args[0], callback);
+        return;
+    } else {
+        async.each(args, function(arg, cb) {
+            txn.getVertex(arg, function(err, v) {
+                if (err) return cb(err);
+                list.addSync(v);
+                cb(null);
+            });
+        }, function(err) {
+            if (err) return callback(err);
+            callback(null, new PipelineWrapper(list.iteratorSync()));
+        });
+    }
 };
 
 GraphWrapper.prototype.e = function() {
-    throw new Error('TODO');
-};
-
-GraphWrapper.prototype.eSync = function() {
+    var args = slice.call(arguments);
+    var callback = args[args.length-1];
+    args = _isArray(args[0]) ? args[0] : args.slice(0, -1);
     var txn = this._getTransaction();
-    var args = _isArray(arguments[0]) ? arguments[0] : slice.call(arguments);
     var list = new ArrayList();
-    for (var i = 0; i < args.length; i++) {
-        list.addSync(txn.getEdgeSync(args[i]));
-    };
-    return new PipelineWrapper(list);
+    if (args.length === 1) {
+        txn.getEdge(callback);
+        return;
+    } else {
+        async.each(args, function(arg, cb) {
+            txn.getEdge(arg, function(err, v) {
+                if (err) return cb(err);
+                list.addSync(v);
+                cb(null);
+            });
+        }, function(err) {
+            if (err) return callback(err);
+            callback(null, new PipelineWrapper(list.iteratorSync()));
+        });
+    }
 };
 
 ////////////////////////
