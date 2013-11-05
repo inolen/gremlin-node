@@ -207,6 +207,62 @@ GraphWrapper.prototype._clearTransaction = function() {
     }
 };
 
+// com.tinkerpop.blueprints.Graph interface
+GraphWrapper.prototype.addVertex = function () {
+    var args = slice.call(arguments);
+    var txn = this._getTransaction();
+    txn.addVertex.apply(txn, args);
+};
+
+GraphWrapper.prototype.addEdge = function () {
+    var args = slice.call(arguments);
+    var txn = this._getTransaction();
+    txn.addEdge.apply(txn, args);
+};
+
+GraphWrapper.prototype.query = function() {
+    var txn = this._getTransaction();
+    return new QueryWrapper(txn.querySync());
+};
+
+// com.tinkerpop.blueprints.ThreadedTransactionalGraph interface
+GraphWrapper.prototype.newTransaction = function() {
+    if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
+        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.ThreadedTransactionalGraph');
+    }
+    var txn = this.graph.newTransactionSync();
+    return new GraphWrapper(txn);
+};
+
+// com.tinkerpop.blueprints.TransactionalGraph interface
+GraphWrapper.prototype.commit = function(callback) {
+    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    }
+    var txn = this._getTransaction();
+    this._clearTransaction();
+    txn.commit(callback);
+};
+
+GraphWrapper.prototype.rollback = function(callback) {
+    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    }
+    var txn = this._getTransaction();
+    this._clearTransaction();
+    txn.rollback(callback);
+};
+
+GraphWrapper.prototype.shutdown = function(callback) {
+    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    }
+    var txn = this._getTransaction();
+    this._clearTransaction();
+    txn.shutdown(callback);
+};
+
+// gremlin shell extensions for the graph object
 GraphWrapper.prototype._ = function() {
     var txn = this._getTransaction();
     var pipeline = new PipelineWrapper(txn);
@@ -218,11 +274,6 @@ GraphWrapper.prototype.start = function(obj) {
     var txn = this._getTransaction();
     var pipeline = new PipelineWrapper(txn);
     return pipeline.start(obj);
-};
-
-GraphWrapper.prototype.query = function() {
-    var txn = this._getTransaction();
-    return new QueryWrapper(txn.querySync());
 };
 
 GraphWrapper.prototype.V = function() {
@@ -286,19 +337,6 @@ GraphWrapper.prototype.eSync = function() {
     };
     return new PipelineWrapper(list);
 };
-
-GraphWrapper.prototype.commit = function(callback) {
-    var txn = this._getTransaction();
-    this._clearTransaction();
-    txn.commit(callback);
-};
-
-GraphWrapper.prototype.rollback = function(callback) {
-    var txn = this._getTransaction();
-    this._clearTransaction();
-    txn.rollback(callback);
-};
-
 
 ////////////////////////
 /// PIPELINE WRAPPER ///
