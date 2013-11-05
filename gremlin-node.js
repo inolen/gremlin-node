@@ -320,7 +320,7 @@ GraphWrapper.prototype.e = function() {
     var txn = this._getTransaction();
     var list = new ArrayList();
     if (args.length === 1) {
-        txn.getEdge(callback);
+        txn.getEdge(args[0], callback);
         return;
     } else {
         async.each(args, function(arg, cb) {
