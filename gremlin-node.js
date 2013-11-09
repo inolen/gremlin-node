@@ -105,16 +105,28 @@ function _ifIsNull(o) {
     return _isNull(o) ? NULL : o;
 }
 
+// there has to be a faster way to perform type checking. perhaps
+// a instanceof operations should be added to node-java. currently,
+// we cache both the classes that come back from loadClass, as well
+// as the results of previous checks on the object itself
 function _isType(o, typeName) {
     var clazz = _isType.cache[typeName];
     if (!clazz) {
         clazz = _isType.cache[typeName] = java.getClassLoader().loadClassSync(typeName);
     }
-    try {
-        return clazz.isInstanceSync(o);
-    } catch(err) {
-        return false;
+    if (!o._isType) {
+        o._isType = {};
     }
+    var res = o._isType[typeName];
+    if (res === undefined) {
+        try {
+            res = clazz.isInstanceSync(o);
+        } catch(err) {
+            res = false;
+        }
+        o._isType[typeName] = res;
+    }
+    return res;
 }
 _isType.cache = {};
 
