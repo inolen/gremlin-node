@@ -1,4 +1,9 @@
-var async = require('async'),
+/* jshint shadow: true */
+
+'use strict';
+
+var _ = require('underscore'),
+    async = require('async'),
     fs = require('fs'),
     glob = require('glob'),
     path = require('path');
@@ -61,7 +66,7 @@ var ClassTypes = {
     'Number': { 'class': Class.forNameSync('java.lang.Number') },
     'BigDecimal': { 'class': Class.forNameSync('java.math.BigDecimal') },
     'BigInteger': { 'class': Class.forNameSync('java.math.BigInteger') }
-}
+};
 
 var NULL = java.callStaticMethodSync('org.codehaus.groovy.runtime.NullObject', 'getNullObject');
 var MAX_VALUE = java.newInstanceSync('java.lang.Long', 2147483647);
@@ -73,7 +78,6 @@ var _JSON = new JSONResultConverter(null, MIN_VALUE, MAX_VALUE, null);
 ///////////////
 
 var toString = Object.prototype.toString,
-    push = Array.prototype.push,
     slice = Array.prototype.slice;
 
 var closureRegex = /^\{.*\}$/;
@@ -189,9 +193,30 @@ function _getEngine() {
 /// GRAPH WRAPPER ///
 /////////////////////
 
-var GraphWrapper = function(graph) {
-    this.graph = graph;
+// exports shared by the graph wrapper / module
+var sharedExports = {
+    java: java,
+    ClassTypes: ClassTypes,
+    Tokens: Tokens,
+    Compare: Compare,
+    Contains: Contains,
+    Direction: Direction,
+    ArrayList: ArrayList,
+    HashMap: HashMap,
+    Table: Table,
+    Tree: Tree,
+    toList: _toList,
+    toListSync: _toListSync,
+    toJSON: _toJSON,
+    toJSONSync: _toJSONSync,
+    getEngine: _getEngine,
 };
+
+var GraphWrapper = function(graph) {
+    this._graph = graph;
+};
+
+_.extend(GraphWrapper.prototype, sharedExports);
 
 GraphWrapper.prototype._getTransaction = function() {
     // Transactions in TransactionalGraph's are often, by default, bound against the
@@ -204,18 +229,19 @@ GraphWrapper.prototype._getTransaction = function() {
     // our own life-cycle if the supplied graph instance provides the interface to create
     // a transaction independent of the executing thread.
     //
-    if (this.graph.txn) {
-        return this.graph.txn;
+    if (this._graph.txn) {
+        return this._graph.txn;
     }
-    if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
-        return this.graph;
+    if (!_isType(this._graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
+        return this._graph;
     }
-    return (this.graph.txn = this.graph.newTransactionSync());
+    this._graph.txn = this._graph.newTransactionSync();
+    return this._graph.txn;
 };
 
 GraphWrapper.prototype._clearTransaction = function() {
-    if (this.graph.txn) {
-        this.graph.txn = null;
+    if (this._graph.txn) {
+        this._graph.txn = null;
     }
 };
 
@@ -239,17 +265,17 @@ GraphWrapper.prototype.query = function() {
 
 // com.tinkerpop.blueprints.ThreadedTransactionalGraph interface
 GraphWrapper.prototype.newTransaction = function() {
-    if (!_isType(this.graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
-        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.ThreadedTransactionalGraph');
+    if (!_isType(this._graph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')) {
+        throw new Error('Graph instance must implement com.tinkerpop.blueprints.ThreadedTransactionalGraph');
     }
-    var txn = this.graph.newTransactionSync();
+    var txn = this._graph.newTransactionSync();
     return new GraphWrapper(txn);
 };
 
 // com.tinkerpop.blueprints.TransactionalGraph interface
 GraphWrapper.prototype.commit = function(callback) {
-    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
-        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    if (!_isType(this._graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Error('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
     }
     var txn = this._getTransaction();
     this._clearTransaction();
@@ -257,8 +283,8 @@ GraphWrapper.prototype.commit = function(callback) {
 };
 
 GraphWrapper.prototype.rollback = function(callback) {
-    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
-        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    if (!_isType(this._graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Error('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
     }
     var txn = this._getTransaction();
     this._clearTransaction();
@@ -266,8 +292,8 @@ GraphWrapper.prototype.rollback = function(callback) {
 };
 
 GraphWrapper.prototype.shutdown = function(callback) {
-    if (!_isType(this.graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
-        throw new Exception('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
+    if (!_isType(this._graph, 'com.tinkerpop.blueprints.TransactionalGraph')) {
+        throw new Error('Graph instance must implement com.tinkerpop.blueprints.TransactionalGraph');
     }
     var txn = this._getTransaction();
     this._clearTransaction();
@@ -353,6 +379,7 @@ GraphWrapper.prototype.e = function() {
 ////////////////////////
 
 function parseVarargs(args, type) {
+    var va;
     if (_isArray(args[args.length-1])) {
         va = args.pop();
     } else {
@@ -815,25 +842,13 @@ QueryWrapper.prototype.limit = queryWrapSync('limit');
 QueryWrapper.prototype.vertices = queryWrapSync('vertices');
 QueryWrapper.prototype.edges = queryWrapSync('edges');
 
-return {
-    java: java,
-    ClassTypes: ClassTypes,
-    Tokens: Tokens,
-    Compare: Compare,
-    Contains: Contains,
-    Direction: Direction,
-    ArrayList: ArrayList,
-    HashMap: HashMap,
-    Table: Table,
-    Tree: Tree,
-    toList: _toList,
-    toListSync: _toListSync,
-    toJSON: _toJSON,
-    toJSONSync: _toJSONSync,
-    getEngine: _getEngine,
+return _.extend({
     wrap: function(graph) {
         return new GraphWrapper(graph);
-    }
-};
+    },
+    GraphWrapper: GraphWrapper,
+    PipelineWrapper: PipelineWrapper,
+    QueryWrapper: QueryWrapper
+}, sharedExports);
 
-}
+};
