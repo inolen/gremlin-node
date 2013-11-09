@@ -19,7 +19,7 @@ var r = repl.start({
   terminal: true,
   writer: outFunc,
   ignoreUndefined: true
-})
+});
 
 function _isObject(o) {
   return toString.call(o) === '[object Object]';
