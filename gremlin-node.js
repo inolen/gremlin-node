@@ -17,7 +17,7 @@ opts.options = opts.options || [];
 opts.classpath = opts.classpath || [];
 
 //add default globbed lib/**/*.jar classpath
-opts.classpath.push(path.join(__dirname, 'lib', '**', '*.jar'));
+opts.classpath.push(path.join(__dirname, 'target', '**', '*.jar'));
 
 //add options
 java.options.push('-Djava.awt.headless=true');
@@ -109,22 +109,14 @@ function _ifIsNull(o) {
     return _isNull(o) ? NULL : o;
 }
 
-// there has to be a faster way to perform type checking. perhaps
-// a instanceof operations should be added to node-java. currently,
-// we cache both the classes that come back from loadClass, as well
-// as the results of previous checks on the object itself
 function _isType(o, typeName) {
-    var clazz = _isType.cache[typeName];
-    if (!clazz) {
-        clazz = _isType.cache[typeName] = java.getClassLoader().loadClassSync(typeName);
-    }
     if (!o._isType) {
         o._isType = {};
     }
     var res = o._isType[typeName];
     if (res === undefined) {
         try {
-            res = clazz.isInstanceSync(o);
+            res = java.instanceOf(o, typeName);
         } catch(err) {
             res = false;
         }
@@ -132,7 +124,6 @@ function _isType(o, typeName) {
     }
     return res;
 }
-_isType.cache = {};
 
 function _toList(obj, callback) {
     if (_isArray(obj)) {
