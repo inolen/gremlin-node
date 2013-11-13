@@ -10,31 +10,7 @@
     "blueprints"
   ],
   "homepage": "https://github.com/entrendipity/gremlin-node",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/entrendipity/gremlin-node.git"
-  },
-  "dependencies": {
-    "java": ">=0.2.8",
-    "glob": "~3.2.6",
-    "async": "~0.2.9",
-    "underscore": "~1.5.2"
-  },
   "license": "MIT",
-  "engines": {
-    "node": ">=0.8.0"
-  },
-  "main": "gremlin-node.js",
-  "readmeFilename": "README.md",
-  "gitHead": "50d0398488e0045899d1523f48d404999df46871",
-  "directories": {
-    "example": "examples",
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "mvn dependency:copy-dependencies package"
-  },
   "authors": [
     {
       "name": "Frank Panetta",
@@ -50,11 +26,32 @@
       "name": "Jared Camins"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/entrendipity/gremlin-node.git"
+  },
+  "main": "lib/gremlin.js",
+  "readmeFilename": "README.md",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "mvn dependency:copy-dependencies package"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "async": "~0.2.9",
+    "glob": "~3.2.6",
+    "java": ">=0.2.8",
+    "underscore": "~1.5.2"
+  },
   "devDependencies": {
-    "grunt-mocha-test": "~0.7.0",
-    "must": "~0.6.0",
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.6.4",
-    "jshint": "~2.3.0"
+    "jshint": "~2.3.0",
+    "mocha": "~1.14.0",
+    "sinon": "~1.7.3"
   }
 }
