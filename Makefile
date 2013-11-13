@@ -1,6 +1,9 @@
-.PHONY: jshint
+.PHONY: jshint test
+
+default: jshint test
 
 jshint:
-	find . -name "*.js" -maxdepth 1 | xargs node_modules/jshint/bin/jshint
+	find lib -name "*.js" | xargs node_modules/jshint/bin/jshint
 
-default: jshint
+test:
+	node_modules/mocha/bin/mocha --ui tdd
