@@ -9,7 +9,7 @@
     "gremlin",
     "blueprints"
   ],
-  "homepage": "https://github.com/entrendipity/gremlin-node",
+  "homepage": "https://github.com/inolen/gremlin-node",
   "license": "MIT",
   "authors": [
     {
@@ -28,17 +28,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/entrendipity/gremlin-node.git"
+    "url": "https://github.com/inolen/gremlin-node.git"
   },
   "main": "lib/gremlin.js",
   "readmeFilename": "README.md",
-  "directories": {
-    "example": "examples",
-    "test": "tests"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "mvn dependency:copy-dependencies package"
+    "test": "make test",
+    "install": "mvn clean package"
   },
   "engines": {
     "node": ">=0.8.0"
