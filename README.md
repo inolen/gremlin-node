@@ -113,6 +113,22 @@ var lucaKnowsMarko = graph.addEdgeSync(null, luca, marko, 'knows');
 graph.commitSync();
 ```
 
+## Console
+
+The gremlin-console.js script provides a Gremlin repl for testing and development. Any repl commands that return a pipeline will be automatically iterated (using the asynchronous API) to match the behavior of other Gremlin repls. To start the repl run:
+
+```
+node gremlin-console.js --classpath="/path/to/additional/*.jar"
+```
+
+For functions like `g.v()` which require that the final argument to the function be a callback, a special `sync()` function has been defined which will cause the repl to wait for the asynchronous callback to be executed before continuing:
+
+```javascript
+g.v(4, sync());
+```
+
+_NOTE: The `sync()` function returns a callback that takes the standard node.js callback parameters `(err, result)`, and can be used only once per executed line. Thus the callback is properly `sync()` and not `sync` as one might normally expect.
+
 ## Examples
 
 _NOTE: These examples are currently out of date. The best reference for now is [in the unit tests](https://github.com/inolen/gremlin-node/blob/master/test/test-pipeline-wrapper.js)._
