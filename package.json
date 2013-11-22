@@ -34,7 +34,7 @@
   "readmeFilename": "README.md",
   "scripts": {
     "test": "make test",
-    "install": "mvn clean package"
+    "install": "make package"
   },
   "engines": {
     "node": ">=0.8.0"

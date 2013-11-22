@@ -25,8 +25,7 @@ g.V('name', 'marko').next(function (err, v) {
 
 [__node-java__](https://github.com/nearinfinity/node-java)
 
-Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and it's dependencies.
-
+Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and its dependencies.
 
 [__maven__](http://maven.apache.org/index.html)
 
@@ -38,7 +37,7 @@ Maven enables the installation of the base jar files.
 $ npm install gremlin
 ```
 
-Gremlin-node includes the required .jar files for Gremlin and the TinkerPop stack. It doesn't include any backend specific jars for say, Titan or OrientDB. A quickstart project for using Titan with gremlin-node is up at [titan-node](https://github.com/inolen/titan-node). However, OrientDB and others need to be configured manually.
+Gremlin-node includes the required .jar files for Gremlin and the TinkerPop stack. It doesn't include any backend specific jars for databases such as Titan or OrientDB.
 
 ## Configuration
 
@@ -66,94 +65,57 @@ var gremlin = new Gremlin({
 });
 ```
 
-## Introduction
+## Connecting to a Graph
 
-Node.js adopts a non-blocking I/O model, which means function calls are asynchronous. Node-java remains true to this model and requires that calls to Java are also asynchronous and therefore require a callback. See the example below, the ``add`` method has a node style callback.
+As mentioned above, gremlin-node only includes jars for the reference Blueprints implementation, TinkerGraph.
 
-```javascript
-var list = new ArrayList();
+To use another database implementing the Blueprints property graph interfaces (e.g. Titan or OrientDB), the Gremlin constructor must point to a location with the databases compiled jars. A quickstart project for using Titan with gremlin-node is up at [titan-node](https://github.com/inolen/titan-node).
 
-list.add('itemA', function(err, result) {
-    if(err) { console.error(err); return; }
-});
-```
-
-However, node-java does allow for synchronous calls, but requires that the method name be suffixed with the word 'Sync'. The example below shows the ``add`` method being called synchronously.
-
-```javascript
-var list = new ArrayList();
-
-list.addSync('item1');
-```
-
-While this isn't important to working with the core gremlin-node API, it's good to know if you deviate and need to call database-specific functionality through node-java. Gremlin-node tries to implement Gremlin syntax as closely as possible. However, there are some differences.
-
-* __Closures__ are passed in as strings
-
-    ```e.g.
-    g.v(1).out().gather('{it -> it.size()}')
-    ```
-* __float__, __long__, __short__, etc. are not native javascript types. In order pass in one of these typed numerical types, please use node-java's __new<type>__ functionality
-
-    ```e.g.
-    g.v(1).outE().has('weight', T.gte, gremlin.java.newFloat(0.5)).property('weight')
-    ```
-
-## Connect to Graph
+Once the dependent jars are properly loaded into the Java runtime, a graph instance must be created and passed to `gremlin.wrap`.
 
 ### TinkerGraph
 
 ```javascript
-var TinkerGraphFactory = g.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
-var graphDB = TinkerGraphFactory.createTinkerGraphSync();
-g.SetGraph(graphDB);
+var TinkerGraphFactory = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
+var graph = TinkerGraphFactory.createTinkerGraphSync();
+var g = gremlin.wrap(graph);
+```
+
+### Titan
+
+```javascript
+var TitanFactory = gremlin.java.import('com.thinkaurelius.titan.core.TitanFactory');
+var graph = TitanFactory.openSync('local:/path/to/config');
+var g = gremlin.wrap(graph);
 ```
 
 ### OrientGraph
 
 ```javascript
 var OrientGraph = g.java.import('com.tinkerpop.blueprints.impls.orient.OrientGraph');
-var graphDB = new OrientGraph('local:/path/to/database/files', 'admin', 'admin');
-g.SetGraph(graphDB);
-```
-
-### Titan
-
-```javascript
-var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
-
-conf = new BaseConfiguration();
-conf.setPropertySync('storage.backend','cassandra');
-conf.setPropertySync('storage.hostname','127.0.0.1');
-conf.setPropertySync('storage.keyspace','titan');
-
-var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
-graphDB = TitanFactory.openSync(conf);
-g.SetGraph(graphDB);
+var graph = new OrientGraph('local:/path/to/database/files', 'admin', 'admin');
+var g = gremlin.wrap(graph);
 ```
 
 ## Working with the Database
 
-Once you have connected to the database, you are able to call all implementation specific database methods synchronously. (You can try calling these asynchronously, but I have found that some methods work and some don't).
-
-For example here's how you would add two Vertices and an Edge and associate them in an OrientDB graph.
+Once you have connected to the database, you are able to call all implementation specific database methods. For example here's how you would add two Vertices and an Edge and associate them in an OrientDB graph.
 
 ```javascript
-var luca = graphDB.addVertexSync(null);
+var luca = graph.addVertexSync(null);
 luca.setPropertySync( 'name', 'Luca' );
 
-var marko = graphDB.addVertexSync(null);
+var marko = graph.addVertexSync(null);
 marko.setPropertySync( 'name', 'Marko' );
 
-var lucaKnowsMarko = graphDB.addEdgeSync(null, luca, marko, 'knows');
+var lucaKnowsMarko = graph.addEdgeSync(null, luca, marko, 'knows');
 
-graphDB.commitSync();
-graphDB.shutdownSync();
+graph.commitSync();
 ```
 
-N.B. Remember to call shutdown if you no longer need the Database.
-
 ## Examples
+
+_NOTE: These examples are currently out of date. The best reference for now is [in the unit tests](https://github.com/inolen/gremlin-node/blob/master/test/test-pipeline-wrapper.js)._
 
 A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gremlin-node syntax.
 
@@ -302,33 +264,7 @@ node>		graphDB.commitSync();
 
 ```
 
-__Example 15: Titan Indexing__
-```javascript
-var g = require('gremlin'),
-    T = g.Tokens,
-    Direction = g.Direction,
-    Type = g.ClassTypes;
-
-//Get a reference to Titan specific Enum
-var UniqCon = g.java.import('com.thinkaurelius.titan.core.TypeMaker$UniquenessConsistency');
-
-var BaseConfiguration = g.java.import('org.apache.commons.configuration.BaseConfiguration');
-
-conf = new BaseConfiguration();
-conf.setPropertySync('storage.backend','cassandra');
-conf.setPropertySync('storage.hostname','127.0.0.1');
-conf.setPropertySync('storage.keyspace','titan');
-
-var TitanFactory = g.java.import('com.thinkaurelius.titan.core.TitanFactory');
-var graphDB = TitanFactory.openSync(conf);
-g.SetGraph(graphDB);
-
-//Create index
-graphDB.makeTypeSync().nameSync('foo').dataTypeSync(Type.String.class).indexedSync(Type.Vertex.class)
-    .uniqueSync(Direction.BOTH, UniqCon.NO_LOCK).makePropertyKeySync();
-```
-
-__Example 7: linkBoth/linkIn/linkOut__
+__Example 15: linkBoth/linkIn/linkOut__
 
 ```
 gremlin>  marko = g.v(1)

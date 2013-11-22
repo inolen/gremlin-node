@@ -1,8 +1,11 @@
-.PHONY: jshint test
+.PHONY: package lint test
 
-default: jshint test
+default: package lint test
 
-jshint:
+package:
+	mvn clean package
+
+lint:
 	find lib -name "*.js" | xargs node_modules/jshint/bin/jshint
 
 test:
