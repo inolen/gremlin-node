@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 var argv = require('optimist').alias('c', 'classpath').argv;
 argv.classpath = argv.classpath || '.';
