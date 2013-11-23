@@ -61,14 +61,14 @@ suite('graph-wrapper', function() {
     assert(fakeTxn.addVertex.calledTwice);
   });
 
-  test('v(Id) with single id', function (done) {
+  test('v(id) with single id', function (done) {
     g.v(2, function (err, data) {
       assert(!err && data.toString() === 'v[2]');
       done();
     });
   });
 
-  test('v(Id...) with id list', function (done) {
+  test('v(id...) with id list', function (done) {
     g.v(2, 4, function (err, pipe) {
       pipe.toJSON(function (err, data) {
         assert(!err && data.length === 2);
@@ -77,7 +77,7 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('v(Id...) with id array', function (done) {
+  test('v(id...) with id array', function (done) {
     g.v([2, 4], function (err, pipe) {
       pipe.toJSON(function (err, data) {
         assert(!err && data.length === 2);
@@ -86,7 +86,7 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('v(Id) with invalid id', function (done) {
+  test('v(id) with invalid id', function (done) {
     g.v(99, function (err, data) {
       assert(!err && data === null);
       done();
