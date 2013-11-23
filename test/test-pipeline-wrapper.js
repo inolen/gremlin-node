@@ -149,7 +149,15 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.loop = function() {
   // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
   // PipelineWrapper.prototype.back = function(step) {
-  // PipelineWrapper.prototype.dedup = function(closure) {
+  test('dedup()', function (done) {
+    g.v(3, 3, function (err, verts) {
+      verts.dedup().toJSON(function (err, res) {
+        assert(!err && res.length === 1);
+        done();
+      });
+    });
+  });
+
   // PipelineWrapper.prototype.except = function() {
   // PipelineWrapper.prototype.filter = function(closure) {
   // PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
