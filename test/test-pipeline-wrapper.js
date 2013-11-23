@@ -143,6 +143,14 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.property = function() {
   // PipelineWrapper.prototype.step = function() {
   // PipelineWrapper.prototype.copySplit = function() {
+  test('copySplit(), _(), and fairMerge()', function (done) {
+    g.V().both().toJSON(function (err, bothed) {
+      g.V().copySplit(g._().in(), g._().out()).fairMerge().toJSON(function (err, copied) {
+        assert(bothed.length === copied.length);
+        done();
+      });
+    });
+  });
   // PipelineWrapper.prototype.exhaustMerge = function() {
   // PipelineWrapper.prototype.fairMerge = function() {
   // PipelineWrapper.prototype.ifThenElse = function() {
@@ -169,7 +177,7 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.aggregate = function() {
   // PipelineWrapper.prototype.optional = function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
-  // PipelineWrapper.prototype.groupCount = function() {
+
   test('groupCount(map, closure)', function (done) {
     var m = new gremlin.HashMap();
     g.V().out().groupCount(m, '{it->it.id}').iterate(function (err, iterated) {
