@@ -143,13 +143,29 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.property = function() {
   // PipelineWrapper.prototype.step = function() {
   // PipelineWrapper.prototype.copySplit = function() {
+  test('copySplit(), _(), and fairMerge()', function (done) {
+    g.V().both().toJSON(function (err, bothed) {
+      g.V().copySplit(g._().in(), g._().out()).fairMerge().toJSON(function (err, copied) {
+        assert(bothed.length === copied.length);
+        done();
+      });
+    });
+  });
   // PipelineWrapper.prototype.exhaustMerge = function() {
   // PipelineWrapper.prototype.fairMerge = function() {
   // PipelineWrapper.prototype.ifThenElse = function() {
   // PipelineWrapper.prototype.loop = function() {
   // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
   // PipelineWrapper.prototype.back = function(step) {
-  // PipelineWrapper.prototype.dedup = function(closure) {
+  test('dedup()', function (done) {
+    g.v(3, 3, function (err, verts) {
+      verts.dedup().toJSON(function (err, res) {
+        assert(!err && res.length === 1);
+        done();
+      });
+    });
+  });
+
   // PipelineWrapper.prototype.except = function() {
   // PipelineWrapper.prototype.filter = function(closure) {
   // PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
@@ -161,7 +177,19 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.aggregate = function() {
   // PipelineWrapper.prototype.optional = function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
-  // PipelineWrapper.prototype.groupCount = function() {
+
+  test('groupCount(map, closure)', function (done) {
+    var m = new gremlin.HashMap();
+    g.V().out().groupCount(m, '{it->it.id}').iterate(function (err, iterated) {
+        assert(!err && iterated === null);
+        gremlin.toJSON(m, function (err, res) {
+          res = res[0]; // Rexster encloses all objects in arrays. Go figure.
+          assert(!err);
+          assert(res['3'] === 3 && res['2'] === 1 && typeof res['6'] === 'undefined');
+          done();
+        });
+    });
+  });
   // PipelineWrapper.prototype.linkOut = function() {
   // PipelineWrapper.prototype.linkIn = function() {
   // PipelineWrapper.prototype.linkBoth = function() {
