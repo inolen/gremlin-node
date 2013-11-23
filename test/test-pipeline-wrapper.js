@@ -170,6 +170,18 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.optional = function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
   // PipelineWrapper.prototype.groupCount = function() {
+  test('groupCount(map, closure)', function (done) {
+    var m = new gremlin.HashMap();
+    g.V().out().groupCount(m, '{it->it.id}').iterate(function (err, iterated) {
+        assert(!err && iterated === null);
+        gremlin.toJSON(m, function (err, res) {
+          res = res[0]; // Rexster encloses all objects in arrays. Go figure.
+          assert(!err);
+          assert(res['3'] === 3 && res['2'] === 1 && typeof res['6'] === 'undefined');
+          done();
+        });
+    });
+  });
   // PipelineWrapper.prototype.linkOut = function() {
   // PipelineWrapper.prototype.linkIn = function() {
   // PipelineWrapper.prototype.linkBoth = function() {
