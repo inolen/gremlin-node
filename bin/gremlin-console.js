@@ -1,10 +1,11 @@
 'use strict';
 var argv = require('optimist').alias('c', 'classpath').argv;
+argv.classpath = argv.classpath || '.';
 var util = require('util'),
-    Gremlin = require('./lib/gremlin'),
+    Gremlin = require('../lib/gremlin'),
     gremlin = new Gremlin({ classpath: util.isArray(argv.classpath) ? argv.classpath : [ argv.classpath ] }),
-    GraphWrapper = require('./lib/graph-wrapper'),
-    PipelineWrapper = require('./lib/pipeline-wrapper'),
+    GraphWrapper = require('../lib/graph-wrapper'),
+    PipelineWrapper = require('../lib/pipeline-wrapper'),
     T = gremlin.Tokens,
     repl = require('repl'),
     vm = require('vm')/*,
