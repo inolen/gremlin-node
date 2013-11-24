@@ -182,7 +182,17 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.range = function() {
   // PipelineWrapper.prototype.retain = function(/*final Collection<E> collection*/) {
   // PipelineWrapper.prototype.simplePath = function() {
-  // PipelineWrapper.prototype.aggregate = function() {
+  test('aggregate()', function (done) {
+    var al = new gremlin.ArrayList();
+    g.V().has('lang', 'java').aggregate(al).next(function (err, res) {
+      gremlin.toJSON(res, function (err, iter) {
+        gremlin.toJSON(al, function (err, recs) {
+          assert(iter.length === 1 && recs.length === 2);
+          done();
+        });
+      });
+    });
+  });
   // PipelineWrapper.prototype.optional = function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
   test('groupCount(map, closure)', function (done) {
@@ -201,7 +211,17 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.linkIn = function() {
   // PipelineWrapper.prototype.linkBoth = function() {
   // PipelineWrapper.prototype.sideEffect = function() {
-  // PipelineWrapper.prototype.store = function() {
+  test('store()', function (done) {
+    var al = new gremlin.ArrayList();
+    g.V().has('lang', 'java').store(al).next(function (err, res) {
+      gremlin.toJSON(res, function (err, iter) {
+        gremlin.toJSON(al, function (err, recs) {
+          assert(iter.length === 1 && recs.length === 1);
+          done();
+        });
+      });
+    });
+  });
   // PipelineWrapper.prototype.table = function() {
   // PipelineWrapper.prototype.tree = function() {
   // PipelineWrapper.prototype.gather = function() {
