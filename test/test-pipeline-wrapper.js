@@ -212,7 +212,13 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.scatter = function() {
   // PipelineWrapper.prototype.select = function() {
   // PipelineWrapper.prototype.shuffle = function() {
-  // PipelineWrapper.prototype.cap = function() {
+  test('groupCount() and cap()', function (done) {
+    g.V().in().id().groupCount().cap().toJSON(function (err, map) {
+      map = map[0];
+      assert(!err && map['1'] === 3 && map['4'] === 2 && map['6'] === 1);
+      done();
+    });
+  });
   // PipelineWrapper.prototype.orderMap = function() {
   // PipelineWrapper.prototype.transform = function() {
 });
