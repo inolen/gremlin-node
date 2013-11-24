@@ -165,7 +165,12 @@ suite('pipeline-wrapper', function() {
     });
   });
   // PipelineWrapper.prototype.except = function() {
-  // PipelineWrapper.prototype.filter = function(closure) {
+  test('filter()', function (done) {
+    g.V().filter("{it->it.name == 'lop'}").toJSON(function (err, recs) {
+      assert(!err && recs.length === 1);
+      done();
+    });
+  });
   // PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
   // PipelineWrapper.prototype.random = function() {
   // PipelineWrapper.prototype.index = function(idx) {
