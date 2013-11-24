@@ -155,7 +155,12 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.ifThenElse = function() {
   // PipelineWrapper.prototype.loop = function() {
   // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
-  // PipelineWrapper.prototype.back = function(step) {
+  test('as() and back()', function (done) {
+    g.V().as('test').out('knows').back('test').toJSON(function (err, recs) {
+      assert(!err && recs.length === 1);
+      done();
+    });
+  });
   test('dedup()', function (done) {
     g.v(3, 3, function (err, verts) {
       verts.dedup().toJSON(function (err, res) {
