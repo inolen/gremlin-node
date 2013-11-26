@@ -2,7 +2,6 @@
   "eqeqeq": true,
   "indent": 2,
   "node": true,
-  "proto": true,
   "quotmark": "single",
   "shadow": true,
   "strict": true,
