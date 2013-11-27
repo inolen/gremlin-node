@@ -121,13 +121,19 @@ The gremlin-console.js script provides a Gremlin repl for testing and developmen
 node gremlin-console.js --classpath="/path/to/additional/*.jar"
 ```
 
-For functions like `g.v()` which require that the final argument to the function be a callback, a special `sync()` function has been defined which will cause the repl to wait for the asynchronous callback to be executed before continuing:
+In order to handle asynchronous calls, gremlin-console.js offers two convenience routines. First, gremlin-console.js defines a default callback for GraphWrapper methods that require a callback, and provides an async keyword to specify that the default callback is going to be used. For example:
 
 ```javascript
-g.v(4, sync());
+> async; g.v(3);
 ```
 
-_NOTE: The `sync()` function returns a callback that takes the standard node.js callback parameters `(err, result)`, and can be used only once per executed line. Thus the callback is properly `sync()` and not `sync` as one might normally expect.
+Second, gremlin-console.js defines a `sync()` function which will mark a line asynchronous, and print the result that is passed to it. For example:
+
+```javascript
+> doSomethingAsynchronous(sync());
+```
+
+_NOTE: The `sync()` function returns a callback that takes the standard node.js callback parameters `(err, result)`. Thus the callback is properly `sync()` and not `sync` as one might normally expect.
 
 ## Examples
 
