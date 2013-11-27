@@ -1,95 +1,81 @@
 #!/usr/bin/env node
+
 'use strict';
-var argv = require('optimist').alias('c', 'classpath').argv;
+
+var repl = require('repl');
+var optimist = require('optimist');
+var util = require('util');
+var vm = require('vm');
+var Gremlin = require('../lib/gremlin');
+
+var argv = optimist.alias('c', 'classpath').argv;
 argv.classpath = argv.classpath || '.';
-var util = require('util'),
-    Gremlin = require('../lib/gremlin'),
-    gremlin = new Gremlin({ classpath: util.isArray(argv.classpath) ? argv.classpath : [ argv.classpath ] }),
-    GraphWrapper = require('../lib/graph-wrapper'),
-    PipelineWrapper = require('../lib/pipeline-wrapper'),
-    T = gremlin.Tokens,
-    repl = require('repl'),
-    vm = require('vm')/*,
-    require('repl.history')(repl, './.node_history')*/;
 
-var TinkerGraphFactory = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
-process.stdout.write('\n');
-process.stdout.write('         \\,,,/' + '\n');
-process.stdout.write('         (o o)' + '\n');
-process.stdout.write('-----oOOo-(_)-oOOo-----' + '\n');
-
-var r = repl.start({
-    prompt: 'gremlin> ',
-    input: process.stdin,
-    output: process.stdout,
-    terminal: true,
-    writer: outFunc,
-    ignoreUndefined: true,
-    eval: evalFunc
+var gremlin = new Gremlin({
+  classpath: util.isArray(argv.classpath) ? argv.classpath : [ argv.classpath ]
 });
 
-function _isObject(o) {
-    return Object.prototype.toString.call(o) === '[object Object]';
-}
+// inject a default graph
+var TinkerGraphFactory = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
+var graph = TinkerGraphFactory.createTinkerGraphSync();
+var g = gremlin.wrap(graph);
 
-function outFunc(it){
-    var arr, msg;
-    if (it && it.toStringSync) {
-        process.stdout.write('==>' + it.toStringSync() + '\n');
-    } else {
-        return repl.writer(it);
-    }
-    return '';
+console.log();
+console.log('         \\,,,/');
+console.log('         (o o)');
+console.log('-----oOOo-(_)-oOOo-----');
+
+var r = repl.start({
+  prompt: 'gremlin> ',
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true,
+  ignoreUndefined: true,
+  writer: outFunc,
+  eval: evalFunc
+});
+
+function outFunc(it) {
+  if (it instanceof gremlin.PipelineWrapper) {
+    it = it.toJSONSync();
+  }
+  return '==> ' + util.inspect(it);
 }
 
 function evalFunc(code, context, file, cb) {
-  var err, result, async = false;
-  context.sync = function () {
-    async = true;
-    return function (err, res) {
-      handleResult(err, res, context, cb);
-    }
+  // g.print is a helper method for async functions.
+  // in the case that it is used, we must defer calling
+  // the callback until print itself has been called
+  var async = false;
+  var print = function (err, data) {
+    cb(null, gremlin.toJSONSync(data));
   };
+
+  Object.defineProperty(g, 'print', {
+    get: function () {
+      async = true;
+      return print;
+    },
+    configurable: true
+  });
+
   try {
-    result = vm.runInContext(code, context, file);
+    var result = vm.runInContext(code, context, file);
+    if (!async) {
+      cb(null, result);
+    }
   } catch (e) {
-    err = e;
+    return cb(e);
   }
-  if (err && process.domain) {
-    process.domain.emit('error', err);
-    process.domain.exit();
-  }
-  else if (!async) handleResult(err, result, context, cb);
 };
 
-function handleResult(err, result, context, cb) {
-  if (_isObject(result) && result.constructor === PipelineWrapper) {
-    var method = 'toJSON';
-    if (context.list) method = 'toList';
-    if (context.next) method = 'next'
-    result[method](cb);
-  } else {
-    cb(err, result);
-  }
-}
-
 r.context.gremlin = gremlin;
-r.context.TinkerGraphFactory = TinkerGraphFactory;
-r.context.GraphWrapper = GraphWrapper;
 r.context.java = gremlin.java;
-r.context.sync = function (err, res) { }; // Stub so autocomplete picks it up
-
-try {
-    var TitanFactory = gremlin.java.import('com.thinkaurelius.titan.core.TitanFactory');
-    var GraphOfTheGodsFactory = gremlin.java.import('com.thinkaurelius.titan.example.GraphOfTheGodsFactory');
-    r.context.TitanFactory = TitanFactory; //TitanFactory.openSync('./tmp/titan');
-    r.context.GraphOfTheGodsFactory = GraphOfTheGodsFactory;
-} catch (e) {
-    console.log("No Titan classes available");
-}
-
+r.context.TinkerGraphFactory = TinkerGraphFactory;
+r.context.graph = graph;
+r.context.g = g;
 
 r.on('exit', function () {
-    console.log('Good-bye from Gremlin!');
-    process.exit();
+  console.log('Good-bye from Gremlin!');
+  process.exit();
 });
