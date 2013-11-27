@@ -42,15 +42,14 @@ function outFunc(it){
     return '';
 }
 
+GraphWrapper.prototype.defaultcb = handleResult;
+
 var evalGlobals = { };
 
 function evalFunc(code, context, file, cb) {
   var err, result;
   evalGlobals = { context: context, file: file, cb: cb };
-  context.sync = function () {
-    evalGlobals.async = true;
-    return handleResult;
-  };
+
   try {
     result = vm.runInContext(code, context, file);
   } catch (e) {
@@ -78,7 +77,15 @@ r.context.gremlin = gremlin;
 r.context.TinkerGraphFactory = TinkerGraphFactory;
 r.context.GraphWrapper = GraphWrapper;
 r.context.java = gremlin.java;
-r.context.sync = function (err, res) { }; // Stub so autocomplete picks it up
+r.context.sync = function (err, res) {
+  evalGlobals.async = true;
+  return handleResult;
+};
+Object.defineProperties(r.context, {
+  "async": {
+    "get": function () { evalGlobals.async = true; return handleResult; }
+  }
+});
 
 try {
     var TitanFactory = gremlin.java.import('com.thinkaurelius.titan.core.TitanFactory');
