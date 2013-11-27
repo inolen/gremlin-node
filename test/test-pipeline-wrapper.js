@@ -155,7 +155,12 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.ifThenElse = function() {
   // PipelineWrapper.prototype.loop = function() {
   // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
-  // PipelineWrapper.prototype.back = function(step) {
+  test('as() and back()', function (done) {
+    g.V().as('test').out('knows').back('test').toJSON(function (err, recs) {
+      assert(!err && recs.length === 1);
+      done();
+    });
+  });
   test('dedup()', function (done) {
     g.v(3, 3, function (err, verts) {
       verts.dedup().toJSON(function (err, res) {
@@ -165,14 +170,29 @@ suite('pipeline-wrapper', function() {
     });
   });
   // PipelineWrapper.prototype.except = function() {
-  // PipelineWrapper.prototype.filter = function(closure) {
+  test('filter()', function (done) {
+    g.V().filter("{it->it.name == 'lop'}").toJSON(function (err, recs) {
+      assert(!err && recs.length === 1);
+      done();
+    });
+  });
   // PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
   // PipelineWrapper.prototype.random = function() {
   // PipelineWrapper.prototype.index = function(idx) {
   // PipelineWrapper.prototype.range = function() {
   // PipelineWrapper.prototype.retain = function(/*final Collection<E> collection*/) {
   // PipelineWrapper.prototype.simplePath = function() {
-  // PipelineWrapper.prototype.aggregate = function() {
+  test('aggregate()', function (done) {
+    var al = new gremlin.ArrayList();
+    g.V().has('lang', 'java').aggregate(al).next(function (err, res) {
+      gremlin.toJSON(res, function (err, iter) {
+        gremlin.toJSON(al, function (err, recs) {
+          assert(iter.length === 1 && recs.length === 2);
+          done();
+        });
+      });
+    });
+  });
   // PipelineWrapper.prototype.optional = function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
   test('groupCount(map, closure)', function (done) {
@@ -191,7 +211,17 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.linkIn = function() {
   // PipelineWrapper.prototype.linkBoth = function() {
   // PipelineWrapper.prototype.sideEffect = function() {
-  // PipelineWrapper.prototype.store = function() {
+  test('store()', function (done) {
+    var al = new gremlin.ArrayList();
+    g.V().has('lang', 'java').store(al).next(function (err, res) {
+      gremlin.toJSON(res, function (err, iter) {
+        gremlin.toJSON(al, function (err, recs) {
+          assert(iter.length === 1 && recs.length === 1);
+          done();
+        });
+      });
+    });
+  });
   // PipelineWrapper.prototype.table = function() {
   // PipelineWrapper.prototype.tree = function() {
   // PipelineWrapper.prototype.gather = function() {
@@ -202,7 +232,13 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.scatter = function() {
   // PipelineWrapper.prototype.select = function() {
   // PipelineWrapper.prototype.shuffle = function() {
-  // PipelineWrapper.prototype.cap = function() {
+  test('groupCount() and cap()', function (done) {
+    g.V().in().id().groupCount().cap().toJSON(function (err, map) {
+      map = map[0];
+      assert(!err && map['1'] === 3 && map['4'] === 2 && map['6'] === 1);
+      done();
+    });
+  });
   // PipelineWrapper.prototype.orderMap = function() {
   // PipelineWrapper.prototype.transform = function() {
 });
