@@ -60,4 +60,93 @@ suite('graph-wrapper', function() {
     assert(fakeGraph.newTransactionSync.calledOnce);
     assert(fakeTxn.addVertex.calledTwice);
   });
+
+  test('addEdge(id, v1, v2)', function (done) {
+    g.v(1, 2, function (err, pipe) {
+      if (err) return done(err);
+
+      pipe.next(function (err, v1) {
+        if (err) return done(err);
+
+        pipe.next(function (err, v2) {
+          if (err) return done(err);
+
+          g.addEdge(null, v1, v2, 'buddy', function (err, e) {
+            if (err) return done(err);
+
+            var data = g.toJSONSync(e)[0];
+            assert(data._id === '0');
+            assert(data._label === 'buddy');
+
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  test('getEdge', function (done) {
+    g.getEdge('7', function (err, e) {
+      if (err) return done(err);
+
+      var data = g.toJSONSync(e)[0];
+      assert(data._id === '7');
+      assert(data._label === 'knows');
+      done();
+    });
+  });
+
+  test('removeEdge', function (done) {
+    g.getEdge('7', function (err, e) {
+      if (err) return done(err);
+
+      g.removeEdge(e, function (err) {
+        if (err) return done(err);
+
+        g.getEdge('7', function (err, e) {
+          if (err) return done(err);
+
+          assert(!e);
+
+          done();
+        });
+      });
+    });
+  });
+
+  test('v(id) with single id', function (done) {
+    g.v(2, function (err, data) {
+      if (err) return done(err);
+      assert(data.toString() === 'v[2]');
+      done();
+    });
+  });
+
+  test('v(id...) with id list', function (done) {
+    g.v(2, 4, function (err, pipe) {
+      pipe.toJSON(function (err, data) {
+        if (err) return done(err);
+        assert(data.length === 2);
+        done();
+      });
+    });
+  });
+
+  test('v(id...) with id array', function (done) {
+    g.v([2, 4], function (err, pipe) {
+      pipe.toJSON(function (err, data) {
+        if (err) return done(err);
+        assert(data.length === 2);
+        done();
+      });
+    });
+  });
+
+  test('v(id) with invalid id', function (done) {
+    g.v(99, function (err, data) {
+      if (err) return done(err);
+      assert(!data);
+      done();
+    });
+  });
 });
