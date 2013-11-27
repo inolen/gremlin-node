@@ -42,13 +42,14 @@ function outFunc(it){
     return '';
 }
 
+var evalGlobals = { };
+
 function evalFunc(code, context, file, cb) {
-  var err, result, async = false;
+  var err, result;
+  evalGlobals = { context: context, file: file, cb: cb };
   context.sync = function () {
-    async = true;
-    return function (err, res) {
-      handleResult(err, res, context, cb);
-    }
+    evalGlobals.async = true;
+    return handleResult;
   };
   try {
     result = vm.runInContext(code, context, file);
@@ -59,17 +60,17 @@ function evalFunc(code, context, file, cb) {
     process.domain.emit('error', err);
     process.domain.exit();
   }
-  else if (!async) handleResult(err, result, context, cb);
+  else if (!evalGlobals.async) handleResult(err, result, context, cb);
 };
 
-function handleResult(err, result, context, cb) {
+function handleResult(err, result) {
   if (_isObject(result) && result.constructor === PipelineWrapper) {
     var method = 'toJSON';
-    if (context.list) method = 'toList';
-    if (context.next) method = 'next'
-    result[method](cb);
+    if (evalGlobals.context.list) method = 'toList';
+    if (evalGlobals.context.next) method = 'next'
+    result[method](evalGlobals.cb);
   } else {
-    cb(err, result);
+    evalGlobals.cb(err, result);
   }
 }
 
