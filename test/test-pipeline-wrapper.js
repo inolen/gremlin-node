@@ -72,14 +72,14 @@ suite('pipeline-wrapper', function() {
 
   test('hasNot(string key, object value)', function (done) {
     g.V().hasNot('age').count(function (err, count) {
-      assert(!err && count.longValue === '2');
+      assert(!err && count === 2);
       done();
     });
   });
 
   test('hasNot(string key, object value)', function (done) {
     g.V().hasNot('age', 27).count(function (err, count) {
-      assert(!err && count.longValue === '5');
+      assert(!err && count === 5);
       done();
     });
   });

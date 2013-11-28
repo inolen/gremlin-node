@@ -72,12 +72,9 @@ suite('graph-wrapper', function() {
           assert(!err && v2);
 
           g.addEdge(null, v1, v2, 'buddy', function (err, e) {
-            assert(!err);
-
-            var data = g.toJSONSync(e)[0];
-            assert(data._id === '0');
-            assert(data._label === 'buddy');
-
+            assert(!err && e);
+            assert(e.getId() === '0');
+            assert(e.getLabel() === 'buddy');
             done();
           });
         });
@@ -88,10 +85,8 @@ suite('graph-wrapper', function() {
   test('getEdge(id)', function (done) {
     g.getEdge('7', function (err, e) {
       assert(!err && e);
-
-      var data = g.toJSONSync(e)[0];
-      assert(data._id === '7');
-      assert(data._label === 'knows');
+      assert(e.getId() === '7');
+      assert(e.getLabel() === 'knows');
       done();
     });
   });
@@ -121,8 +116,8 @@ suite('graph-wrapper', function() {
 
   test('v(id...) with id list', function (done) {
     g.v('2', '4', function (err, pipe) {
-      pipe.toJSON(function (err, data) {
-        assert(!err && data.length === 2);
+      pipe.count(function (err, count) {
+        assert(!err && count === 2);
         done();
       });
     });
@@ -131,8 +126,8 @@ suite('graph-wrapper', function() {
   test('v(id...) with id array', function (done) {
     g.v(['2', '4'], function (err, pipe) {
       assert(!err && pipe);
-      pipe.toJSON(function (err, data) {
-        assert(!err && data.length === 2);
+      pipe.count(function (err, count) {
+        assert(!err && count === 2);
         done();
       });
     });
