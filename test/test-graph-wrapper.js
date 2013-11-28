@@ -28,7 +28,7 @@ suite('graph-wrapper', function() {
 
   test('Non ThreadedTransactionalGraph instances do not start unique transactions', function() {
     graph.newTransactionSync = sandbox.spy();
-    g.addVertex(null);
+    g.addVertex(null, function () {});
     assert(!graph.newTransactionSync.called);
   });
 
@@ -43,6 +43,7 @@ suite('graph-wrapper', function() {
       isType: sandbox.stub()
         .withArgs(fakeGraph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')
         .returns(true),
+      VertexWrapper: function () {},
       toList: function () {},
       toListSync: function () {},
       toJSON: function () {},
@@ -51,14 +52,47 @@ suite('graph-wrapper', function() {
     var g2 = new GraphWrapper(fakeGremlin, fakeGraph);
 
     // should start a new transaction
-    g2.addVertex(null);
+    g2.addVertex(null, function () {});
 
     // should re-use the existing transaction
-    g2.addVertex(null);
+    g2.addVertex(null, function () {});
 
     assert(fakeGremlin.isType.calledOnce);
     assert(fakeGraph.newTransactionSync.calledOnce);
     assert(fakeTxn.addVertex.calledTwice);
+  });
+
+  test('addVertex(id)', function (done) {
+    g.addVertex(null, function (err, v) {
+      assert(!err && v instanceof gremlin.VertexWrapper);
+      done();
+    });
+  });
+
+  test('getVertex(id)', function (done) {
+    g.getVertex('1', function (err, v) {
+      assert(!err && v instanceof gremlin.VertexWrapper);
+      v.getProperty('name', function (err, name) {
+        assert(!err && name === 'marko');
+        done();
+      });
+    });
+  });
+
+  test('removeVertex(v)', function (done) {
+    g.getVertex('1', function (err, v) {
+      assert(!err && v);
+
+      g.removeVertex(v, function (err) {
+        assert(!err);
+
+        g.getVertex('1', function (err, v) {
+          assert(!err && !v);
+
+          done();
+        });
+      });
+    });
   });
 
   test('addEdge(id, v1, v2)', function (done) {
@@ -72,7 +106,7 @@ suite('graph-wrapper', function() {
           assert(!err && v2);
 
           g.addEdge(null, v1, v2, 'buddy', function (err, e) {
-            assert(!err && e);
+            assert(!err && e instanceof gremlin.EdgeWrapper);
             assert(e.getId() === '0');
             assert(e.getLabel() === 'buddy');
             done();
@@ -84,7 +118,7 @@ suite('graph-wrapper', function() {
 
   test('getEdge(id)', function (done) {
     g.getEdge('7', function (err, e) {
-      assert(!err && e);
+      assert(!err && e instanceof gremlin.EdgeWrapper);
       assert(e.getId() === '7');
       assert(e.getLabel() === 'knows');
       done();
