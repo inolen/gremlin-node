@@ -25,8 +25,11 @@ suite('pipeline-wrapper', function() {
 
   test('V(string key, object value)', function (done) {
     g.V('name', 'marko').next(function (err, v) {
-      assert(!err && v.getPropertySync('name') === 'marko');
-      done();
+      assert(!err);
+      v.getProperty('name', function (err, name) {
+        assert(!err && name === 'marko');
+        done();
+      });
     });
   });
 
@@ -39,22 +42,31 @@ suite('pipeline-wrapper', function() {
 
   test('has(string key, object value)', function (done) {
     g.V().has('name', 'marko').next(function (err, v) {
-      assert(!err && v.getPropertySync('name') === 'marko');
-      done();
+      assert(!err);
+      v.getProperty('name', function (err, name) {
+        assert(!err && name === 'marko');
+        done();
+      });
     });
   });
 
   test('has(string key, token, object value)', function (done) {
     g.V().has('name', gremlin.Tokens.eq, 'marko').next(function (err, v) {
-      assert(!err && v.getPropertySync('name') === 'marko');
-      done();
+      assert(!err);
+      v.getProperty('name', function (err, name) {
+        assert(!err && name === 'marko');
+        done();
+      });
     });
   });
 
   test('has(string key, predicate, object value)', function (done) {
     g.V().has('name', gremlin.Compare.EQUAL, 'marko').next(function (err, v) {
-      assert(!err && v.getPropertySync('name') === 'marko');
-      done();
+      assert(!err);
+      v.getProperty('name', function (err, name) {
+        assert(!err && name === 'marko');
+        done();
+      });
     });
   });
 
@@ -184,13 +196,9 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.simplePath = function() {
   test('aggregate()', function (done) {
     var al = new gremlin.ArrayList();
-    g.V().has('lang', 'java').aggregate(al).next(function (err, res) {
-      gremlin.toJSON(res, function (err, iter) {
-        gremlin.toJSON(al, function (err, recs) {
-          assert(iter.length === 1 && recs.length === 2);
-          done();
-        });
-      });
+    g.V().has('lang', 'java').aggregate(al).next(function (err, v) {
+      assert(!err && v && al.sizeSync() === 2);
+      done();
     });
   });
   // PipelineWrapper.prototype.optional = function() {
@@ -198,13 +206,13 @@ suite('pipeline-wrapper', function() {
   test('groupCount(map, closure)', function (done) {
     var m = new gremlin.HashMap();
     g.V().out().groupCount(m, '{it->it.id}').iterate(function (err, iterated) {
-        assert(!err && iterated === null);
-        gremlin.toJSON(m, function (err, res) {
-          res = res[0]; // Rexster encloses all objects in arrays. Go figure.
-          assert(!err);
-          assert(res['3'] === 3 && res['2'] === 1 && typeof res['6'] === 'undefined');
-          done();
-        });
+      assert(!err && iterated === null);
+      gremlin.toJSON(m, function (err, res) {
+        res = res[0]; // Rexster encloses all objects in arrays. Go figure.
+        assert(!err);
+        assert(res['3'] === 3 && res['2'] === 1 && typeof res['6'] === 'undefined');
+        done();
+      });
     });
   });
   // PipelineWrapper.prototype.linkOut = function() {
@@ -213,13 +221,9 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.sideEffect = function() {
   test('store()', function (done) {
     var al = new gremlin.ArrayList();
-    g.V().has('lang', 'java').store(al).next(function (err, res) {
-      gremlin.toJSON(res, function (err, iter) {
-        gremlin.toJSON(al, function (err, recs) {
-          assert(iter.length === 1 && recs.length === 1);
-          done();
-        });
-      });
+    g.V().has('lang', 'java').store(al).next(function (err, v) {
+      assert(!err && v && al.sizeSync() === 1);
+      done();
     });
   });
   // PipelineWrapper.prototype.table = function() {

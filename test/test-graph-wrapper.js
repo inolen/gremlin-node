@@ -113,14 +113,14 @@ suite('graph-wrapper', function() {
   });
 
   test('v(id) with single id', function (done) {
-    g.v(2, function (err, data) {
-      assert(!err && data.toString() === 'v[2]');
+    g.v('2', function (err, v) {
+      assert(!err && v.toJSON().id === '2');
       done();
     });
   });
 
   test('v(id...) with id list', function (done) {
-    g.v(2, 4, function (err, pipe) {
+    g.v('2', '4', function (err, pipe) {
       pipe.toJSON(function (err, data) {
         assert(!err && data.length === 2);
         done();
@@ -129,7 +129,7 @@ suite('graph-wrapper', function() {
   });
 
   test('v(id...) with id array', function (done) {
-    g.v([2, 4], function (err, pipe) {
+    g.v(['2', '4'], function (err, pipe) {
       assert(!err && pipe);
       pipe.toJSON(function (err, data) {
         assert(!err && data.length === 2);
@@ -139,8 +139,8 @@ suite('graph-wrapper', function() {
   });
 
   test('v(id) with invalid id', function (done) {
-    g.v(99, function (err, data) {
-      assert(!err && !data);
+    g.v('99', function (err, v) {
+      assert(!err && !v);
       done();
     });
   });
