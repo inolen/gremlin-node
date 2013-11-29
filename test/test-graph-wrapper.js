@@ -142,13 +142,19 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('setProperty(key, value) / getProperty(key)', function (done) {
+  test('setProperty(key, value) / getProperty(key) / removeProperty(key)', function (done) {
     g.getVertex('1', function (err, v) {
       v.setProperty('name', 'john', function (err) {
         assert(!err);
         v.getProperty('name', function (err, name) {
           assert(!err && name === 'john');
-          done();
+          v.removeProperty('name', function (err, res) {
+            assert(!err);
+            v.getProperty('name', function (err, name) {
+              assert(!err && name === null);
+              done();
+            });
+          });
         });
       });
     });
