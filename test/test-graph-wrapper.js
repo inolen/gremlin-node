@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('underscore');
 var assert = require('assert');
 var sinon = require('sinon');
 var Gremlin = require('../lib/gremlin');
@@ -149,6 +150,30 @@ suite('graph-wrapper', function() {
           assert(!err && name === 'john');
           done();
         });
+      });
+    });
+  });
+
+  test('setProperties(props) / getProperties(props)', function (done) {
+    g.getVertex('1', function (err, v) {
+      v.setProperties({
+        'name': 'josh',
+        'age': 45
+      }, function (err) {
+        assert(!err);
+        v.getProperties(['name', 'age'], function (err, props) {
+          assert(!err && props.name === 'josh' && props.age === 45);
+          done();
+        });
+      });
+    });
+  });
+
+  test('getProperties()', function (done) {
+    g.getVertex('1', function (err, v) {
+      v.getProperties(function (err, props) {
+        assert(!err && _.isEqual(props, { name: 'marko', age: 29 }));
+        done();
       });
     });
   });
