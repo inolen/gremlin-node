@@ -141,6 +141,18 @@ suite('graph-wrapper', function() {
     });
   });
 
+  test('setProperty(key, value) / getProperty(key)', function (done) {
+    g.getVertex('1', function (err, v) {
+      v.setProperty('name', 'john', function (err) {
+        assert(!err);
+        v.getProperty('name', function (err, name) {
+          assert(!err && name === 'john');
+          done();
+        });
+      });
+    });
+  });
+
   test('v(id) with single id', function (done) {
     g.v('2', function (err, v) {
       assert(!err && v.getId() === '2');
