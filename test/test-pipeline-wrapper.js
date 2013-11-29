@@ -126,21 +126,21 @@ suite('pipeline-wrapper', function() {
   });
 
   test('both(string... labels)', function (done) {
-    g.V().both('knows').dedup().toJSON(function (err, verts) {
+    g.V().both('knows').dedup().toArray(function (err, verts) {
       assert(!err && verts.length === 3);
       done();
     });
   });
 
   test('both(int branchFactor, string... labels)', function (done) {
-    g.V().both(1, 'knows').dedup().toJSON(function (err, verts) {
+    g.V().both(1, 'knows').dedup().toArray(function (err, verts) {
       assert(!err && verts.length === 2);
       done();
     });
   });
 
   test('bothV()', function (done) {
-    g.E('id', '7').bothV().toJSON(function (err, verts) {
+    g.E('id', '7').bothV().toArray(function (err, verts) {
       assert(!err && verts.length === 2);
       done();
     });
@@ -161,8 +161,8 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.property = function() {
   // PipelineWrapper.prototype.step = function() {
   test('copySplit(), _(), and fairMerge()', function (done) {
-    g.V().both().toJSON(function (err, bothed) {
-      g.V().copySplit(g._().in(), g._().out()).fairMerge().toJSON(function (err, copied) {
+    g.V().both().toArray(function (err, bothed) {
+      g.V().copySplit(g._().in(), g._().out()).fairMerge().toArray(function (err, copied) {
         assert(bothed.length === copied.length);
         done();
       });
@@ -174,14 +174,14 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.loop = function() {
   // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
   test('as() and back()', function (done) {
-    g.V().as('test').out('knows').back('test').toJSON(function (err, recs) {
+    g.V().as('test').out('knows').back('test').toArray(function (err, recs) {
       assert(!err && recs.length === 1);
       done();
     });
   });
   test('dedup()', function (done) {
     g.v(3, 3, function (err, verts) {
-      verts.dedup().toJSON(function (err, res) {
+      verts.dedup().toArray(function (err, res) {
         assert(!err && res.length === 1);
         done();
       });
@@ -189,7 +189,7 @@ suite('pipeline-wrapper', function() {
   });
   // PipelineWrapper.prototype.except = function() {
   test('filter()', function (done) {
-    g.V().filter("{it->it.name == 'lop'}").toJSON(function (err, recs) {
+    g.V().filter("{ it -> it.name == 'lop' }").toArray(function (err, recs) {
       assert(!err && recs.length === 1);
       done();
     });
@@ -211,14 +211,12 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.groupBy = function(map, closure) {
   test('groupCount(map, closure)', function (done) {
     var m = new gremlin.HashMap();
-    g.V().out().groupCount(m, '{it->it.id}').iterate(function (err, iterated) {
+    g.V().out().groupCount(m, '{ it -> it.id }').iterate(function (err, iterated) {
       assert(!err && iterated === null);
-      gremlin.toJSON(m, function (err, res) {
-        res = res[0]; // Rexster encloses all objects in arrays. Go figure.
-        assert(!err);
-        assert(res['3'] === 3 && res['2'] === 1 && typeof res['6'] === 'undefined');
-        done();
-      });
+      assert(m.getSync('3').longValue === '3');
+      assert(m.getSync('2').longValue === '1');
+      assert(m.getSync('6') === null);
+      done();
     });
   });
   // PipelineWrapper.prototype.linkOut = function() {
@@ -243,8 +241,7 @@ suite('pipeline-wrapper', function() {
   // PipelineWrapper.prototype.select = function() {
   // PipelineWrapper.prototype.shuffle = function() {
   test('groupCount() and cap()', function (done) {
-    g.V().in().id().groupCount().cap().toJSON(function (err, map) {
-      map = map[0];
+    g.V().in().id().groupCount().cap().next(function (err, map) {
       assert(!err && map['1'] === 3 && map['4'] === 2 && map['6'] === 1);
       done();
     });
