@@ -142,19 +142,25 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('setProperty(key, value) / getProperty(key)', function (done) {
+  test('setProperty(key, value) / getProperty(key) / removeProperty(key)', function (done) {
     g.getVertex('1', function (err, v) {
       v.setProperty('name', 'john', function (err) {
         assert(!err);
         v.getProperty('name', function (err, name) {
           assert(!err && name === 'john');
-          done();
+          v.removeProperty('name', function (err, res) {
+            assert(!err);
+            v.getProperty('name', function (err, name) {
+              assert(!err && name === null);
+              done();
+            });
+          });
         });
       });
     });
   });
 
-  test('setProperties(props) / getProperties(props)', function (done) {
+  test('setProperties(props) / getProperties(props) / removeProperties(props)', function (done) {
     g.getVertex('1', function (err, v) {
       v.setProperties({
         'name': 'josh',
@@ -163,7 +169,12 @@ suite('graph-wrapper', function() {
         assert(!err);
         v.getProperties(['name', 'age'], function (err, props) {
           assert(!err && props.name === 'josh' && props.age === 45);
-          done();
+          v.removeProperties(['name', 'age'], function (err) {
+            v.getProperties(['name', 'age'], function (err, props) {
+              assert(!err && !props.name && !props.age);
+              done();
+            });
+          });
         });
       });
     });
