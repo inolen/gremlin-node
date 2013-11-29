@@ -160,7 +160,7 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('setProperties(props) / getProperties(props)', function (done) {
+  test('setProperties(props) / getProperties(props) / removeProperties(props)', function (done) {
     g.getVertex('1', function (err, v) {
       v.setProperties({
         'name': 'josh',
@@ -169,7 +169,12 @@ suite('graph-wrapper', function() {
         assert(!err);
         v.getProperties(['name', 'age'], function (err, props) {
           assert(!err && props.name === 'josh' && props.age === 45);
-          done();
+          v.removeProperties(['name', 'age'], function (err) {
+            v.getProperties(['name', 'age'], function (err, props) {
+              assert(!err && !props.name && !props.age);
+              done();
+            });
+          });
         });
       });
     });
