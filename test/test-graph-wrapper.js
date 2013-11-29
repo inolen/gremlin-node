@@ -143,7 +143,7 @@ suite('graph-wrapper', function() {
 
   test('v(id) with single id', function (done) {
     g.v('2', function (err, v) {
-      assert(!err && v.toJSON().id === '2');
+      assert(!err && v.getId() === '2');
       done();
     });
   });

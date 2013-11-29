@@ -2,6 +2,7 @@
 
 var _ = require('underscore');
 var assert = require('assert');
+var async = require('async');
 var path = require('path');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
@@ -35,8 +36,11 @@ suite('pipeline-wrapper', function() {
 
   test('E(string key, object value)', function (done) {
     g.E('weight', java.newFloat(0.5)).next(function (err, e) {
-      assert(!err && e.getPropertySync('weight') === 0.5);
-      done();
+      assert(!err);
+      e.getProperty('weight', function (err, weight) {
+        assert(!err && weight === 0.5);
+        done();
+      });
     });
   });
 
@@ -90,19 +94,21 @@ suite('pipeline-wrapper', function() {
     
     g.E()
       .interval('weight', java.newFloat(lower), java.newFloat(upper))
-      .toJSON(function (err, edges) {
+      .toArray(function (err, edges) {
         assert(!err && edges.length === 3);
-        edges.forEach(function (e) {
-          assert(e.weight >= lower && e.weight <= upper);
-        });
-        done();
+        async.each(edges, function (e, cb) {
+          e.getProperty('weight', function (err, weight) {
+            assert(!err && weight >= lower && weight <= upper);
+            cb();
+          });
+        }, done);
       });
   });
 
   test('bothE(string... labels)', function (done) {
-    g.V().bothE('knows', 'created').toJSON(function (err, edges) {
+    g.V().bothE('knows', 'created').toArray(function (err, edges) {
       assert(!err && edges.length === 12);
-      var counts = _.countBy(edges, function (e) { return e._label; });
+      var counts = _.countBy(edges, function (e) { return e.getLabel(); });
       assert(counts.knows === 4);
       assert(counts.created === 8);
       done();
@@ -110,9 +116,9 @@ suite('pipeline-wrapper', function() {
   });
 
   test('bothE(int branchFactor, string... labels)', function (done) {
-    g.V().bothE(1, 'knows', 'created').toJSON(function (err, edges) {
+    g.V().bothE(1, 'knows', 'created').toArray(function (err, edges) {
       assert(!err && edges.length === 6);
-      var counts = _.countBy(edges, function (e) { return e._label; });
+      var counts = _.countBy(edges, function (e) { return e.getLabel(); });
       assert(counts.knows === 3);
       assert(counts.created === 3);
       done();
