@@ -1,7 +1,7 @@
 {
   "name": "gremlin",
   "description": "Gremlin for graph databases which implement the Blueprints property graph data model.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "keywords": [
     "graph",
     "database",
