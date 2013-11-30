@@ -155,7 +155,7 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('setProperties(props) / getProperties(props) / removeProperties(props)', function (done) {
+  test('setProperties(props) / getProperties(props)', function (done) {
     g.getVertex('1', function (err, v) {
       v.setProperties({
         'name': 'josh',
