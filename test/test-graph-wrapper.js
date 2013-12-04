@@ -6,34 +6,34 @@ var sinon = require('sinon');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
 
-suite('graph-wrapper', function() {
+suite('graph-wrapper', function () {
   var gremlin;
   var graph;
   var g;
   var sandbox;
 
-  suiteSetup(function() {
+  suiteSetup(function () {
     gremlin = new Gremlin();
   });
 
-  setup(function() {
+  setup(function () {
     var TinkerGraphFactory = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
     graph = TinkerGraphFactory.createTinkerGraphSync();
     g = new GraphWrapper(gremlin, graph);
     sandbox = sinon.sandbox.create();
   });
 
-  teardown(function() {
+  teardown(function () {
     sandbox.restore();
   });
 
-  test('Non ThreadedTransactionalGraph instances do not start unique transactions', function() {
+  test('Non ThreadedTransactionalGraph instances do not start unique transactions', function () {
     graph.newTransactionSync = sandbox.spy();
     g.addVertex(null, function () {});
     assert(!graph.newTransactionSync.called);
   });
 
-  test('ThreadedTransactionalGraph starts unique transactions', function() {
+  test('ThreadedTransactionalGraph starts unique transactions', function () {
     var fakeTxn = {
       addVertex: sandbox.stub()
     };

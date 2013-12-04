@@ -6,6 +6,7 @@
   "shadow": true,
   "strict": true,
   "trailing": true,
+  "white": true,
   "globals": {
     "suite": true,
     "test": true,

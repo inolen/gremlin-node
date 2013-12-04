@@ -7,18 +7,18 @@ var path = require('path');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
 
-suite('pipeline-wrapper', function() {
+suite('pipeline-wrapper', function () {
   var gremlin;
   var java;
   var graph;
   var g;
 
-  suiteSetup(function() {
+  suiteSetup(function () {
     gremlin = new Gremlin();
     java = gremlin.java;
   });
 
-  setup(function() {
+  setup(function () {
     var TinkerGraphFactory = java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
     graph = TinkerGraphFactory.createTinkerGraphSync();
     g = new GraphWrapper(gremlin, graph);
@@ -147,19 +147,19 @@ suite('pipeline-wrapper', function() {
   });
 
   // TODO
-  // PipelineWrapper.prototype.idEdge = function() {
-  // PipelineWrapper.prototype.id = function() {
-  // PipelineWrapper.prototype.idVertex = function() {
-  // PipelineWrapper.prototype.inE = function() {
-  // PipelineWrapper.prototype.in = function() {
-  // PipelineWrapper.prototype.inV = function() {
-  // PipelineWrapper.prototype.label = function() {
-  // PipelineWrapper.prototype.outE = function() {
-  // PipelineWrapper.prototype.out = function(){
-  // PipelineWrapper.prototype.outV = function(){
-  // PipelineWrapper.prototype.map = function() {
-  // PipelineWrapper.prototype.property = function() {
-  // PipelineWrapper.prototype.step = function() {
+  // PipelineWrapper.prototype.idEdge = function () {
+  // PipelineWrapper.prototype.id = function () {
+  // PipelineWrapper.prototype.idVertex = function () {
+  // PipelineWrapper.prototype.inE = function () {
+  // PipelineWrapper.prototype.in = function () {
+  // PipelineWrapper.prototype.inV = function () {
+  // PipelineWrapper.prototype.label = function () {
+  // PipelineWrapper.prototype.outE = function () {
+  // PipelineWrapper.prototype.out = function (){
+  // PipelineWrapper.prototype.outV = function (){
+  // PipelineWrapper.prototype.map = function () {
+  // PipelineWrapper.prototype.property = function () {
+  // PipelineWrapper.prototype.step = function () {
   test('copySplit(), _(), and fairMerge()', function (done) {
     g.V().both().toArray(function (err, bothed) {
       g.V().copySplit(g._().in(), g._().out()).fairMerge().toArray(function (err, copied) {
@@ -168,11 +168,11 @@ suite('pipeline-wrapper', function() {
       });
     });
   });
-  // PipelineWrapper.prototype.exhaustMerge = function() {
-  // PipelineWrapper.prototype.fairMerge = function() {
-  // PipelineWrapper.prototype.ifThenElse = function() {
-  // PipelineWrapper.prototype.loop = function() {
-  // PipelineWrapper.prototype.and = function(/*final Pipe<E, ?>... pipes*/) {
+  // PipelineWrapper.prototype.exhaustMerge = function () {
+  // PipelineWrapper.prototype.fairMerge = function () {
+  // PipelineWrapper.prototype.ifThenElse = function () {
+  // PipelineWrapper.prototype.loop = function () {
+  // PipelineWrapper.prototype.and = function (/*final Pipe<E, ?>... pipes*/) {
   test('as() and back()', function (done) {
     g.V().as('test').out('knows').back('test').toArray(function (err, recs) {
       assert(!err && recs.length === 1);
@@ -187,19 +187,19 @@ suite('pipeline-wrapper', function() {
       });
     });
   });
-  // PipelineWrapper.prototype.except = function() {
+  // PipelineWrapper.prototype.except = function () {
   test('filter()', function (done) {
-    g.V().filter("{ it -> it.name == 'lop' }").toArray(function (err, recs) {
+    g.V().filter('{ it -> it.name == "lop" }').toArray(function (err, recs) {
       assert(!err && recs.length === 1);
       done();
     });
   });
-  // PipelineWrapper.prototype.or = function(/*final Pipe<E, ?>... pipes*/) {
-  // PipelineWrapper.prototype.random = function() {
-  // PipelineWrapper.prototype.index = function(idx) {
-  // PipelineWrapper.prototype.range = function() {
-  // PipelineWrapper.prototype.retain = function(/*final Collection<E> collection*/) {
-  // PipelineWrapper.prototype.simplePath = function() {
+  // PipelineWrapper.prototype.or = function (/*final Pipe<E, ?>... pipes*/) {
+  // PipelineWrapper.prototype.random = function () {
+  // PipelineWrapper.prototype.index = function (idx) {
+  // PipelineWrapper.prototype.range = function () {
+  // PipelineWrapper.prototype.retain = function (/*final Collection<E> collection*/) {
+  // PipelineWrapper.prototype.simplePath = function () {
   test('aggregate()', function (done) {
     var al = new gremlin.ArrayList();
     g.V().has('lang', 'java').aggregate(al).next(function (err, v) {
@@ -207,8 +207,8 @@ suite('pipeline-wrapper', function() {
       done();
     });
   });
-  // PipelineWrapper.prototype.optional = function() {
-  // PipelineWrapper.prototype.groupBy = function(map, closure) {
+  // PipelineWrapper.prototype.optional = function () {
+  // PipelineWrapper.prototype.groupBy = function (map, closure) {
   test('groupCount(map, closure)', function (done) {
     var m = new gremlin.HashMap();
     g.V().out().groupCount(m, '{ it -> it.id }').iterate(function (err, iterated) {
@@ -219,10 +219,10 @@ suite('pipeline-wrapper', function() {
       done();
     });
   });
-  // PipelineWrapper.prototype.linkOut = function() {
-  // PipelineWrapper.prototype.linkIn = function() {
-  // PipelineWrapper.prototype.linkBoth = function() {
-  // PipelineWrapper.prototype.sideEffect = function() {
+  // PipelineWrapper.prototype.linkOut = function () {
+  // PipelineWrapper.prototype.linkIn = function () {
+  // PipelineWrapper.prototype.linkBoth = function () {
+  // PipelineWrapper.prototype.sideEffect = function () {
   test('store()', function (done) {
     var al = new gremlin.ArrayList();
     g.V().has('lang', 'java').store(al).next(function (err, v) {
@@ -230,22 +230,22 @@ suite('pipeline-wrapper', function() {
       done();
     });
   });
-  // PipelineWrapper.prototype.table = function() {
-  // PipelineWrapper.prototype.tree = function() {
-  // PipelineWrapper.prototype.gather = function() {
-  // PipelineWrapper.prototype._ = function() {
-  // PipelineWrapper.prototype.memoize = function() {
-  // PipelineWrapper.prototype.order = function() {
-  // PipelineWrapper.prototype.path = function() {
-  // PipelineWrapper.prototype.scatter = function() {
-  // PipelineWrapper.prototype.select = function() {
-  // PipelineWrapper.prototype.shuffle = function() {
+  // PipelineWrapper.prototype.table = function () {
+  // PipelineWrapper.prototype.tree = function () {
+  // PipelineWrapper.prototype.gather = function () {
+  // PipelineWrapper.prototype._ = function () {
+  // PipelineWrapper.prototype.memoize = function () {
+  // PipelineWrapper.prototype.order = function () {
+  // PipelineWrapper.prototype.path = function () {
+  // PipelineWrapper.prototype.scatter = function () {
+  // PipelineWrapper.prototype.select = function () {
+  // PipelineWrapper.prototype.shuffle = function () {
   test('groupCount() and cap()', function (done) {
     g.V().in().id().groupCount().cap().next(function (err, map) {
       assert(!err && map['1'] === 3 && map['4'] === 2 && map['6'] === 1);
       done();
     });
   });
-  // PipelineWrapper.prototype.orderMap = function() {
-  // PipelineWrapper.prototype.transform = function() {
+  // PipelineWrapper.prototype.orderMap = function () {
+  // PipelineWrapper.prototype.transform = function () {
 });
