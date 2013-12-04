@@ -196,15 +196,6 @@ suite('graph-wrapper', function() {
     });
   });
 
-  test('getProperties()', function (done) {
-    g.getVertex('1', function (err, v) {
-      v.getProperties(function (err, props) {
-        assert(!err && _.isEqual(props, { name: 'marko', age: 29 }));
-        done();
-      });
-    });
-  });
-
   test('v(id) with single id', function (done) {
     g.v('2', function (err, v) {
       assert(!err && v.getId() === '2');
