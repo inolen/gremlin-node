@@ -5,6 +5,8 @@ var assert = require('assert');
 var sinon = require('sinon');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
+var VertexWrapper = require('../lib/vertex-wrapper');
+var EdgeWrapper = require('../lib/edge-wrapper');
 
 suite('graph-wrapper', function () {
   var gremlin;
@@ -44,7 +46,6 @@ suite('graph-wrapper', function () {
       isType: sandbox.stub()
         .withArgs(fakeGraph, 'com.tinkerpop.blueprints.ThreadedTransactionalGraph')
         .returns(true),
-      VertexWrapper: function () {},
       toList: function () {},
       toListSync: function () {},
       toJSON: function () {},
@@ -65,14 +66,14 @@ suite('graph-wrapper', function () {
 
   test('addVertex(id)', function (done) {
     g.addVertex(null, function (err, v) {
-      assert(!err && v instanceof gremlin.VertexWrapper);
+      assert(!err && v instanceof VertexWrapper);
       done();
     });
   });
 
   test('getVertex(id)', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v instanceof gremlin.VertexWrapper);
+      assert(!err && v instanceof VertexWrapper);
       v.getProperty('name', function (err, name) {
         assert(!err && name === 'marko');
         done();
@@ -107,7 +108,7 @@ suite('graph-wrapper', function () {
           assert(!err && v2);
 
           g.addEdge(null, v1, v2, 'buddy', function (err, e) {
-            assert(!err && e instanceof gremlin.EdgeWrapper);
+            assert(!err && e instanceof EdgeWrapper);
             assert(e.getId() === '0');
             assert(e.getLabel() === 'buddy');
             done();
@@ -119,7 +120,7 @@ suite('graph-wrapper', function () {
 
   test('getEdge(id)', function (done) {
     g.getEdge('7', function (err, e) {
-      assert(!err && e instanceof gremlin.EdgeWrapper);
+      assert(!err && e instanceof EdgeWrapper);
       assert(e.getId() === '7');
       assert(e.getLabel() === 'knows');
       done();
