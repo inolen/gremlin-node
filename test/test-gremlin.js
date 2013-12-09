@@ -10,7 +10,6 @@ suite('gremlin', function () {
   var gremlin;
   var graph;
   var g;
-  var sandbox;
 
   suiteSetup(function () {
     gremlin = new Gremlin();
@@ -20,11 +19,6 @@ suite('gremlin', function () {
     var TinkerGraphFactory = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraphFactory');
     graph = TinkerGraphFactory.createTinkerGraphSync();
     g = new GraphWrapper(gremlin, graph);
-    sandbox = sinon.sandbox.create();
-  });
-
-  teardown(function () {
-    sandbox.restore();
   });
 
   test('Wrapped objects can be converted to JS objects using gremlin.toJSON', function (done) {
