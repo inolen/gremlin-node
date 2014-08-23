@@ -292,6 +292,7 @@ suite('pipeline-wrapper', function () {
   });
   // PipelineWrapper.prototype.except = function () {
   test('filter()', function (done) {
+    this.timeout(2500); // A longer timeout is required on Travis
     g.V().filter('{ it -> it.name == "lop" }').map().toArray(function (err, recs) {
       assert(!err && recs.length === 1);
       var expected = [ { name: 'lop', lang: 'java' } ];
