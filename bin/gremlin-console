@@ -7,6 +7,7 @@ var optimist = require('optimist');
 var util = require('util');
 var vm = require('vm');
 var Gremlin = require('../lib/gremlin');
+var _ = require('underscore');
 
 var argv = optimist.alias('c', 'classpath').argv;
 argv.classpath = argv.classpath || '.';
@@ -36,7 +37,7 @@ var r = repl.start({
 });
 
 function outFunc(it) {
-  if (it instanceof gremlin.PipelineWrapper) {
+  if (_.isObject(it) && _.isFunction(it.toJSONSync)) {
     it = it.toJSONSync();
   }
   return '==> ' + util.inspect(it);
@@ -70,6 +71,7 @@ function evalFunc(code, context, file, cb) {
 };
 
 r.context.gremlin = gremlin;
+r.context.T = gremlin.Tokens;
 r.context.java = gremlin.java;
 r.context.TinkerGraphFactory = TinkerGraphFactory;
 r.context.graph = graph;
