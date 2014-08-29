@@ -1,6 +1,8 @@
 gremlin-node
 ============
 
+[![Build Status](https://travis-ci.org/jimlloyd/gremlin-node.svg)](https://travis-ci.org/jimlloyd/gremlin-node)
+
 Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java.
 
 ```javascript
@@ -132,7 +134,7 @@ gremlin>  g.v(1, 4).out('knows', 'created').in
 
 node>     g.v(1, 4).out('knows', 'created').in();
 
-node>     g.v([1, 4]).out(['knows', 'created']).in(); 
+node>     g.v([1, 4]).out(['knows', 'created']).in();
 ```
 
 __Example 2: [i]__
@@ -169,7 +171,7 @@ node>     g.V().and(g._().both('knows'), g._().both('created'));
 
 gremlin>  g.v(1).outE.or(_().has('id', T.eq, '9'), _().has('weight', T.lt, 0.6f))
 
-node>     g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f')); 
+node>     g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f'));
 ```
 
 __Example 6: groupBy__
