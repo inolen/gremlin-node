@@ -1,7 +1,7 @@
 gremlin-node
 ============
 
-[![Build Status](https://travis-ci.org/jimlloyd/gremlin-node.svg)](https://travis-ci.org/jimlloyd/gremlin-node)
+[![Build Status](https://travis-ci.org/jimlloyd/gremlin-node.svg)](https://travis-ci.org/inolen/gremlin-node)
 
 Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java.
 
@@ -287,8 +287,8 @@ Anthony Pesch - [inolen](https://github.com/inolen)
 
 Jared Camins-Esakov
 
-##License
-###The MIT License (MIT)
+## License
+### The MIT License (MIT)
 
 Copyright (c) 2013 entrendipity pty ltd
 Parts copyright (c) 2013 C & P Bibliography Services, LLC
