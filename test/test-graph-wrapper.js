@@ -73,6 +73,12 @@ suite('graph-wrapper', function () {
     });
   });
 
+  test('addVertexP(id)', function (done) {
+    g.addVertexP(null)
+      .then(function (v) { assert(v instanceof VertexWrapper); })
+      .nodeify(done);
+  });
+
   test('getVertex(id)', function (done) {
     g.getVertex('1', function (err, v) {
       assert(!err && v instanceof VertexWrapper);
@@ -81,6 +87,18 @@ suite('graph-wrapper', function () {
         done();
       });
     });
+  });
+
+  test('getVertexP(id)', function (done) {
+    g.getVertexP('1')
+      .then(function (v) {
+        assert(v instanceof VertexWrapper);
+        return v.getPropertyP('name');
+      })
+      .then(function (name) {
+        assert(name === 'marko');
+      })
+      .nodeify(done);
   });
 
   test('removeVertex(v)', function (done) {
@@ -97,6 +115,14 @@ suite('graph-wrapper', function () {
         });
       });
     });
+  });
+
+  test('removeVertexP(v)', function (done) {
+    g.getVertexP('1')
+      .then(function (v) { assert(v instanceof VertexWrapper); return g.removeVertexP(v); })
+      .then(function () { return g.getVertexP('1'); })
+      .then(function (v) { assert(v === null); })
+      .nodeify(done);
   });
 
   test('addEdge(id, v1, v2)', function (done) {

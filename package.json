@@ -41,8 +41,10 @@
   },
   "dependencies": {
     "async": "~0.2.9",
+    "debug": "^2.0.0",
     "glob": "~3.2.6",
     "java": ">=0.2.8",
+    "q": "^1.0.1",
     "underscore": "~1.5.2"
   },
   "devDependencies": {
