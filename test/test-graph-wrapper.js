@@ -2,7 +2,9 @@
 
 var _ = require('underscore');
 var assert = require('assert');
+var fs = require('fs');
 var sinon = require('sinon');
+var tmp = require('tmp');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
 var VertexWrapper = require('../lib/vertex-wrapper');
@@ -253,4 +255,62 @@ suite('graph-wrapper', function () {
       done();
     });
   });
+
+  test('g.toJSON()', function (done) {
+    g.toJSON(function (err, json) {
+      var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+      assert.deepEqual(json, expected);
+      done();
+    });
+  });
+
+  test('g.toJSONSync()', function (done) {
+    var json = g.toJSONSync();
+    var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+    assert.deepEqual(json, expected);
+    done();
+  });
+
+  test('g.saveAndLoadGraphML()', function (done) {
+    tmp.tmpName(function (err, path) {
+      if (err) {
+        // A failure in tmpName is not a failure in gremlin-node.
+        // If this ever fails, it is likely some environmental problem.
+        throw err;
+      }
+      g.saveGraphMLSync(path);
+      var TinkerGraph = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraph');
+      var h = gremlin.wrap(new TinkerGraph());
+      var json = h.toJSONSync();
+      var expected = [ 'tinkergraph[vertices:0 edges:0]' ];
+      assert.deepEqual(json, expected);
+      h.loadGraphMLSync(path);
+      json = h.toJSONSync();
+      expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+      assert.deepEqual(json, expected);
+      fs.unlink(path, done);
+    });
+  });
+
+  test('g.saveAndLoadGraphSON()', function (done) {
+    tmp.tmpName(function (err, path) {
+      if (err) {
+        // A failure in tmpName is not a failure in gremlin-node.
+        // If this ever fails, it is likely some environmental problem.
+        throw err;
+      }
+      g.saveGraphSONSync(path);
+      var TinkerGraph = gremlin.java.import('com.tinkerpop.blueprints.impls.tg.TinkerGraph');
+      var h = gremlin.wrap(new TinkerGraph());
+      var json = h.toJSONSync();
+      var expected = [ 'tinkergraph[vertices:0 edges:0]' ];
+      assert.deepEqual(json, expected);
+      h.loadGraphSONSync(path);
+      json = h.toJSONSync();
+      expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+      assert.deepEqual(json, expected);
+      fs.unlink(path, done);
+    });
+  });
+
 });
