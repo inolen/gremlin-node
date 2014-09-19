@@ -253,4 +253,20 @@ suite('graph-wrapper', function () {
       done();
     });
   });
+
+  test('g.toJSON()', function (done) {
+    g.toJSON(function (err, json) {
+      var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+      assert.deepEqual(json, expected);
+      done();
+    });
+  });
+
+  test('g.toJSONSync()', function (done) {
+    var json = g.toJSONSync();
+    var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+    assert.deepEqual(json, expected);
+    done();
+  });
+
 });
