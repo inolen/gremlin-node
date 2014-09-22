@@ -225,61 +225,50 @@ suite('graph-wrapper', function () {
     });
   });
 
-  test('v(id) with single id', function (done) {
-    g.v('2', function (err, v) {
-      assert(!err && v.getId() === '2');
-      done();
-    });
-  });
-
-  test('v(id) with single id then toJSON', function (done) {
-    g.v('2', function (err, v) {
-      assert(!err && v.getId() === '2');
-      v.toJSON(function (err, vjson) {
-        var expected = [ { age: 27, name: 'vadas', _id: '2', _type: 'vertex' } ];
-        assert.deepEqual(vjson, expected);
+  test('v(id) with single id using callback API', function (done) {
+    g.v('2', function(err, pipe) {
+      assert(!err);
+      pipe.id().toJSON(function (err, ids) {
+        assert(!err);
+        assert.deepEqual(ids, ['2']);
         done();
       });
     });
   });
 
-  test('v(id...) with id list', function (done) {
-    g.v('2', '4', function (err, pipe) {
-      pipe.count(function (err, count) {
-        assert(!err && count === 2);
+  test('v(id) with single id using promise API', function (done) {
+    g.v('2')
+      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2']); }); })
+      .done(done);
+  });
+
+  test('v(id) with id list using callback API', function (done) {
+    g.v('2', '4', function(err, pipe) {
+      assert(!err);
+      pipe.id().toJSON(function (err, ids) {
+        assert(!err);
+        assert.deepEqual(ids, ['2', '4']);
         done();
       });
     });
   });
 
-  test('v(id...) with id list then toJSON', function (done) {
-    g.v('2', '4', function (err, pipe) {
-      pipe.toJSON(function (err, json) {
-        var expected = [
-          { age: 27, name: 'vadas', _id: '2', _type: 'vertex' },
-          { age: 32, name: 'josh', _id: '4', _type: 'vertex' }
-        ];
-        assert.deepEqual(json, expected);
-        done();
-      });
-    });
+  test('v(id...) with id list using promise API', function (done) {
+    g.v('2', '4')
+      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2', '4']); }); })
+      .done(done);
   });
 
-  test('v(id...) with id array', function (done) {
-    g.v(['2', '4'], function (err, pipe) {
-      assert(!err && pipe);
-      pipe.count(function (err, count) {
-        assert(!err && count === 2);
-        done();
-      });
-    });
+  test('v(id...) with id array using promise API', function (done) {
+    g.v(['2', '4'])
+      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2', '4']); }); })
+      .done(done);
   });
 
-  test('v(id) with invalid id', function (done) {
-    g.v('99', function (err, v) {
-      assert(!err && !v);
-      done();
-    });
+  test('v(id) with invalid id using promise API', function (done) {
+    g.v('99')
+      .then(function (pipe) { pipe.toJSON(function (err, json) { assert.deepEqual(json, [ null ]); }) })
+      .done(done);
   });
 
   test('g.toJSON()', function (done) {
