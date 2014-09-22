@@ -5,6 +5,7 @@ var assert = require('assert');
 var fs = require('fs');
 var sinon = require('sinon');
 var tmp = require('tmp');
+var Q = require('q');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
 var VertexWrapper = require('../lib/vertex-wrapper');
@@ -52,6 +53,8 @@ suite('graph-wrapper', function () {
       toListSync: function () {},
       toJSON: function () {},
       toJSONSync: function () {},
+      extractArguments: sandbox.stub()
+        .returns({ args: [ null ], callback: function () {} })
     };
     var g2 = new GraphWrapper(fakeGremlin, fakeGraph);
 
@@ -66,79 +69,82 @@ suite('graph-wrapper', function () {
     assert(fakeTxn.addVertex.calledTwice);
   });
 
-  test('addVertex(id)', function (done) {
+  test('addVertex(id) using callback API', function (done) {
     g.addVertex(null, function (err, v) {
-      assert(!err && v instanceof VertexWrapper);
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
       done();
     });
   });
 
-  test('addVertexP(id)', function (done) {
-    g.addVertexP(null)
-      .then(function (v) { assert(v instanceof VertexWrapper); })
-      .nodeify(done);
+  test('addVertex(id) using promise API', function (done) {
+    g.addVertex(null)
+      .then(function (v) { assert(v instanceof VertexWrapper); }, assert.ifError)
+      .done(done);
   });
 
-  test('getVertex(id)', function (done) {
+  test('getVertex(id) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v instanceof VertexWrapper);
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
       v.getProperty('name', function (err, name) {
-        assert(!err && name === 'marko');
+        assert.ifError(err);
+        assert.strictEqual(name, 'marko');
         done();
       });
     });
   });
 
-  test('getVertexP(id)', function (done) {
-    g.getVertexP('1')
-      .then(function (v) {
-        assert(v instanceof VertexWrapper);
-        return v.getPropertyP('name');
-      })
-      .then(function (name) {
-        assert(name === 'marko');
-      })
+  test('getVertex(id) using promise API', function (done) {
+    g.getVertex('1')
+      .then(function (v) { assert(v instanceof VertexWrapper); return v.getProperty('name'); }, assert.ifError)
+      .then(function (name) { assert.strictEqual(name, 'marko'); }, assert.ifError)
       .nodeify(done);
   });
 
-  test('removeVertex(v)', function (done) {
+  test('removeVertex(v) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v);
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
 
       g.removeVertex(v, function (err) {
-        assert(!err);
+        assert.ifError(err);
 
         g.getVertex('1', function (err, v) {
-          assert(!err && !v);
-
+          assert.ifError(err);
+          assert(!v);
           done();
         });
       });
     });
   });
 
-  test('removeVertexP(v)', function (done) {
-    g.getVertexP('1')
-      .then(function (v) { assert(v instanceof VertexWrapper); return g.removeVertexP(v); })
-      .then(function () { return g.getVertexP('1'); })
-      .then(function (v) { assert(v === null); })
+  test('removeVertex(v) using promise API', function (done) {
+    g.getVertex('1')
+      .then(function (v) { assert(v instanceof VertexWrapper); return g.removeVertex(v); }, assert.ifError)
+      .then(function () { return g.getVertex('1'); }, assert.ifError)
+      .then(function (v) { assert.strictEqual(v, null); }, assert.ifError)
       .nodeify(done);
   });
 
-  test('addEdge(id, v1, v2)', function (done) {
+  test('addEdge(id, v1, v2) using callback API', function (done) {
     g.v(1, 2, function (err, pipe) {
-      assert(!err && pipe);
+      assert.ifError(err);
+      assert(pipe);
 
       pipe.next(function (err, v1) {
-        assert(!err && v1);
+        assert.ifError(err);
+        assert(v1 instanceof VertexWrapper);
 
         pipe.next(function (err, v2) {
-          assert(!err && v2);
+          assert.ifError(err);
+          assert(v2 instanceof VertexWrapper);
 
           g.addEdge(null, v1, v2, 'buddy', function (err, e) {
-            assert(!err && e instanceof EdgeWrapper);
-            assert(e.getId() === '0');
-            assert(e.getLabel() === 'buddy');
+            assert.ifError(err);
+            assert(e instanceof EdgeWrapper);
+            assert.strictEqual(e.getId(), '0');
+            assert.strictEqual(e.getLabel(), 'buddy');
             done();
           });
         });
@@ -146,90 +152,176 @@ suite('graph-wrapper', function () {
     });
   });
 
-  test('getEdge(id)', function (done) {
+  test('addEdge(id, v1, v2) using promise API', function (done) {
+    var pipe, v1;
+    g.v(1, 2)
+      .then(function (_pipe) { assert(_pipe); pipe=_pipe; return pipe.next(); }, assert.ifError)
+      .then(function (_v1) { v1=_v1; assert(v1 instanceof VertexWrapper); return pipe.next(); }, assert.ifError)
+      .then(function (v2) {
+        assert(v2 instanceof VertexWrapper);
+        return g.addEdge(null, v1, v2, 'buddy');
+        }, assert.ifError)
+      .then(function (e) {
+        assert(e instanceof EdgeWrapper);
+        assert.strictEqual(e.getId(), '0');
+        assert.strictEqual(e.getLabel(), 'buddy');
+        }, assert.ifError)
+      .done(done);
+    });
+
+  test('getEdge(id) using callback API', function (done) {
     g.getEdge('7', function (err, e) {
-      assert(!err && e instanceof EdgeWrapper);
-      assert(e.getId() === '7');
-      assert(e.getLabel() === 'knows');
+      assert.ifError(err);
+      assert(e instanceof EdgeWrapper);
+      assert.strictEqual(e.getId(), '7');
+      assert.strictEqual(e.getLabel(), 'knows');
       done();
     });
   });
 
-  test('removeEdge(e)', function (done) {
+  test('getEdge(id) using promise API', function (done) {
+    g.getEdge('7')
+      .then(function (e) {
+        assert(e instanceof EdgeWrapper);
+        assert.strictEqual(e.getId(), '7');
+        assert.strictEqual(e.getLabel(), 'knows');
+        }, assert.ifError)
+      .done(done);
+  });
+
+  test('removeEdge(e) using callback API', function (done) {
     g.getEdge('7', function (err, e) {
-      assert(!err && e);
+      assert.ifError(err);
+      assert(e instanceof EdgeWrapper);
 
       g.removeEdge(e, function (err) {
-        assert(!err);
+        assert.ifError(err);
 
         g.getEdge('7', function (err, e) {
-          assert(!err && !e);
-
+          assert.ifError(err);
+          assert(!e);
           done();
         });
       });
     });
   });
 
-  test('setProperty(key, value) / getProperty(key)', function (done) {
+  test('removeEdge(e) using promise API', function (done) {
+    g.getEdge('7')
+      .then(function (e) {assert(e instanceof EdgeWrapper); return g.removeEdge(e); }, assert.ifError)
+      .then(function () { return g.getEdge('7'); }, assert.ifError)
+      .then(function (e) { assert(!e); }, assert.ifError)
+      .done(done);
+  });
+
+  test('setProperty(key, value) / getProperty(key) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v);
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
       v.setProperty('name', 'john', function (err) {
-        assert(!err);
+        assert.ifError(err);
         v.getProperty('name', function (err, name) {
-          assert(!err && name === 'john');
+          assert.ifError(err);
+          assert.strictEqual(name, 'john');
           done();
         });
       });
     });
   });
 
-  test('setProperties(props) / getProperties(props)', function (done) {
+  test('setProperty(key, value) / getProperty(key) using promise API', function (done) {
+    var v;
+    g.getVertex('1')
+      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function () { return v.getProperty('name'); }, assert.ifError)
+      .then(function (name) { assert.strictEqual(name, 'marko'); return v; }, assert.ifError)
+      .then(function () { return v.setProperty('name', 'john'); }, assert.ifError)
+      .then(function () { return v.getProperty('name'); }, assert.ifError)
+      .then(function (name) { assert.strictEqual(name, 'john'); }, assert.ifError)
+      .done(done);
+  });
+
+  test('setProperties(props) / getProperties(props) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      v.setProperties({
-        'name': 'josh',
-        'age': 45
-      }, function (err) {
-        assert(!err);
+      var expectedProps = { 'name': 'josh', 'age': 45 };
+      v.setProperties(expectedProps, function (err) {
+        assert.ifError(err);
         v.getProperties(['name', 'age'], function (err, props) {
-          assert(!err && props.name === 'josh' && props.age === 45);
+          assert.ifError(err);
+          assert.deepEqual(props, expectedProps);
           done();
         });
       });
     });
   });
 
-  test('removeProperty(key)', function (done) {
+  test('setProperties(props) / getProperties(props) using promise API', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v);
+      var expectedProps = { 'name': 'josh', 'age': 45 };
+      v.setProperties(expectedProps)
+        .then(function () { return v.getProperties(['name', 'age']); }, assert.ifError)
+        .then(function (props) { assert.deepEqual(props, expectedProps); }, assert.ifError)
+        .done(done);
+    });
+  });
+
+  test('removeProperty(key) using callback API', function (done) {
+    g.getVertex('1', function (err, v) {
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
       v.removeProperty('name', function (err, res) {
-        assert(!err);
+        assert.ifError(err);
         v.getProperty('name', function (err, name) {
-          assert(!err && name === null);
+          assert.ifError(err);
+          assert.strictEqual(name, null);
           done();
         });
       });
     });
   });
 
-  test('removeProperties(props)', function (done) {
+  test('removeProperty(key) using promises API', function (done) {
+    var v;
+    g.getVertex('1')
+      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function () { return v.removeProperty('name'); }, assert.ifError)
+      .then(function () { return v.getProperty('name'); }, assert.ifError)
+      .then(function (name) { assert.strictEqual(name, null); }, assert.ifError)
+      .done(done);
+  });
+
+  test('removeProperties(props) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      assert(!err && v);
+      assert.ifError(err);
+      assert(v instanceof VertexWrapper);
       v.removeProperties(['name', 'age'], function (err) {
-        assert(!err);
+        assert.ifError(err);
         v.getProperties(['name', 'age'], function (err, props) {
-          assert(!err && !props.name && !props.age);
+          assert.ifError(err);
+          assert.deepEqual(props, {name: null, age: null});
           done();
         });
       });
     });
+  });
+
+  test('removeProperties(props) using promises API', function (done) {
+    var v;
+    g.getVertex('1')
+      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function () { return v.getProperties(['name', 'age']); }, assert.ifError)
+      .then(function (props) { assert.deepEqual(props, {name: 'marko', age: 29}); }, assert.ifError)
+      .then(function () { return v.removeProperties(['name', 'age']); }, assert.ifError)
+      .then(function () { return v.getProperties(['name', 'age']); }, assert.ifError)
+      .then(function (props) { assert.deepEqual(props, {name: null, age: null}); }, assert.ifError)
+      .done(done);
   });
 
   test('v(id) with single id using callback API', function (done) {
-    g.v('2', function(err, pipe) {
-      assert(!err);
+    g.v('2', function (err, pipe) {
+      assert.ifError(err);
       pipe.id().toJSON(function (err, ids) {
-        assert(!err);
+        assert.ifError(err);
         assert.deepEqual(ids, ['2']);
         done();
       });
@@ -237,16 +329,18 @@ suite('graph-wrapper', function () {
   });
 
   test('v(id) with single id using promise API', function (done) {
+    var expected = ['2'];
     g.v('2')
-      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2']); }); })
+      .then(function (pipe) { return pipe.id().toJSON(); }, assert.ifError)
+      .then(function (json) { assert.deepEqual(json, expected); }, assert.ifError)
       .done(done);
   });
 
   test('v(id) with id list using callback API', function (done) {
-    g.v('2', '4', function(err, pipe) {
-      assert(!err);
+    g.v('2', '4', function (err, pipe) {
+      assert.ifError(err);
       pipe.id().toJSON(function (err, ids) {
-        assert(!err);
+        assert.ifError(err);
         assert.deepEqual(ids, ['2', '4']);
         done();
       });
@@ -254,29 +348,42 @@ suite('graph-wrapper', function () {
   });
 
   test('v(id...) with id list using promise API', function (done) {
+    var expected = ['2', '4'];
     g.v('2', '4')
-      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2', '4']); }); })
+      .then(function (pipe) { return pipe.id().toJSON(); }, assert.ifError)
+      .then(function (json) { assert.deepEqual(json, expected); }, assert.ifError)
       .done(done);
   });
 
   test('v(id...) with id array using promise API', function (done) {
+    var expected = ['2', '4'];
     g.v(['2', '4'])
-      .then(function (pipe) { pipe.id().toJSON(function (err, ids) { assert.deepEqual(ids, ['2', '4']); }); })
+      .then(function (pipe) { return pipe.id().toJSON(); }, assert.ifError)
+      .then(function (json) { assert.deepEqual(json, expected); }, assert.ifError)
       .done(done);
   });
 
   test('v(id) with invalid id using promise API', function (done) {
     g.v('99')
-      .then(function (pipe) { pipe.toJSON(function (err, json) { assert.deepEqual(json, [ null ]); }) })
+      .then(function (pipe) { return pipe.toJSON(); }, assert.ifError)
+      .then(function (json) { assert.deepEqual(json, [ null ]); }, assert.ifError)
       .done(done);
   });
 
-  test('g.toJSON()', function (done) {
+  test('g.toJSON() using callback API', function (done) {
+    var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
     g.toJSON(function (err, json) {
-      var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+      assert.ifError(err);
       assert.deepEqual(json, expected);
       done();
     });
+  });
+
+  test('g.toJSON() using promise API', function (done) {
+    var expected = [ 'tinkergraph[vertices:6 edges:6]' ];
+    g.toJSON()
+      .then(function (json) { assert.deepEqual(json, expected); }, assert.ifError)
+      .done(done);
   });
 
   test('g.toJSONSync()', function (done) {

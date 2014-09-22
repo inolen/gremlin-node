@@ -52,4 +52,19 @@ suite('gremlin', function () {
       done();
     });
   });
+
+  test('gremlin.toList(jsarray) using callback API', function (done) {
+    gremlin.toList(['a', 'b', 'c'], function (err, list) {
+      assert.ifError(err);
+      assert(gremlin.isType(list, 'java.util.Collection'));
+      done();
+    });
+  });
+
+  test('gremlin.toList(jsarray) using promise API', function (done) {
+    gremlin.toList(['a', 'b', 'c'])
+      .then(function (list) { assert(gremlin.isType(list, 'java.util.Collection')); }, assert.ifError )
+      .done(done);
+  });
+
 });
