@@ -2,8 +2,8 @@
 
 var _ = require('underscore');
 var assert = require('assert');
-var async = require('async');
 var path = require('path');
+var Q = require('q');
 var Gremlin = require('../lib/gremlin');
 var GraphWrapper = require('../lib/graph-wrapper');
 
@@ -152,19 +152,21 @@ suite('pipeline-wrapper', function () {
     var lower = 0.3;
     var upper = 0.9;
 
-    g.E()
-      .interval('weight', java.newFloat(lower), java.newFloat(upper))
-      .toArray(function (err, edges) {
-        assert.ifError(err);
-        assert.strictEqual(edges.length, 3);
-        async.each(edges, function (e, cb) {
-          e.getProperty('weight', function (err, weight) {
-            assert.ifError(err);
-            assert(weight >= lower && weight <= upper);
-            cb();
-          });
-        }, done);
-      });
+    var pipe = g.E().interval('weight', java.newFloat(lower), java.newFloat(upper));
+    pipe.toArray()
+      .then(function (a) {
+        assert(_.isArray(a));
+        assert.strictEqual(a.length, 3);
+        var p = a.map(function (e) { return e.getProperty('weight'); });
+        Q.all(p)
+          .then(function (weights) {
+            weights.map(function (w) {
+              assert(w >= lower && w <= upper);
+            });
+          })
+          .done(done);
+      })
+      .done();
   });
 
   test('bothE(string... labels)', function (done) {
