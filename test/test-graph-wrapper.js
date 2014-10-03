@@ -243,10 +243,10 @@ suite('graph-wrapper', function () {
 
   test('setProperties(props) / getProperties(props) using callback API', function (done) {
     g.getVertex('1', function (err, v) {
-      var expectedProps = { 'name': 'josh', 'age': 45 };
+      var expectedProps = { 'name': 'josh', 'age': 45, 'foo': 23, 'bar': 42, 'xxx': 'yyy' };
       v.setProperties(expectedProps, function (err) {
         assert.ifError(err);
-        v.getProperties(['name', 'age'], function (err, props) {
+        v.getProperties(Object.keys(expectedProps), function (err, props) {
           assert.ifError(err);
           assert.deepEqual(props, expectedProps);
           done();
@@ -257,9 +257,9 @@ suite('graph-wrapper', function () {
 
   test('setProperties(props) / getProperties(props) using promise API', function (done) {
     g.getVertex('1', function (err, v) {
-      var expectedProps = { 'name': 'josh', 'age': 45 };
+      var expectedProps = { 'name': 'josh', 'age': 45, 'foo': 23, 'bar': 42, 'xxx': 'yyy' };
       v.setProperties(expectedProps)
-        .then(function () { return v.getProperties(['name', 'age']); }, assert.ifError)
+        .then(function () { return v.getProperties(Object.keys(expectedProps)); }, assert.ifError)
         .then(function (props) { assert.deepEqual(props, expectedProps); }, assert.ifError)
         .done(done);
     });
