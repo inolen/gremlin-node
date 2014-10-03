@@ -5,6 +5,8 @@ gremlin-node
 
 Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java.
 
+NOTE: This package is compatible with TinkerPop V2. TinkerPop V3 is a significant change and is TBD.
+
 ```javascript
 var Gremlin = require('gremlin');
 var gremlin = new Gremlin({
@@ -23,11 +25,33 @@ g.V('name', 'marko').next(function (err, v) {
 });
 ```
 
+## Promises/A+ API
+
+Gremlin-node as of version 0.4.0 supports the use of Promises/A+ for most functions taking a callback. For example, a portion of the above code could be written as:
+
+```javascript
+g.V('name', 'marko').next().then(
+  function (v) {
+    v.getProperty('name').then(console.log);
+  });
+```
+
+This snippet by itself may seem underwhelming, but consider that with some enhanecments to the gremlin-console application, promises make it possible to interact with gremlin in the console as if the promise-returning functions returned values:
+
+```
+node > var pipe = g.V('name', 'marko')
+node > var v = pipe.next()
+node > v.getProperty('name')
+'marko'
+```
+
+The gremlin-console application contained in this package does not yet have these enhancements. For early access to a console with these enhancements, use the repository [gremlin-repl](https://github.com/jimlloyd/gremlin-repl).
+
 ## Dependencies
 
-[__node-java__](https://github.com/nearinfinity/node-java)
+[__node-java__](https://github.com/joeferner/node-java)
 
-Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/nearinfinity/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and its dependencies.
+Bridge API to connect with existing Java APIs. Please read the [__node-java__](https://github.com/joeferner/node-java) installation notes, as it outlines how to install the node-java module on specific platforms and its dependencies.
 
 [__maven__](http://maven.apache.org/index.html)
 
@@ -117,171 +141,21 @@ graph.commitSync();
 
 ## Examples
 
-_NOTE: These examples are currently out of date. The best reference for now is [in the unit tests](https://github.com/inolen/gremlin-node/blob/master/test/test-pipeline-wrapper.js)._
+A good resource to understand the Gremlin API (for TinkerPop2) is [GremlinDocs](http://gremlindocs.com/).  Most of the examples given at GremlinDocs have been translated to work in a node REPL, and encoded to run as unit tests, but in a separate repository. See [gremlin-repl](https://github.com/jimlloyd/gremlin-repl), and in particular these expected output files:
 
-A good resource to understand the Gremlin API is [GremlinDocs](http://gremlindocs.com/). Below are examples of gremlin and it's equivalent gremlin-node syntax.
-
-__Example 1: Basic Transforms__
-
-```
-gremlin>  g.V('name', 'marko').out
-
-node>     g.V('name', 'marko').out();
-
-node>     g.V({name: 'marko'}).out();
-
-gremlin>  g.v(1, 4).out('knows', 'created').in
-
-node>     g.v(1, 4).out('knows', 'created').in();
-
-node>     g.v([1, 4]).out(['knows', 'created']).in();
-```
-
-__Example 2: [i]__
-
-```
-gremlin>  g.V[0].name
-
-node>     g.V().index(0).property('name');
-```
-
-__Example 3: [i..j]__
-
-```
-gremlin>  g.V[0..<2].name
-
-node>     g.V().range(0,1).property('name');
-```
-
-__Example 4: has__
-
-```
-gremlin>    g.E.has('weight', T.gt, 0.5f).outV.transform{[it.id,it.age]}
-
-node>       g.E().has('weight', T.gt, '0.5f').outV().transform('{[it.id,it.age]}');
-```
-
-__Example 5: and & or__
-
-
-```
-gremlin>  g.V.and(_().both('knows'), _().both('created'))
-
-node>     g.V().and(g._().both('knows'), g._().both('created'));
-
-gremlin>  g.v(1).outE.or(_().has('id', T.eq, '9'), _().has('weight', T.lt, 0.6f))
-
-node>     g.v(1).outE().or(g._().has('id', T.eq, 9), g._().has('weight', T.lt, '0.6f'));
-```
-
-__Example 6: groupBy__
-
-```
-gremlin>    g.V.out.groupBy{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}.cap
-
-node>       g.V().out().groupBy('{it.name}{it.in}{it.unique().findAll{i -> i.age > 30}.name}').cap();
-```
-
-__Example 7: retain__
-
-```
-gremlin>  g.V.retain([g.v(1), g.v(2), g.v(3)])
-
-node>     g.V().retain([g.v(1), g.v(2), g.v(3)]);
-```
-
-__Example 8: groupBy with map__
-```
-gremlin>    m = [:]
-
-gremlin>    g.V.groupBy(m){it}{it.out}.iterate();null;
-
-node>       var map = new g.HashMap();
-
-node>       g.V().groupBy(map, '{it}{it.out}').iterate();
-```
-
-__Example 9: aggregate__
-```
-gremlin>    x = []
-
-gremlin>    g.v(1).out.aggregate(x).out.retain(x)
-
-node>       var x = new g.ArrayList();
-
-node>       g.v(1).out().aggregate(x).out().retain(x);
-```
-
-__Example 10: accessing returned values__
-```
-node>       g.v(1).out().iterator().toListSync();
-
-node>       g.v(1).out().toList();
-
-node>       g.v(1).out().toJSON();
-```
-
-__Example 11: Adding Vertices and Edge__
-```
-node>       var luca = graphDB.addVertexSync(null);
-node>       luca.setPropertySync( 'name', 'Luca' );
-
-node>       var marko = graphDB.addVertexSync(null);
-node>       marko.setPropertySync( 'name', 'Marko' );
-
-node>       var lucaKnowsMarko = graphDB.addEdgeSync(null, luca, marko, 'knows');
-
-node>       graphDB.commitSync();
-```
-
-__Example 12: Updating Vertices__
-```
-node>       var marko = g.V('name', 'Marko').iterator().nextSync();
-node>       marko.setPropertySync('name', 'Frank');
-
-node>       var luca = g.v('8:27').iterator().nextSync();
-node>       luca.setPropertySync('name', 'John');
-
-node>       graphDB.commitSync();
-
-```
-
-__Example 13: Removing a Vertex__
-```
-node>       var marko = g.v(1).iterator().nextSync();
-node>		marko.removeSync();
-node>		graphDB.commitSync();
-
-```
-
-__Example 14: Removing Vertices__
-```
-node>       var vertices = g.V().iterator();
-node>		var element;
-node>		while(vertices.hasNextSync()){
-				element = vertices.nextSync();
-				element.removeSync();
-			};
-node>		graphDB.commitSync();
-
-```
-
-__Example 15: linkBoth/linkIn/linkOut__
-
-```
-gremlin>  marko = g.v(1)
-gremlin>  g.V.except([marko]).linkBoth('connected', marko)
-
-// This type of operation, retrieving the underlying vertex using nextSync()
-// cannot be done on a JS variable
-node>     g.V().except(g.v(1)).linkBoth('connected', g.v(1).iterator().nextSync());
-```
+1. [gremlindocs-transform](https://github.com/jimlloyd/gremlin-repl/blob/master/test/data/gremlindocs-transform.expected)
+2. [gremlindocs-filter](https://github.com/jimlloyd/gremlin-repl/blob/master/test/data/gremlindocs-filter.expected)
+3. [gremlindocs-sideeffects](https://github.com/jimlloyd/gremlin-repl/blob/master/test/data/gremlindocs-side-effects.expected)
+4. [gremlindocs-branch](https://github.com/jimlloyd/gremlin-repl/blob/master/test/data/gremlindocs-branch.expected)
+5. [gremlindocs-methods](https://github.com/jimlloyd/gremlin-repl/blob/master/test/data/gremlindocs-methods.expected)
 
 ## Authors
 
 Frank Panetta  - [Follow @entrendipity](https://twitter.com/intent/follow?screen_name=entrendipity)
 
 Anthony Pesch - [inolen](https://github.com/inolen)
+
+Jim Lloyd - [jimlloyd](https://github.com/jimlloyd)
 
 ## Contributors
 
