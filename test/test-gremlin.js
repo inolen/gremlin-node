@@ -63,7 +63,7 @@ suite('gremlin', function () {
 
   test('gremlin.toList(jsarray) using promise API', function (done) {
     gremlin.toList(['a', 'b', 'c'])
-      .then(function (list) { assert(gremlin.isType(list, 'java.util.Collection')); }, assert.ifError )
+      .then(function (list) { assert(gremlin.isType(list, 'java.util.Collection')); }, assert.ifError)
       .done(done);
   });
 
