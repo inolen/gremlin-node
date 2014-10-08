@@ -155,19 +155,19 @@ suite('graph-wrapper', function () {
   test('addEdge(id, v1, v2) using promise API', function (done) {
     var pipe, v1;
     g.v(1, 2)
-      .then(function (_pipe) { assert(_pipe); pipe=_pipe; return pipe.next(); }, assert.ifError)
-      .then(function (_v1) { v1=_v1; assert(v1 instanceof VertexWrapper); return pipe.next(); }, assert.ifError)
+      .then(function (_pipe) { assert(_pipe); pipe = _pipe; return pipe.next(); }, assert.ifError)
+      .then(function (_v1) { v1 = _v1; assert(v1 instanceof VertexWrapper); return pipe.next(); }, assert.ifError)
       .then(function (v2) {
         assert(v2 instanceof VertexWrapper);
         return g.addEdge(null, v1, v2, 'buddy');
-        }, assert.ifError)
+      }, assert.ifError)
       .then(function (e) {
         assert(e instanceof EdgeWrapper);
         assert.strictEqual(e.getId(), '0');
         assert.strictEqual(e.getLabel(), 'buddy');
-        }, assert.ifError)
+      }, assert.ifError)
       .done(done);
-    });
+  });
 
   test('getEdge(id) using callback API', function (done) {
     g.getEdge('7', function (err, e) {
@@ -185,7 +185,7 @@ suite('graph-wrapper', function () {
         assert(e instanceof EdgeWrapper);
         assert.strictEqual(e.getId(), '7');
         assert.strictEqual(e.getLabel(), 'knows');
-        }, assert.ifError)
+      }, assert.ifError)
       .done(done);
   });
 
@@ -232,7 +232,7 @@ suite('graph-wrapper', function () {
   test('setProperty(key, value) / getProperty(key) using promise API', function (done) {
     var v;
     g.getVertex('1')
-      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function (_v) { v = _v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
       .then(function () { return v.getProperty('name'); }, assert.ifError)
       .then(function (name) { assert.strictEqual(name, 'marko'); return v; }, assert.ifError)
       .then(function () { return v.setProperty('name', 'john'); }, assert.ifError)
@@ -283,7 +283,7 @@ suite('graph-wrapper', function () {
   test('removeProperty(key) using promises API', function (done) {
     var v;
     g.getVertex('1')
-      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function (_v) { v = _v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
       .then(function () { return v.removeProperty('name'); }, assert.ifError)
       .then(function () { return v.getProperty('name'); }, assert.ifError)
       .then(function (name) { assert.strictEqual(name, null); }, assert.ifError)
@@ -308,7 +308,7 @@ suite('graph-wrapper', function () {
   test('removeProperties(props) using promises API', function (done) {
     var v;
     g.getVertex('1')
-      .then(function (_v) { v=_v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
+      .then(function (_v) { v = _v; assert(v instanceof VertexWrapper); return v; }, assert.ifError)
       .then(function () { return v.getProperties(['name', 'age']); }, assert.ifError)
       .then(function (props) { assert.deepEqual(props, {name: 'marko', age: 29}); }, assert.ifError)
       .then(function () { return v.removeProperties(['name', 'age']); }, assert.ifError)
