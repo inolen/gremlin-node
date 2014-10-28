@@ -175,7 +175,12 @@ suite('graph-wrapper', function () {
       assert(e instanceof EdgeWrapper);
       assert.strictEqual(e.getId(), '7');
       assert.strictEqual(e.getLabel(), 'knows');
-      done();
+      e.getProperty('weight')
+        .then(function (weight) {
+          console.log('Edge(7) weight is:', weight);
+          assert(weight > 0.0 && weight < 1.0);
+        }, assert.ifError)
+        .done(done);
     });
   });
 

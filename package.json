@@ -1,7 +1,7 @@
 {
   "name": "gremlin",
   "description": "Gremlin for graph databases which implement the Blueprints property graph data model.",
-  "version": "0.3.12",
+  "version": "0.4.0",
   "keywords": [
     "graph",
     "database",
@@ -19,6 +19,10 @@
     {
       "name": "Anthony Pesch",
       "email": "inolen@gmail.com"
+    },
+    {
+      "name": "Jim Lloyd",
+      "email": "jim.lloyd@gmail.com"
     }
   ],
   "contributors": [
@@ -37,10 +41,9 @@
     "install": "make package"
   },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=0.10.0"
   },
   "dependencies": {
-    "async": "~0.2.9",
     "debug": "^2.0.0",
     "glob": "~3.2.6",
     "java": ">=0.2.8",
