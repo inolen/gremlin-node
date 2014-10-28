@@ -41,7 +41,6 @@ function compareBy(keys) {
 
 var compareNameAge = compareBy(['name', 'age']);
 
-
 suite('pipeline-wrapper', function () {
   var gremlin;
   var java;
@@ -61,9 +60,10 @@ suite('pipeline-wrapper', function () {
 
   test('V(string key, object value)', function (done) {
     g.V('name', 'marko').next(function (err, v) {
-      assert(!err);
+      assert.ifError(err);
       v.getProperty('name', function (err, name) {
-        assert(!err && name === 'marko');
+        assert.ifError(err);
+        assert.strictEqual(name, 'marko');
         done();
       });
     });
@@ -74,7 +74,7 @@ suite('pipeline-wrapper', function () {
   // more understandable to programmers learning gremlin.
   test('map()', function (done) {
     g.V().map().toArray(function (err, verts) {
-      assert(!err);
+      assert.ifError(err);
       var expected = [
         { name: 'josh', age: 32 },
         { name: 'lop', lang: 'java' },
@@ -90,9 +90,10 @@ suite('pipeline-wrapper', function () {
 
   test('E(string key, object value)', function (done) {
     g.E('weight', java.newFloat(0.5)).next(function (err, e) {
-      assert(!err);
+      assert.ifError(err);
       e.getProperty('weight', function (err, weight) {
-        assert(!err && weight === 0.5);
+        assert.ifError(err);
+        assert.strictEqual(weight, 0.5);
         done();
       });
     });
@@ -100,9 +101,10 @@ suite('pipeline-wrapper', function () {
 
   test('has(string key, object value)', function (done) {
     g.V().has('name', 'marko').next(function (err, v) {
-      assert(!err);
+      assert.ifError(err);
       v.getProperty('name', function (err, name) {
-        assert(!err && name === 'marko');
+        assert.ifError(err);
+        assert.strictEqual(name, 'marko');
         done();
       });
     });
@@ -110,9 +112,10 @@ suite('pipeline-wrapper', function () {
 
   test('has(string key, token, object value)', function (done) {
     g.V().has('name', gremlin.Tokens.eq, 'marko').next(function (err, v) {
-      assert(!err);
+      assert.ifError(err);
       v.getProperty('name', function (err, name) {
-        assert(!err && name === 'marko');
+        assert.ifError(err);
+        assert.strictEqual(name, 'marko');
         done();
       });
     });
@@ -120,9 +123,10 @@ suite('pipeline-wrapper', function () {
 
   test('has(string key, predicate, object value)', function (done) {
     g.V().has('name', gremlin.Compare.EQUAL, 'marko').next(function (err, v) {
-      assert(!err);
+      assert.ifError(err);
       v.getProperty('name', function (err, name) {
-        assert(!err && name === 'marko');
+        assert.ifError(err);
+        assert.strictEqual(name, 'marko');
         done();
       });
     });
@@ -130,14 +134,16 @@ suite('pipeline-wrapper', function () {
 
   test('hasNot(string key, object value)', function (done) {
     g.V().hasNot('age').count(function (err, count) {
-      assert(!err && count === 2);
+      assert.ifError(err);
+      assert.strictEqual(count, 2);
       done();
     });
   });
 
   test('hasNot(string key, object value)', function (done) {
     g.V().hasNot('age', 27).count(function (err, count) {
-      assert(!err && count === 5);
+      assert.ifError(err);
+      assert.strictEqual(count, 5);
       done();
     });
   });
@@ -149,10 +155,12 @@ suite('pipeline-wrapper', function () {
     g.E()
       .interval('weight', java.newFloat(lower), java.newFloat(upper))
       .toArray(function (err, edges) {
-        assert(!err && edges.length === 3);
+        assert.ifError(err);
+        assert.strictEqual(edges.length, 3);
         async.each(edges, function (e, cb) {
           e.getProperty('weight', function (err, weight) {
-            assert(!err && weight >= lower && weight <= upper);
+            assert.ifError(err);
+            assert(weight >= lower && weight <= upper);
             cb();
           });
         }, done);
@@ -161,7 +169,8 @@ suite('pipeline-wrapper', function () {
 
   test('bothE(string... labels)', function (done) {
     g.V().bothE('knows', 'created').toArray(function (err, edges) {
-      assert(!err && edges.length === 12);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 12);
       var counts = _.countBy(edges, function (e) { return e.getLabel(); });
       var expected = { created: 8, knows: 4 };
       assert.deepEqual(counts, expected);
@@ -171,7 +180,8 @@ suite('pipeline-wrapper', function () {
 
   test('bothE(int branchFactor, string... labels)', function (done) {
     g.V().bothE(1, 'knows', 'created').toArray(function (err, edges) {
-      assert(!err && edges.length === 6);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 6);
       var counts = _.countBy(edges, function (e) { return e.getLabel(); });
       var expected = { created: 3, knows: 3 };
       assert.deepEqual(counts, expected);
@@ -181,7 +191,8 @@ suite('pipeline-wrapper', function () {
 
   test('both(string... labels)', function (done) {
     g.V().both('knows').dedup().map().toArray(function (err, verts) {
-      assert(!err && verts.length === 3);
+      assert.ifError(err);
+      assert.strictEqual(verts.length, 3);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' }, { age: 32, name: 'josh' } ];
       assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
@@ -190,7 +201,8 @@ suite('pipeline-wrapper', function () {
 
   test('both(int branchFactor, string... labels)', function (done) {
     g.V().both(1, 'knows').dedup().map().toArray(function (err, verts) {
-      assert(!err && verts.length === 2);
+      assert.ifError(err);
+      assert.strictEqual(verts.length, 2);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' } ];
       assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
@@ -199,7 +211,8 @@ suite('pipeline-wrapper', function () {
 
   test('bothV()', function (done) {
     g.E('id', '7').bothV().map().toArray(function (err, verts) {
-      assert(!err && verts.length === 2);
+      assert.ifError(err);
+      assert.strictEqual(verts.length, 2);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' } ];
       assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
@@ -208,7 +221,8 @@ suite('pipeline-wrapper', function () {
 
   test('inV()', function (done) {
     g.E('id', '7').inV().map().toArray(function (err, verts) {
-      assert(!err && verts.length === 1);
+      assert.ifError(err);
+      assert.strictEqual(verts.length, 1);
       var expected = [ { age: 27, name: 'vadas' } ];
       assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
@@ -217,7 +231,8 @@ suite('pipeline-wrapper', function () {
 
   test('inE()', function (done) {
     g.V('name', 'lop').inE().map().toArray(function (err, edges) {
-      assert(!err && edges.length === 3);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 3);
       done();
     });
   });
@@ -225,14 +240,16 @@ suite('pipeline-wrapper', function () {
   // PipelineWrapper.prototype.in = function () {
   test('in()', function (done) {
     g.V('name', 'lop').in().map().toArray(function (err, edges) {
-      assert(!err && edges.length === 3);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 3);
       done();
     });
   });
 
   test('outV()', function (done) {
     g.E('id', '7').outV().map().toArray(function (err, verts) {
-      assert(!err && verts.length === 1);
+      assert.ifError(err);
+      assert.strictEqual(verts.length, 1);
       var expected = [ { age: 29, name: 'marko' } ];
       assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
@@ -241,25 +258,27 @@ suite('pipeline-wrapper', function () {
 
   test('outE()', function (done) {
     g.V('name', 'josh').outE().toArray(function (err, edges) {
-      assert(!err && edges.length === 2);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 2);
       done();
     });
   });
 
   test('out()', function (done) {
     g.V('name', 'josh').out().toArray(function (err, edges) {
-      assert(!err && edges.length === 2);
+      assert.ifError(err);
+      assert.strictEqual(edges.length, 2);
       done();
     });
   });
 
   test('id()', function (done) {
     g.V().id().toArray(function (err, ids) {
-      assert(!err);
+      assert.ifError(err);
       var expected = [ '1', '2', '3', '4', '5', '6' ];
       assert.deepEqual(ids.sort(), expected);
       g.E().id().toArray(function (err, ids) {
-        assert(!err);
+        assert.ifError(err);
         var expected = [ '10', '11', '12', '7', '8', '9' ];
         assert.deepEqual(ids.sort(), expected);
         done();
@@ -269,7 +288,7 @@ suite('pipeline-wrapper', function () {
 
   test('label()', function (done) {
     g.E().label().toArray(function (err, labels) {
-      assert(!err);
+      assert.ifError(err);
       var expected = [ 'created', 'knows', 'created', 'knows', 'created', 'created' ];
       assert.deepEqual(labels.sort(), expected.sort());
       done();
@@ -278,11 +297,11 @@ suite('pipeline-wrapper', function () {
 
   test('property()', function (done) {
     g.V().property('name').toArray(function (err, names) {
-      assert(!err);
+      assert.ifError(err);
       var expected = [ 'lop', 'vadas', 'marko', 'peter', 'ripple', 'josh' ];
       assert.deepEqual(names.sort(), expected.sort());
       g.V().property('age').toArray(function (err, ages) {
-        assert(!err);
+        assert.ifError(err);
         var expected = [ null, 27, 29, 35, null, 32 ];
         assert.deepEqual(ages.sort(), expected.sort());
         done();
@@ -298,7 +317,7 @@ suite('pipeline-wrapper', function () {
   test('copySplit(), _(), and fairMerge()', function (done) {
     g.V().both().toArray(function (err, bothed) {
       g.V().copySplit(g._().in(), g._().out()).fairMerge().toArray(function (err, copied) {
-        assert(bothed.length === copied.length);
+        assert.strictEqual(bothed.length, copied.length);
         done();
       });
     });
@@ -310,14 +329,16 @@ suite('pipeline-wrapper', function () {
   // PipelineWrapper.prototype.and = function (/*final Pipe<E, ?>... pipes*/) {
   test('as() and back()', function (done) {
     g.V().as('test').out('knows').back('test').toArray(function (err, recs) {
-      assert(!err && recs.length === 1);
+      assert.ifError(err);
+      assert.strictEqual(recs.length, 1);
       done();
     });
   });
   test('dedup()', function (done) {
     g.v(3, 3, function (err, verts) {
       verts.dedup().toArray(function (err, res) {
-        assert(!err && res.length === 1);
+        assert.ifError(err);
+        assert.strictEqual(res.length, 1);
         done();
       });
     });
@@ -326,7 +347,8 @@ suite('pipeline-wrapper', function () {
   test('filter()', function (done) {
     this.timeout(5000); // A longer timeout is required on Travis
     g.V().filter('{ it -> it.name == "lop" }').map().toArray(function (err, recs) {
-      assert(!err && recs.length === 1);
+      assert.ifError(err);
+      assert.strictEqual(recs.length, 1);
       var expected = [ { name: 'lop', lang: 'java' } ];
       assert.deepEqual(recs, expected);
       done();
@@ -341,7 +363,9 @@ suite('pipeline-wrapper', function () {
   test('aggregate()', function (done) {
     var al = new gremlin.ArrayList();
     g.V().has('lang', 'java').aggregate(al).next(function (err, v) {
-      assert(!err && v && al.sizeSync() === 2);
+      assert.ifError(err);
+      assert.ok(v);
+      assert.strictEqual(al.sizeSync(), 2);
       // al is an ArrayList<Vertex>
       done();
     });
@@ -351,10 +375,11 @@ suite('pipeline-wrapper', function () {
   test('groupCount(map, closure)', function (done) {
     var m = new gremlin.HashMap();
     g.V().out().groupCount(m, '{ it -> it.id }').iterate(function (err, iterated) {
-      assert(!err && iterated === null);
-      assert(m.getSync('3').longValue === '3');
-      assert(m.getSync('2').longValue === '1');
-      assert(m.getSync('6') === null);
+      assert.ifError(err);
+      assert.strictEqual(iterated, null);
+      assert.strictEqual(m.getSync('3').longValue, '3');
+      assert.strictEqual(m.getSync('2').longValue, '1');
+      assert.strictEqual(m.getSync('6'), null);
       done();
     });
   });
@@ -365,7 +390,9 @@ suite('pipeline-wrapper', function () {
   test('store()', function (done) {
     var al = new gremlin.ArrayList();
     g.V().has('lang', 'java').store(al).next(function (err, v) {
-      assert(!err && v && al.sizeSync() === 1);
+      assert.ifError(err);
+      assert.ok(v);
+      assert.strictEqual(al.sizeSync(), 1);
       done();
     });
   });
@@ -381,7 +408,10 @@ suite('pipeline-wrapper', function () {
   // PipelineWrapper.prototype.shuffle = function () {
   test('groupCount() and cap()', function (done) {
     g.V().in().id().groupCount().cap().next(function (err, map) {
-      assert(!err && map['1'] === 3 && map['4'] === 2 && map['6'] === 1);
+      assert.ifError(err);
+      assert(map['1'] === 3);
+      assert(map['4'] === 2);
+      assert(map['6'] === 1);
       done();
     });
   });
