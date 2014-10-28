@@ -10,6 +10,38 @@ var GraphWrapper = require('../lib/graph-wrapper');
 // For reference, see the java interface:
 // https://github.com/tinkerpop/gremlin/blob/master/gremlin-java/src/main/java/com/tinkerpop/gremlin/java/GremlinFluentPipeline.java
 
+function compareValues(aval, bval) {
+  if (!_.isUndefined(aval) && !_.isUndefined(bval)) {
+    if (aval === bval) return 0;
+    if (aval < bval) return -1;
+    return 1;
+  }
+  else if (_.isUndefined(aval) && _.isUndefined(bval)) {
+    return 0;
+  }
+  else if (_.isUndefined(aval)) {
+    return 1;
+  }
+  else {
+    return -1;
+  }
+}
+
+function compareBy(keys) {
+  return function compare(a, b) {
+    for (var i = 0; i < keys.length; ++i) {
+      var key = keys[i];
+      var comp = compareValues(a[key], b[key]);
+      if (comp !== 0)
+        return comp;
+    }
+    return 0;
+  };
+}
+
+var compareNameAge = compareBy(['name', 'age']);
+
+
 suite('pipeline-wrapper', function () {
   var gremlin;
   var java;
@@ -44,14 +76,14 @@ suite('pipeline-wrapper', function () {
     g.V().map().toArray(function (err, verts) {
       assert(!err);
       var expected = [
+        { name: 'josh', age: 32 },
         { name: 'lop', lang: 'java' },
-        { age: 27, name: 'vadas' },
-        { age: 29, name: 'marko' },
-        { age: 35, name: 'peter' },
+        { name: 'marko', age: 29 },
+        { name: 'peter', age: 35 },
         { name: 'ripple', lang: 'java' },
-        { age: 32, name: 'josh' }
+        { name: 'vadas', age: 27 }
       ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -151,7 +183,7 @@ suite('pipeline-wrapper', function () {
     g.V().both('knows').dedup().map().toArray(function (err, verts) {
       assert(!err && verts.length === 3);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' }, { age: 32, name: 'josh' } ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -160,7 +192,7 @@ suite('pipeline-wrapper', function () {
     g.V().both(1, 'knows').dedup().map().toArray(function (err, verts) {
       assert(!err && verts.length === 2);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' } ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -169,7 +201,7 @@ suite('pipeline-wrapper', function () {
     g.E('id', '7').bothV().map().toArray(function (err, verts) {
       assert(!err && verts.length === 2);
       var expected = [ { age: 29, name: 'marko' }, { age: 27, name: 'vadas' } ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -178,7 +210,7 @@ suite('pipeline-wrapper', function () {
     g.E('id', '7').inV().map().toArray(function (err, verts) {
       assert(!err && verts.length === 1);
       var expected = [ { age: 27, name: 'vadas' } ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -202,7 +234,7 @@ suite('pipeline-wrapper', function () {
     g.E('id', '7').outV().map().toArray(function (err, verts) {
       assert(!err && verts.length === 1);
       var expected = [ { age: 29, name: 'marko' } ];
-      assert.deepEqual(verts, expected);
+      assert.deepEqual(verts.sort(compareNameAge), expected.sort(compareNameAge));
       done();
     });
   });
@@ -224,12 +256,12 @@ suite('pipeline-wrapper', function () {
   test('id()', function (done) {
     g.V().id().toArray(function (err, ids) {
       assert(!err);
-      var expected = [ '3', '2', '1', '6', '5', '4' ];
-      assert.deepEqual(ids, expected);
+      var expected = [ '1', '2', '3', '4', '5', '6' ];
+      assert.deepEqual(ids.sort(), expected);
       g.E().id().toArray(function (err, ids) {
         assert(!err);
-        var expected = [ '10', '7', '9', '8', '11', '12' ];
-        assert.deepEqual(ids, expected);
+        var expected = [ '10', '11', '12', '7', '8', '9' ];
+        assert.deepEqual(ids.sort(), expected);
         done();
       });
     });
@@ -239,7 +271,7 @@ suite('pipeline-wrapper', function () {
     g.E().label().toArray(function (err, labels) {
       assert(!err);
       var expected = [ 'created', 'knows', 'created', 'knows', 'created', 'created' ];
-      assert.deepEqual(labels, expected);
+      assert.deepEqual(labels.sort(), expected.sort());
       done();
     });
   });
@@ -248,11 +280,11 @@ suite('pipeline-wrapper', function () {
     g.V().property('name').toArray(function (err, names) {
       assert(!err);
       var expected = [ 'lop', 'vadas', 'marko', 'peter', 'ripple', 'josh' ];
-      assert.deepEqual(names, expected);
+      assert.deepEqual(names.sort(), expected.sort());
       g.V().property('age').toArray(function (err, ages) {
         assert(!err);
         var expected = [ null, 27, 29, 35, null, 32 ];
-        assert.deepEqual(ages, expected);
+        assert.deepEqual(ages.sort(), expected.sort());
         done();
       });
     });
