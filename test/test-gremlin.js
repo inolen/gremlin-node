@@ -24,7 +24,8 @@ suite('gremlin', function () {
   test('Wrapped objects can be converted to JS objects using gremlin.toJSON', function (done) {
     g.v('2', function (err, res) {
       gremlin.toJSON(res, function (err, json) {
-        assert(!err && json[0]._id === '2');
+        assert.ifError(err);
+        assert.strictEqual(json[0]._id, '2');
         done();
       });
     });
@@ -33,7 +34,8 @@ suite('gremlin', function () {
   test('Unwrapped objects can be converted to JS objects using gremlin.toJSON', function (done) {
     g.getVertex('2', function (err, res) {
       gremlin.toJSON(res.el, function (err, json) {
-        assert(!err && json[0]._id === '2');
+        assert.ifError(err);
+        assert.strictEqual(json[0]._id, '2');
         done();
       });
     });
