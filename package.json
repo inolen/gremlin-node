@@ -41,7 +41,7 @@
     "install": "make package"
   },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=0.10.0"
   },
   "dependencies": {
     "debug": "^2.0.0",
