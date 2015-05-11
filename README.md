@@ -3,9 +3,11 @@ gremlin-node
 
 [![Build Status](https://travis-ci.org/inolen/gremlin-node.svg)](https://travis-ci.org/inolen/gremlin-node)
 
-Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java.
+**NOTE: This project is no longer being maintained. The project owners instead now use [ts-tinkerpop](https://github.com/RedSeal-co/ts-tinkerpop),
+which takes advantage of [ts-java](https://github.com/RedSeal-co/ts-java). We suggest you take a look at those two
+projects.**
 
-NOTE: This package is compatible with TinkerPop V2. TinkerPop V3 is a significant change and is TBD.
+Implementation of [Gremlin](https://github.com/tinkerpop/gremlin/wiki) for node.js. Gremlin-node is a javascript wrapper around the Gremlin API. The node-java module provides the bridge between node and Java.
 
 ```javascript
 var Gremlin = require('gremlin');
